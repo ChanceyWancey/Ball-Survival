@@ -1,0 +1,499 @@
+#include <furi.h>
+#include <gui/gui.h>
+#include <input/input.h>
+#include <stdlib.h>
+
+#define MAP_WIDTH 16
+#define MAP_HEIGHT 8
+#define TILE_SIZE 8
+#define MAX_ENEMIES 8
+#define MAX_ITEMS 5
+
+typedef enum {
+    TILE_FLOOR = 0,
+    TILE_WALL = 1
+} TileType;
+
+typedef enum {
+    ITEM_NONE = 0,
+    ITEM_POTION = 1,
+    ITEM_WEAPON = 2
+} ItemType;
+
+typedef struct {
+    int8_t x;
+    int8_t y;
+    int8_t hp;
+    int8_t max_hp;
+    int8_t atk;
+} Player;
+
+typedef struct {
+    int8_t x;
+    int8_t y;
+    int8_t hp;
+    int8_t atk;
+    bool active;
+} Enemy;
+
+typedef struct {
+    int8_t x;
+    int8_t y;
+    ItemType type;
+    bool active;
+} Item;
+
+typedef struct {
+    TileType map[MAP_HEIGHT][MAP_WIDTH];
+    Player player;
+    Enemy enemies[MAX_ENEMIES];
+    Item items[MAX_ITEMS];
+    int8_t stairs_x;
+    int8_t stairs_y;
+    uint8_t floor;
+    char message[32];
+    uint32_t message_timer;
+    bool game_active;
+    bool game_over;
+    bool show_menu;
+} GameState;
+
+void game_init(GameState* state) {
+    state->floor = 1;
+    state->player.hp = 20;
+    state->player.max_hp = 20;
+    state->player.atk = 3;
+    state->game_active = false;
+    state->game_over = false;
+    state->show_menu = true;
+    state->message[0] = '\0';
+    state->message_timer = 0;
+}
+
+void generate_map(GameState* state) {
+    // Fill with walls
+    for(int y = 0; y < MAP_HEIGHT; y++) {
+        for(int x = 0; x < MAP_WIDTH; x++) {
+            state->map[y][x] = TILE_WALL;
+        }
+    }
+    
+    // Create rooms
+    int num_rooms = 3 + (rand() % 2);
+    
+    for(int i = 0; i < num_rooms; i++) {
+        int room_w = 3 + (rand() % 4);
+        int room_h = 3 + (rand() % 3);
+        int room_x = 1 + (rand() % (MAP_WIDTH - room_w - 1));
+        int room_y = 1 + (rand() % (MAP_HEIGHT - room_h - 1));
+        
+        for(int y = room_y; y < room_y + room_h && y < MAP_HEIGHT; y++) {
+            for(int x = room_x; x < room_x + room_w && x < MAP_WIDTH; x++) {
+                state->map[y][x] = TILE_FLOOR;
+            }
+        }
+        
+        if(i == 0) {
+            state->player.x = room_x + room_w / 2;
+            state->player.y = room_y + room_h / 2;
+        }
+        
+        if(i == num_rooms - 1) {
+            state->stairs_x = room_x + room_w / 2;
+            state->stairs_y = room_y + room_h / 2;
+        }
+    }
+    
+    // Connect rooms with corridors
+    for(int y = 0; y < MAP_HEIGHT; y++) {
+        for(int x = 0; x < MAP_WIDTH; x += 3) {
+            if(rand() % 3 == 0) {
+                state->map[y][x] = TILE_FLOOR;
+                if(x + 1 < MAP_WIDTH) state->map[y][x + 1] = TILE_FLOOR;
+            }
+        }
+    }
+    
+    for(int x = 0; x < MAP_WIDTH; x++) {
+        for(int y = 0; y < MAP_HEIGHT; y += 2) {
+            if(rand() % 3 == 0) {
+                state->map[y][x] = TILE_FLOOR;
+                if(y + 1 < MAP_HEIGHT) state->map[y + 1][x] = TILE_FLOOR;
+            }
+        }
+    }
+    
+    // Spawn enemies
+    int num_enemies = 2 + (state->floor / 2);
+    if(num_enemies > MAX_ENEMIES) num_enemies = MAX_ENEMIES;
+    
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        state->enemies[i].active = false;
+    }
+    
+    for(int i = 0; i < num_enemies; i++) {
+        int attempts = 0;
+        while(attempts < 20) {
+            int x = rand() % MAP_WIDTH;
+            int y = rand() % MAP_HEIGHT;
+            
+            if(state->map[y][x] == TILE_FLOOR &&
+               (x != state->player.x || y != state->player.y) &&
+               (x != state->stairs_x || y != state->stairs_y)) {
+                state->enemies[i].x = x;
+                state->enemies[i].y = y;
+                state->enemies[i].hp = 3 + state->floor;
+                state->enemies[i].atk = 2 + (state->floor / 2);
+                state->enemies[i].active = true;
+                break;
+            }
+            attempts++;
+        }
+    }
+    
+    // Spawn items
+    int num_items = 1 + (rand() % 3);
+    if(num_items > MAX_ITEMS) num_items = MAX_ITEMS;
+    
+    for(int i = 0; i < MAX_ITEMS; i++) {
+        state->items[i].active = false;
+    }
+    
+    for(int i = 0; i < num_items; i++) {
+        int attempts = 0;
+        while(attempts < 20) {
+            int x = rand() % MAP_WIDTH;
+            int y = rand() % MAP_HEIGHT;
+            
+            if(state->map[y][x] == TILE_FLOOR &&
+               (x != state->player.x || y != state->player.y)) {
+                state->items[i].x = x;
+                state->items[i].y = y;
+                state->items[i].type = (rand() % 2) ? ITEM_POTION : ITEM_WEAPON;
+                state->items[i].active = true;
+                break;
+            }
+            attempts++;
+        }
+    }
+}
+
+void set_message(GameState* state, const char* msg) {
+    snprintf(state->message, sizeof(state->message), "%s", msg);
+    state->message_timer = furi_get_tick() + 2000;
+}
+
+bool all_enemies_defeated(GameState* state) {
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(state->enemies[i].active) return false;
+    }
+    return true;
+}
+
+bool can_move(GameState* state, int8_t x, int8_t y) {
+    return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT && 
+           state->map[y][x] == TILE_FLOOR;
+}
+
+void move_player(GameState* state, int8_t dx, int8_t dy) {
+    int8_t new_x = state->player.x + dx;
+    int8_t new_y = state->player.y + dy;
+    
+    if(!can_move(state, new_x, new_y)) return;
+    
+    // Check for enemy collision
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(state->enemies[i].active && 
+           state->enemies[i].x == new_x && 
+           state->enemies[i].y == new_y) {
+            state->enemies[i].hp -= state->player.atk;
+            
+            if(state->enemies[i].hp <= 0) {
+                state->enemies[i].active = false;
+                set_message(state, "Enemy defeated!");
+                return;
+            } else {
+                snprintf(state->message, sizeof(state->message), 
+                        "Hit! E:%d HP", state->enemies[i].hp);
+                state->message_timer = furi_get_tick() + 2000;
+                return;
+            }
+        }
+    }
+    
+    state->player.x = new_x;
+    state->player.y = new_y;
+    
+    // Check for items
+    for(int i = 0; i < MAX_ITEMS; i++) {
+        if(state->items[i].active && 
+           state->items[i].x == new_x && 
+           state->items[i].y == new_y) {
+            if(state->items[i].type == ITEM_POTION) {
+                state->player.hp += 5;
+                if(state->player.hp > state->player.max_hp) 
+                    state->player.hp = state->player.max_hp;
+                set_message(state, "+5 HP!");
+            } else if(state->items[i].type == ITEM_WEAPON) {
+                state->player.atk += 1;
+                set_message(state, "+1 ATK!");
+            }
+            state->items[i].active = false;
+            return;
+        }
+    }
+    
+    // Check for stairs
+    if(all_enemies_defeated(state) && 
+       new_x == state->stairs_x && 
+       new_y == state->stairs_y) {
+        state->floor++;
+        if(state->floor > 10) {
+            set_message(state, "YOU WIN!");
+            state->game_over = true;
+            return;
+        }
+        
+        state->player.hp += 3;
+        if(state->player.hp > state->player.max_hp) 
+            state->player.hp = state->player.max_hp;
+            
+        snprintf(state->message, sizeof(state->message), 
+                "Floor %d", state->floor);
+        state->message_timer = furi_get_tick() + 2000;
+        
+        generate_map(state);
+    }
+}
+
+void move_enemies(GameState* state) {
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(!state->enemies[i].active) continue;
+        
+        int8_t dx = 0, dy = 0;
+        
+        if(state->player.x > state->enemies[i].x) dx = 1;
+        else if(state->player.x < state->enemies[i].x) dx = -1;
+        
+        if(state->player.y > state->enemies[i].y) dy = 1;
+        else if(state->player.y < state->enemies[i].y) dy = -1;
+        
+        if(rand() % 2 == 0 && dx != 0) dy = 0;
+        else dx = 0;
+        
+        int8_t new_x = state->enemies[i].x + dx;
+        int8_t new_y = state->enemies[i].y + dy;
+        
+        if(!can_move(state, new_x, new_y)) continue;
+        
+        if(new_x == state->player.x && new_y == state->player.y) {
+            state->player.hp -= state->enemies[i].atk;
+            snprintf(state->message, sizeof(state->message), 
+                    "Hit! P:%d HP", state->player.hp);
+            state->message_timer = furi_get_tick() + 2000;
+            
+            if(state->player.hp <= 0) {
+                set_message(state, "GAME OVER");
+                state->game_over = true;
+            }
+            continue;
+        }
+        
+        bool occupied = false;
+        for(int j = 0; j < MAX_ENEMIES; j++) {
+            if(i != j && state->enemies[j].active &&
+               state->enemies[j].x == new_x && state->enemies[j].y == new_y) {
+                occupied = true;
+                break;
+            }
+        }
+        
+        if(!occupied) {
+            state->enemies[i].x = new_x;
+            state->enemies[i].y = new_y;
+        }
+    }
+}
+
+static void draw_callback(Canvas* canvas, void* ctx) {
+    GameState* state = (GameState*)ctx;
+    
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+    
+    if(state->show_menu) {
+        canvas_draw_str(canvas, 15, 20, "Simple Roguelike");
+        canvas_draw_str(canvas, 10, 35, "Press OK to start");
+        canvas_draw_str(canvas, 20, 50, "Goal: Floor 10");
+        return;
+    }
+    
+    if(!state->game_active) return;
+    
+    // Draw map
+    for(int y = 0; y < MAP_HEIGHT; y++) {
+        for(int x = 0; x < MAP_WIDTH; x++) {
+            if(state->map[y][x] == TILE_WALL) {
+                canvas_draw_box(canvas, x * TILE_SIZE, y * TILE_SIZE, 
+                              TILE_SIZE, TILE_SIZE);
+            }
+        }
+    }
+    
+    // Draw stairs if all enemies defeated
+    if(all_enemies_defeated(state)) {
+        canvas_draw_frame(canvas, 
+                         state->stairs_x * TILE_SIZE + 2, 
+                         state->stairs_y * TILE_SIZE + 2, 
+                         TILE_SIZE - 4, TILE_SIZE - 4);
+    }
+    
+    // Draw items
+    for(int i = 0; i < MAX_ITEMS; i++) {
+        if(state->items[i].active) {
+            if(state->items[i].type == ITEM_POTION) {
+                canvas_draw_disc(canvas, 
+                               state->items[i].x * TILE_SIZE + TILE_SIZE/2,
+                               state->items[i].y * TILE_SIZE + TILE_SIZE/2,
+                               2);
+            } else {
+                canvas_draw_line(canvas,
+                               state->items[i].x * TILE_SIZE + 2,
+                               state->items[i].y * TILE_SIZE + 2,
+                               state->items[i].x * TILE_SIZE + TILE_SIZE - 2,
+                               state->items[i].y * TILE_SIZE + TILE_SIZE - 2);
+                canvas_draw_line(canvas,
+                               state->items[i].x * TILE_SIZE + TILE_SIZE - 2,
+                               state->items[i].y * TILE_SIZE + 2,
+                               state->items[i].x * TILE_SIZE + 2,
+                               state->items[i].y * TILE_SIZE + TILE_SIZE - 2);
+            }
+        }
+    }
+    
+    // Draw enemies
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(state->enemies[i].active) {
+            canvas_draw_box(canvas,
+                          state->enemies[i].x * TILE_SIZE + 2,
+                          state->enemies[i].y * TILE_SIZE + 2,
+                          TILE_SIZE - 4, TILE_SIZE - 4);
+        }
+    }
+    
+    // Draw player
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_disc(canvas,
+                    state->player.x * TILE_SIZE + TILE_SIZE/2,
+                    state->player.y * TILE_SIZE + TILE_SIZE/2,
+                    3);
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_circle(canvas,
+                      state->player.x * TILE_SIZE + TILE_SIZE/2,
+                      state->player.y * TILE_SIZE + TILE_SIZE/2,
+                      3);
+    
+    // Draw UI
+    char stats[32];
+    snprintf(stats, sizeof(stats), "F%d HP%d/%d A%d", 
+            state->floor, state->player.hp, state->player.max_hp, 
+            state->player.atk);
+    canvas_draw_str(canvas, 2, 62, stats);
+    
+    // Draw message if active
+    if(furi_get_tick() < state->message_timer && state->message[0] != '\0') {
+        canvas_draw_str(canvas, 2, 52, state->message);
+    }
+    
+    if(state->game_over) {
+        canvas_draw_box(canvas, 20, 20, 88, 24);
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_str(canvas, 25, 32, state->message);
+        canvas_draw_str(canvas, 25, 42, "Press Back");
+    }
+}
+
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
+    furi_message_queue_put(event_queue, input_event, FuriWaitForever);
+}
+
+int32_t simple_roguelike_app(void* p) {
+    UNUSED(p);
+    
+    FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
+    
+    GameState* game_state = malloc(sizeof(GameState));
+    game_init(game_state);
+    
+    ViewPort* view_port = view_port_alloc();
+    view_port_draw_callback_set(view_port, draw_callback, game_state);
+    view_port_input_callback_set(view_port, input_callback, event_queue);
+    
+    Gui* gui = furi_record_open(RECORD_GUI);
+    gui_add_view_port(gui, view_port, GuiLayerFullscreen);
+    
+    InputEvent event;
+    uint32_t last_enemy_move = furi_get_tick();
+    
+    while(1) {
+        if(furi_message_queue_get(event_queue, &event, 100) == FuriStatusOk) {
+            if(event.type == InputTypePress || event.type == InputTypeRepeat) {
+                if(game_state->show_menu) {
+                    if(event.key == InputKeyOk) {
+                        game_state->show_menu = false;
+                        game_state->game_active = true;
+                        generate_map(game_state);
+                    } else if(event.key == InputKeyBack) {
+                        break;
+                    }
+                } else if(game_state->game_over) {
+                    if(event.key == InputKeyBack) {
+                        game_init(game_state);
+                    }
+                } else if(game_state->game_active) {
+                    if(event.key == InputKeyBack) {
+                        break;
+                    }
+                    
+                    switch(event.key) {
+                        case InputKeyUp:
+                            move_player(game_state, 0, -1);
+                            break;
+                        case InputKeyDown:
+                            move_player(game_state, 0, 1);
+                            break;
+                        case InputKeyLeft:
+                            move_player(game_state, -1, 0);
+                            break;
+                        case InputKeyRight:
+                            move_player(game_state, 1, 0);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                
+                view_port_update(view_port);
+            }
+        }
+        
+        if(game_state->game_active && !game_state->game_over) {
+            uint32_t current_tick = furi_get_tick();
+            if(current_tick - last_enemy_move >= 1000) {
+                move_enemies(game_state);
+                last_enemy_move = current_tick;
+                view_port_update(view_port);
+            }
+        }
+    }
+    
+    gui_remove_view_port(gui, view_port);
+    furi_record_close(RECORD_GUI);
+    view_port_free(view_port);
+    furi_message_queue_free(event_queue);
+    free(game_state);
+    
+    return 0;
+}
