@@ -510,6 +510,13 @@
             <div class="character-price">$250</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('phantom')">INFO</button>
         </div>
+        <div class="character-card" onclick="selectCharacter('boxer')" id="boxerCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#dc2626,#7f1d1d);box-shadow:0 0 20px rgba(220,38,38,.9);"></div>
+            <div class="character-name">Boxer</div>
+            <div class="character-ability">High damage up close!<br>R: Power Dash — dash<br>into enemies with damage</div>
+            <div class="character-price">$500</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('boxer')">INFO</button>
+        </div>
         <div class="character-card" onclick="selectCharacter('fire')" id="fireCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#ff4500,#7f1d1d);box-shadow:0 0 20px rgba(255,69,0,.9);"></div>
             <div class="character-name">Fire Ball</div>
@@ -640,6 +647,13 @@
         <img id="playerSkinOverlay" width="40" height="40" referrerpolicy="no-referrer" alt="" />
         <div id="deathFeed"></div>
         <div id="adminKeys"></div>
+    </div>
+    <div id="bossHealthBar" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);width:400px;background:rgba(0,0,0,0.8);border:3px solid #dc2626;border-radius:8px;padding:8px;z-index:100;">
+        <div style="color:#fbbf24;font-weight:bold;font-size:14px;margin-bottom:4px;">👹 THE FIRST TRIANGLE</div>
+        <div style="background:rgba(0,0,0,0.5);border-radius:4px;height:20px;overflow:hidden;border:1px solid #dc2626;">
+            <div id="bossHealthFill" style="background:linear-gradient(90deg,#ef4444,#dc2626);height:100%;width:100%;transition:width 0.1s;"></div>
+        </div>
+        <div style="color:#fca5a5;font-size:11px;margin-top:4px;text-align:center;" id="bossHealthText">1000/1000</div>
     </div>
     <div id="hud">
         <div class="stat-box"><div class="stat-label">LEVEL</div><div class="stat-value" id="level">1</div></div>
@@ -829,6 +843,7 @@ const CHARACTERS = {
     technoblade: { color:'#7c3aed', shadow:'#a855f7', projColor:'#c084fc', ability:'bloodgod',    manaCost:150, cdMax:0,   useImg:true, msgNormal:'was slain by Technoblade',   msgSpecial:'was slaughtered by Technoblade' },
     admin:       { color:'#ff0000', shadow:'#ffffff', projColor:'#ffffff', ability:'admin_burst', manaCost:0,   cdMax:0,   useImg:false, isAdmin:true, isVampire:true,
                    msgNormal:'was deleted by The Admin', msgSpecial:'was banned by The Admin' },
+    boxer:       { color:'#dc2626', shadow:'#991b1b', projColor:'#fca5a5', ability:'dashpunch',    manaCost:25,  cdMax:120, useImg:false, isBoxer:true },
 };
 
 const ADMIN_ABILITIES = [
@@ -848,7 +863,7 @@ const ADMIN_CDS    = [60,90,120,100,180,20,300,600,45];
 const PRICES = {
     default:0, goldhoarder:0, vampire:0, builder:0,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
-    fire:500, ice:1000, electric:2500,
+    fire:500, ice:1000, electric:2500, boxer:500,
     wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000
 };
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
@@ -898,6 +913,7 @@ function resetPlayerObj() {
 function getProjectileDamage() {
     if (CHARACTERS[currentCharacter].isMachineGun) return 1;
     if (CHARACTERS[currentCharacter].isGoldHoarder) return GH_DAMAGE;
+    if (CHARACTERS[currentCharacter].isBoxer) return player.damage * 2;
     return player.damage;
 }
 
@@ -1556,12 +1572,18 @@ class Projectile {
 
 class Enemy {
     constructor(x,y,type='normal') {
-        this.x=x; this.y=y; this.type=type; this.radius=type==='boss'?30:15;
-        this.speed=type==='boss'?1.5:2+Math.random(); this.health=type==='boss'?50:20;
-        this.maxHealth=this.health; this.damage=type==='boss'?20:10;
-        this.expValue=type==='boss'?50:10; this.color=type==='boss'?'#dc2626':'#ef4444';
+        this.x=x; this.y=y; this.type=type; 
+        this.radius=type==='boss'?30:(type==='triangle'?12:15);
+        this.speed=type==='boss'?1.5:(type==='triangle'?3.5:2+Math.random()); 
+        this.health=type==='boss'?50:(type==='triangle'?15:20);
+        this.maxHealth=this.health; 
+        this.damage=type==='boss'?20:(type==='triangle'?12:10);
+        this.expValue=type==='boss'?50:(type==='triangle'?15:10); 
+        this.color=type==='boss'?'#dc2626':(type==='triangle'?'#7c3aed':'#ef4444');
         this.alive=true; this.frozen=0; this.name=randName();
         this.isBoss = type==='boss';
+        this.isTriangle = type==='triangle';
+        this.rotation = Math.random() * Math.PI * 2;
     }
     update(dt=1) {
         if(this.frozen>0){this.frozen-=dt;return;}
@@ -1624,7 +1646,23 @@ class Enemy {
         ctx.save(); ctx.shadowBlur=20;
         if(this.frozen>0){ctx.shadowColor='#06b6d4';ctx.fillStyle='#67e8f9';}
         else{ctx.shadowColor=this.color;ctx.fillStyle=this.color;}
-        ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fill();
+        
+        if (this.isTriangle) {
+            // Draw triangle enemy
+            this.rotation += 0.05;
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.beginPath();
+            const s = this.radius;
+            ctx.moveTo(0, -s);
+            ctx.lineTo(s * 0.866, s * 0.5);
+            ctx.lineTo(-s * 0.866, s * 0.5);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fill();
+        }
+        
         if (this.isBoss) {
             ctx.fillStyle='#fbbf24'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
             ctx.fillText('BOSS',this.x,this.y-this.radius-4);
@@ -1634,6 +1672,156 @@ class Enemy {
             ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(bx,by,bw,bh);
             ctx.fillStyle='#22c55e'; ctx.fillRect(bx,by,bw*(this.health/this.maxHealth),bh);
         }
+        ctx.restore();
+    }
+}
+
+class Boss {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.health = 1000;
+        this.maxHealth = 1000;
+        this.radius = 35;
+        this.rotation = 0;
+        this.alive = true;
+        this.lastAttackTime = 0;
+        this.vertexAttackCooldown = 3000; // 3 seconds in ms
+        this.dashAttackCooldown = 0;
+        this.summonCooldown = 0;
+        this.dashInProgress = false;
+        this.dashTargetX = 0;
+        this.dashTargetY = 0;
+    }
+    
+    update(dt = 1) {
+        const ts = Date.now();
+        
+        // Always spin counter-clockwise
+        this.rotation -= 0.03 * dt;
+        
+        // Update attack cooldowns
+        this.lastAttackTime += dt;
+        if (this.dashAttackCooldown > 0) this.dashAttackCooldown -= dt;
+        if (this.summonCooldown > 0) this.summonCooldown -= dt;
+        
+        // Vertex attack every 3 seconds (all tiers)
+        if (this.lastAttackTime > this.vertexAttackCooldown / 16.67) {
+            this.fireVertexAttack();
+            this.lastAttackTime = 0;
+        }
+        
+        // Dash attack below 750 HP
+        if (this.health < 750 && this.dashAttackCooldown <= 0 && !this.dashInProgress) {
+            this.dashAttackCooldown = 4000; // 4 second cooldown
+            this.startDashAttack();
+        }
+        
+        // Handle dash movement
+        if (this.dashInProgress) {
+            const dx = this.dashTargetX - this.x;
+            const dy = this.dashTargetY - this.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 15) {
+                this.dashInProgress = false;
+                // Deal damage on impact
+                enemies.forEach(e => {
+                    if (!e.isBoss && !e.isTriangleMini) {
+                        const d = Math.hypot(e.x - this.x, e.y - this.y);
+                        if (d < 60) {
+                            e.health -= 25;
+                            if (e.health <= 0 && e.alive) { e.alive = false; player.kills++; gainExp(e.expValue); handleKill(e); }
+                        }
+                    }
+                });
+                if (Math.hypot(player.x - this.x, player.y - this.y) < 60 && player.invulnerable <= 0) {
+                    player.health -= 25;
+                    player.invulnerable = 30;
+                    updateHUD();
+                    if (player.health <= 0) endGame();
+                }
+            } else {
+                this.x += (dx / dist) * 5 * dt;
+                this.y += (dy / dist) * 5 * dt;
+                for (let i = 0; i < 2; i++) particles.push(new Particle(this.x + (Math.random() - 0.5) * 40, this.y + (Math.random() - 0.5) * 40, '#dc2626'));
+            }
+        }
+        
+        // Summon attack below 300 HP
+        if (this.health < 300 && this.summonCooldown <= 0) {
+            this.summonCooldown = 5000; // 5 second cooldown
+            this.spawnMiniTriangles();
+        }
+    }
+    
+    fireVertexAttack() {
+        // Fire 3 bullets from each vertex of the spinning triangle
+        for (let i = 0; i < 3; i++) {
+            const angle = this.rotation + (Math.PI * 2 / 3) * i;
+            const vx = this.x + Math.cos(angle) * this.radius;
+            const vy = this.y + Math.sin(angle) * this.radius;
+            
+            const bulletAngle = Math.atan2(player.y - vy, player.x - vx);
+            const bulletVx = Math.cos(bulletAngle) * 4;
+            const bulletVy = Math.sin(bulletAngle) * 4;
+            
+            bossBullets.push({
+                x: vx, y: vy, vx: bulletVx, vy: bulletVy, damage: 15, radius: 8, alive: true
+            });
+        }
+        for (let i = 0; i < 20; i++) {
+            particles.push(new Particle(this.x + (Math.random() - 0.5) * 80, this.y + (Math.random() - 0.5) * 80, '#dc2626'));
+        }
+    }
+    
+    startDashAttack() {
+        this.dashInProgress = true;
+        this.dashTargetX = player.x;
+        this.dashTargetY = player.y;
+    }
+    
+    spawnMiniTriangles() {
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 / 6) * i;
+            const x = this.x + Math.cos(angle) * 80;
+            const y = this.y + Math.sin(angle) * 80;
+            miniTriangles.push({
+                x: x, y: y, vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4,
+                rotation: 0, alive: true, radius: 10, health: 1
+            });
+        }
+        for (let i = 0; i < 40; i++) {
+            particles.push(new Particle(this.x, this.y, '#fca5a5'));
+        }
+    }
+    
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        
+        // Draw triangle
+        ctx.fillStyle = '#dc2626';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#dc2626';
+        ctx.beginPath();
+        const size = this.radius;
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size * 0.866, size * 0.5);
+        ctx.lineTo(-size * 0.866, size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Inner highlight
+        ctx.fillStyle = '#ef4444';
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.6);
+        ctx.lineTo(size * 0.52, size * 0.3);
+        ctx.lineTo(-size * 0.52, size * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
         ctx.restore();
     }
 }
@@ -1673,9 +1861,15 @@ class Item {
 function getDifficulty(){return Math.floor(currentRound/50);}
 function getSpawnCount(){return Math.min(1+getDifficulty(),8);}
 function getSpawnInterval(){return Math.max(1500-getDifficulty()*80,300);}
-function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:50+d*20,speed:1.5+d*0.1,damage:20+d*5};return{health:20+d*8,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
+function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:50+d*20,speed:1.5+d*0.1,damage:20+d*5};if(type==='triangle')return{health:15,speed:3.5,damage:12};return{health:20+d*8,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
 
 function spawnWave(){
+    // Check if we should spawn the boss
+    if(!bossSpawned && (veteranTier >= 4 || player.level >= 5)) {
+        spawnTheBoss();
+        return;
+    }
+    
     const count=getSpawnCount();
     for(let i=0;i<count;i++){
         setTimeout(()=>{
@@ -1685,13 +1879,22 @@ function spawnWave(){
             else if(side===1){x=canvas.width+30;y=Math.random()*canvas.height;}
             else if(side===2){x=Math.random()*canvas.width;y=canvas.height+30;}
             else{x=-30;y=Math.random()*canvas.height;}
-            const isBoss=Math.random()<Math.min(0.03+getDifficulty()*0.01,0.15)&&player.level>=3;
-            const type=isBoss?'boss':'normal';
+            
+            // Spawn triangle enemies if boss was defeated
+            const type = (triangleEnemyUnlocked && Math.random() < 0.3) ? 'triangle' : 'normal';
             const e=new Enemy(x,y,type);const stats=getEnemyStats(type);
             e.health=stats.health;e.maxHealth=stats.health;e.speed=stats.speed;e.damage=stats.damage;
             enemies.push(e);
         },i*120);
     }
+}
+
+function spawnTheBoss() {
+    if(currentBoss) return;
+    bossSpawned = true;
+    currentBoss = new Boss(canvas.width / 2, canvas.height / 2);
+    floatMoneyText('👹 THE FIRST TRIANGLE APPEARS!');
+    for(let i=0;i<100;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#dc2626'));
 }
 
 function shootProjectile(isAdmin=false){
@@ -1974,6 +2177,47 @@ function specialAttack(){
             floatMoneyText('🔥 INFERNO!');
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},800); break;
         }
+        case 'dashpunch': {
+            specialInProgress=true; autoFireEnabled=false;
+            const dx = mousePos.x - player.x;
+            const dy = mousePos.y - player.y;
+            const dist = Math.hypot(dx, dy);
+            const angle = dist > 0 ? Math.atan2(dy, dx) : 0;
+            const dashDist = 150;
+            const dashX = player.x + Math.cos(angle) * dashDist;
+            const dashY = player.y + Math.sin(angle) * dashDist;
+            const punchDmg = player.damage * 1.5;
+            
+            // Damage enemies in the path
+            enemies.forEach(e => {
+                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                if (d < dashDist + e.radius) {
+                    e.health -= punchDmg;
+                    if (e.health <= 0 && e.alive) { e.alive = false; player.kills++; gainExp(e.expValue); handleKill(e); }
+                    for(let i=0;i<12;i++) particles.push(new Particle(e.x, e.y, '#fca5a5'));
+                }
+            });
+            
+            // Dash animation
+            let dashProgress = 0;
+            const dashInterval = setInterval(() => {
+                if (!gameRunning) { clearInterval(dashInterval); return; }
+                dashProgress += 0.1;
+                if (dashProgress >= 1) {
+                    clearInterval(dashInterval);
+                    player.x = dashX;
+                    player.y = dashY;
+                    for(let i=0;i<40;i++) particles.push(new Particle(player.x, player.y, '#dc2626'));
+                    floatMoneyText('💪 POWER DASH!');
+                    specialInProgress = false; autoFireEnabled = true;
+                    return;
+                }
+                player.x = player.x + (dashX - player.x) * 0.15;
+                player.y = player.y + (dashY - player.y) * 0.15;
+                for(let i=0;i<5;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*40, player.y + (Math.random()-0.5)*40, '#fca5a5'));
+            }, 16);
+            break;
+        }
         case 'blizzard': {
             specialInProgress=true; autoFireEnabled=false;
             enemies.forEach(e=>{
@@ -2117,6 +2361,17 @@ function updateHUD(){
     document.getElementById('healthBar').style.width=(player.health/player.maxHealth*100)+'%';
     document.getElementById('manaBar').style.width=(player.mana/player.maxMana*100)+'%';
     document.getElementById('expBar').style.width=(player.exp/expToNextLevel*100)+'%';
+    
+    // Boss health bar
+    if (currentBoss && currentBoss.alive) {
+        document.getElementById('bossHealthBar').style.display='block';
+        const bossPercent = (currentBoss.health / currentBoss.maxHealth) * 100;
+        document.getElementById('bossHealthFill').style.width = bossPercent + '%';
+        document.getElementById('bossHealthText').textContent = Math.ceil(currentBoss.health) + '/' + currentBoss.maxHealth;
+    } else {
+        document.getElementById('bossHealthBar').style.display='none';
+    }
+    
     const sk=CHARACTERS[currentCharacter],rEl=document.getElementById('rReady'),rLabel=document.getElementById('rLabel');
     if(currentCharacter==='dream'||currentCharacter==='technoblade'||currentCharacter==='admin'){
         const tier=getDreamArmorTier(),nextTier=DREAM_ARMOR_TIERS[DREAM_ARMOR_TIERS.indexOf(tier)+1];
@@ -2593,6 +2848,8 @@ function resetGame(){
     cyborgMode='rapid';
     timeWizardSnapshot=null; timeWizardSnapshotTimer=0;
     lastNewCharShot=0;
+    // Boss reset
+    currentBoss=null; bossBullets=[]; miniTriangles=[]; bossSpawned=false; triangleEnemyUnlocked=false;
     passiveState={lifesteal:0,thorns:0,regen:0,manaflow:0,armor:0,magnet:0,explosive:0,crit:0,multishot:0,ghostly:0,goldmag:0,overclock:0,trishot:0,homingshot:0,novaleak:0,aimassist:0,novaHitCount:0,berserkerActive:false,berserkerTimer:0,timeslowActive:false,timeslowTimer:0,regenTimer:0,trishotTimer:0,homingTimer:0,blackholeActive:false,blackholeTimer:0};
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
@@ -3026,13 +3283,26 @@ function gameLoop(ts){
     }
     if(ts-lastEnemySpawn>getSpawnInterval()){spawnWave();lastEnemySpawn=ts;}
 
+    if (CHARACTERS[currentCharacter].isBoxer && gameRunning && !document.getElementById('levelUpNotice').classList.contains('show')) {
+        if (ts - boxerAuraLastHit > boxerAuraCooldown) {
+            enemies.forEach(e => {
+                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                if (d < boxerAuraRadius) {
+                    e.health -= player.damage;
+                    if (e.health <= 0 && e.alive) { e.alive = false; player.kills++; gainExp(e.expValue); handleKill(e); }
+                    for(let i=0;i<3;i++) particles.push(new Particle(e.x, e.y, '#fca5a5'));
+                }
+            });
+            boxerAuraLastHit = ts;
+        }
+    }
     if (CHARACTERS[currentCharacter].isGoldHoarder && gameRunning && !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (ts - mgLastShot > GH_FIRE_INTERVAL) { shootProjectile(); mgLastShot = ts; }
     }
     if (CHARACTERS[currentCharacter].isAdmin && gameRunning && !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (ts - mgLastShot > 80) { shootProjectile(true); mgLastShot = ts; }
     }
-    if (!CHARACTERS[currentCharacter].isMachineGun && !CHARACTERS[currentCharacter].isAdmin && !CHARACTERS[currentCharacter].isGoldHoarder && autoFireEnabled &&
+    if (!CHARACTERS[currentCharacter].isMachineGun && !CHARACTERS[currentCharacter].isAdmin && !CHARACTERS[currentCharacter].isGoldHoarder && !CHARACTERS[currentCharacter].isBoxer && autoFireEnabled &&
         !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (!tickNewCharAutoFire(ts, dt)) {
             const overclockMult = 1 - Math.min(passiveState.overclock * 0.25, 0.75);
@@ -3253,8 +3523,145 @@ function gameLoop(ts){
         return proj.alive;
     });
     enemies=enemies.filter(e=>{if(!e.alive)return false;e.update(dt);if(e.alive)e.draw();return e.alive;});
+    
+    // Boss handling
+    if (currentBoss && currentBoss.alive) {
+        currentBoss.update(dt);
+        currentBoss.draw();
+        
+        // Handle boss health from projectiles
+        projectiles = projectiles.filter(proj => {
+            if (currentBoss && !proj.alive) return false;
+            if (currentBoss && proj.alive && !currentBoss.dashInProgress) {
+                const d = Math.hypot(proj.x - currentBoss.x, proj.y - currentBoss.y);
+                if (d < currentBoss.radius + proj.radius) {
+                    currentBoss.health -= proj.damage;
+                    proj.alive = false;
+                    for(let i=0;i<10;i++) particles.push(new Particle(proj.x, proj.y, '#fbbf24'));
+                    if (currentBoss.health <= 0) {
+                        currentBoss.alive = false;
+                        triangleEnemyUnlocked = true;
+                        player.kills += 10;
+                        gainExp(500);
+                        floatMoneyText('👹 TRIANGLE DEFEATED! Triangle enemies unlocked!');
+                        for(let i=0;i<150;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#fbbf24'));
+                        currentBoss = null;
+                        bossBullets = [];
+                    }
+                    return false;
+                }
+            }
+            return true;
+        });
+        
+        // Handle boss bullets
+        bossBullets = bossBullets.filter(b => {
+            if (!b.alive) return false;
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+            
+            // Draw bullet
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#dc2626';
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            
+            // Check collision with player
+            if (Math.hypot(b.x - player.x, b.y - player.y) < b.radius + player.radius && player.invulnerable <= 0) {
+                let dmg = applyDreamArmor(b.damage);
+                dmg = applyPassiveIncomingDamage(dmg);
+                player.health -= dmg;
+                player.invulnerable = 30;
+                updateHUD();
+                if (player.health <= 0) endGame();
+                b.alive = false;
+                for(let i=0;i<15;i++) particles.push(new Particle(b.x, b.y, '#dc2626'));
+                return false;
+            }
+            
+            // Remove if off screen
+            if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
+                b.alive = false;
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Mini triangles
+        miniTriangles = miniTriangles.filter(mt => {
+            if (!mt.alive) return false;
+            mt.x += mt.vx * dt;
+            mt.y += mt.vy * dt;
+            mt.rotation += 0.1 * dt;
+            
+            // Draw mini triangle
+            ctx.save();
+            ctx.translate(mt.x, mt.y);
+            ctx.rotate(mt.rotation);
+            ctx.fillStyle = '#fca5a5';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#fca5a5';
+            ctx.beginPath();
+            const s = mt.radius;
+            ctx.moveTo(0, -s);
+            ctx.lineTo(s * 0.866, s * 0.5);
+            ctx.lineTo(-s * 0.866, s * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            // Check collision with player
+            if (Math.hypot(mt.x - player.x, mt.y - player.y) < mt.radius + player.radius && player.invulnerable <= 0) {
+                player.health -= 25;
+                player.invulnerable = 30;
+                updateHUD();
+                if (player.health <= 0) endGame();
+                mt.alive = false;
+                for(let i=0;i<15;i++) particles.push(new Particle(mt.x, mt.y, '#fca5a5'));
+                return false;
+            }
+            
+            // Remove if off screen
+            if (mt.x < -50 || mt.x > canvas.width + 50 || mt.y < -50 || mt.y > canvas.height + 50) {
+                mt.alive = false;
+                return false;
+            }
+            
+            // Check collision with projectiles
+            projectiles = projectiles.filter(proj => {
+                if (proj.alive && Math.hypot(proj.x - mt.x, proj.y - mt.y) < mt.radius + proj.radius) {
+                    mt.alive = false;
+                    proj.alive = false;
+                    for(let i=0;i<10;i++) particles.push(new Particle(mt.x, mt.y, '#fca5a5'));
+                    return false;
+                }
+                return true;
+            });
+            
+            return true;
+        });
+    }
+    
     items=items.filter(it=>{if(!it.alive)return false;it.update(dt);it.draw();return it.alive;});
     particles=particles.filter(p=>{if(p.life<=0)return false;p.update(dt);p.draw();return true;});
+    
+    // Draw Boxer aura
+    if(currentCharacter==='boxer') {
+        ctx.save();
+        ctx.strokeStyle='rgba(220,38,38,0.3)';
+        ctx.lineWidth=3;
+        ctx.setLineDash([6,4]);
+        ctx.beginPath();
+        ctx.arc(player.x,player.y,boxerAuraRadius,0,Math.PI*2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
 
     floatingTexts=floatingTexts.filter(ft=>{
         ft.y+=ft.vy*dt; ft.life-=dt;
@@ -3518,7 +3925,7 @@ canvas.addEventListener('mousedown',e=>{
         return;
     }
     if(currentCharacter==='pyromancer'&&gameRunning){pyroCharging=true;pyroChargeTimer=0;}
-    else if(gameRunning) shootProjectile(currentCharacter==='admin');
+    else if(currentCharacter!=='boxer'&&gameRunning) shootProjectile(currentCharacter==='admin');
 });
 canvas.addEventListener('mouseup',e=>{
     builderSelectedWall = null;
@@ -3540,6 +3947,16 @@ canvas.addEventListener('mouseup',e=>{
 
 // Replace old click handler — only fires for non-pyromancer
 canvas.removeEventListener('click', null);  // clean slate, mousedown handles it now
+
+let boxerAuraLastHit = 0;
+let boxerAuraRadius = 120;
+let boxerAuraCooldown = 200; // ms between hits
+
+let currentBoss = null;
+let bossBullets = [];
+let miniTriangles = [];
+let bossSpawned = false;
+let triangleEnemyUnlocked = false;
 
 let tutorialActive = false;
 let tutorialStep = 0;
@@ -3695,6 +4112,14 @@ const CHAR_INFO = {
         playstyle: 'Strategic defense. Build walls to funnel enemies into kill zones. Move walls mid-fight to adapt to new threats. Use Reinforce to protect critical walls.',
         tip: '💡 Tip: Build walls to create corridors, then position yourself to fire down the hallway. Reinforce walls that enemies are attacking repeatedly.',
     },
+    boxer: {
+        name: 'Boxer', tag: '$500 · Melee Rushdown', icon: '👊',
+        iconBg: 'linear-gradient(135deg,#dc2626,#991b1b)', iconGlow: '#ef4444',
+        stats: [{ label: 'Damage', value: '20 (2x)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Dash Damage', value: 'Hits all enemies in path' },{ label: 'Cooldown', value: '2 seconds per dash' },{ label: 'Price', value: '$500' }],
+        abilities: `<b>Passive — Close-Range Fighter:</b> Deal 2x normal damage. All projectiles are short-range but devastating at close quarters.<br><br><b>R — Power Dash (25 mana, 2s CD):</b> Dash forward in a straight line, damaging every enemy you pass through. The dash itself carries your full damage output.`,
+        playstyle: 'Aggressive melee character. Get close, spam shots, and use Power Dash to burst through clusters. You trade defense for raw output.',
+        tip: '💡 Tip: Master the dash range — it hits harder than shots but puts you in danger. Dash to escape when surrounded and deal damage simultaneously.',
+    },
     fire: {
         name: 'Fire Ball', tag: '$500 · Area Control', icon: '🔥',
         iconBg: 'linear-gradient(135deg,#ff4500,#7f1d1d)', iconGlow: '#ff4500',
@@ -3799,7 +4224,7 @@ function updateShopDisplay(){
     updateMoneyDisplay();
     document.querySelectorAll('.character-card').forEach(c=>c.classList.remove('selected'));
     const idx=CHARACTER_ORDER.indexOf(currentCharacter);if(idx>=0)document.querySelectorAll('.character-card')[idx].classList.add('selected');
-    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','wemmbu','eggchan','dream','technoblade','admin'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
+    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
 }
 function updateMcSkinClass(){
     if(['wemmbu','eggchan','dream','technoblade'].includes(currentCharacter))document.body.classList.add('mc-skin');
