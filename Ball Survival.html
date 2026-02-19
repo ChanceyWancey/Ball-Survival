@@ -54,8 +54,16 @@
         #characterShop {
             display: none; background: rgba(0,0,0,0.95); border-radius: 8px;
             padding: 40px; max-width: 1100px; border: 3px solid rgba(59,130,246,0.5);
-            max-height: 90vh; overflow-y: auto;
+            max-height: 90vh; overflow-y: auto; position: relative;
         }
+        #charShopBackBtn {
+            background: #3b82f6; color: white; border: none; border-bottom: 4px solid #1d4ed8;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            font-family: 'Arial', sans-serif; font-weight: bold;
+            transition: transform 0.1s; margin-top: 20px; display: inline-block;
+        }
+        #charShopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
+        #charShopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
         #characterShop::-webkit-scrollbar { width: 8px; }
         #characterShop::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
         #characterShop::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
@@ -459,10 +467,6 @@
     <button class="menu-btn" onclick="showCharacterShop()">Characters</button>
     <button class="menu-btn" onclick="startGame()">▶️ Play Game</button>
     <button class="menu-btn" onclick="showSettings(false)" style="background:#6b7280;border-bottom-color:#374151;">⚙️ Settings</button>
-    <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;">
-        <button class="menu-btn" onclick="exportSave()" style="font-size:10px;padding:10px 20px;min-width:160px;">💾 Export</button>
-        <button class="menu-btn" onclick="importSave()" style="font-size:10px;padding:10px 20px;min-width:160px;">📂 Import</button>
-    </div>
 </div>
 
 <div id="tutorial" style="display:none;"></div>
@@ -491,6 +495,13 @@
             <div class="character-ability">PASSIVE: Heal 8 HP<br>on every kill<br>No special ability</div>
             <div class="character-price">FREE</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('vampire')">INFO</button>
+        </div>
+        <div class="character-card" onclick="selectCharacter('builder')" id="builderCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#8b5a2b,#d2691e);box-shadow:0 0 20px rgba(160,82,45,.9);"></div>
+            <div class="character-name">The Builder</div>
+            <div class="character-ability">E: Move nearby walls!<br>Shift+Click: Build new<br>walls for defense<br>R: Reinforce — strengthen walls</div>
+            <div class="character-price">FREE</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('builder')">INFO</button>
         </div>
         <div class="character-card" onclick="selectCharacter('phantom')" id="phantomCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#0ea5e9,#1e1b4b);box-shadow:0 0 22px rgba(125,211,252,.8);"></div>
@@ -592,7 +603,9 @@
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('admin')">INFO</button>
         </div>
     </div>
-    <button class="menu-btn" onclick="backToMenu()">Back</button>
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="charShopBackBtn" onclick="backToMenu()">← Back</button>
+    </div>
 </div>
 
 <div id="infoModal" onclick="if(event.target===this)closeCharInfo()">
@@ -766,6 +779,7 @@
 
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="settings-reset-btn" onclick="resetKeybinds()">↺ Reset Keybinds</button>
+        <button class="settings-reset-btn" onclick="resetAllProgress()">🔄 Reset Progress</button>
         <button class="menu-btn" id="settingsBackBtn" onclick="closeSettings()" style="min-width:120px;padding:10px 20px;font-size:13px;">Back</button>
     </div>
 </div>
@@ -781,6 +795,7 @@ let currentCharacter = localStorage.getItem('ballRPGCurrentCharacter') || 'defau
 
 if (!unlockedCharacters.includes('goldhoarder')) { unlockedCharacters.push('goldhoarder'); savePersistentData(); }
 if (!unlockedCharacters.includes('vampire')) { unlockedCharacters.push('vampire'); savePersistentData(); }
+if (!unlockedCharacters.includes('builder')) { unlockedCharacters.push('builder'); savePersistentData(); }
 
 let gameRunning = false, keys = {}, mousePos = { x: 0, y: 0 };
 let roundTimer = 0, currentRound = 0;
@@ -799,6 +814,7 @@ const CHARACTERS = {
     default:     { color:'#3b82f6', shadow:'#3b82f6', projColor:'#3b82f6', ability:'veteran',    manaCost:20,  cdMax:0,   useImg:false, isVeteran:true },
     goldhoarder: { color:'#eab308', shadow:'#ca8a04', projColor:'#fbbf24', ability:'goldrush',    manaCost:40,  cdMax:0,   useImg:false, isGoldHoarder:true },
     vampire:     { color:'#7f1d1d', shadow:'#ef4444', projColor:'#b91c1c', ability:'none',        manaCost:0,   cdMax:0,   useImg:false, isVampire:true },
+    builder:     { color:'#a0522d', shadow:'#d2691e', projColor:'#8b6914', ability:'reinforce',  manaCost:30,  cdMax:120, useImg:false, isBuilder:true },
     phantom:     { color:'#7dd3fc', shadow:'#38bdf8', projColor:'#e0f2fe', ability:'ghostwalk',   manaCost:20,  cdMax:180, useImg:false, isPhantom:true },
     druid:       { color:'#16a34a', shadow:'#4ade80', projColor:'#bbf7d0', ability:'mushrooms',   manaCost:35,  cdMax:0,   useImg:false, isDruid:true },
     pyromancer:  { color:'#c2410c', shadow:'#fb923c', projColor:'#fed7aa', ability:'meteor',      manaCost:45,  cdMax:0,   useImg:false, isPyromancer:true },
@@ -830,7 +846,7 @@ let adminCooldowns = [0,0,0,0,0,0,0,0,0];
 const ADMIN_CDS    = [60,90,120,100,180,20,300,600,45];
 
 const PRICES = {
-    default:0, goldhoarder:0, vampire:0,
+    default:0, goldhoarder:0, vampire:0, builder:0,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500,
     wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000
@@ -950,6 +966,7 @@ let passiveState = {
     lifesteal: 0, thorns: 0, regen: 0, manaflow: 0, armor: 0,
     magnet: 0, explosive: 0, crit: 0, multishot: 0, ghostly: 0,
     goldmag: 0, overclock: 0, trishot: 0, homingshot: 0, novaleak: 0,
+    aimassist: 0,
     berserkerActive: false, berserkerTimer: 0,
     timeslowActive: false, timeslowTimer: 0,
     regenTimer: 0,
@@ -1180,6 +1197,9 @@ let timeWizardSnapshot = null;    // {health, ts} — last saved HP snapshot
 let timeWizardSnapshotTimer = 0;  // counts up to 5s (300f) to save new snapshot
 let druidShrooms = [];            // {x,y,timer,radius} — healing mushrooms
 let lastNewCharShot = 0;          // for custom fire rate on new chars
+let builderWalls = [];            // {x,y,w,h,hp,maxHp,reinforced} — walls for builder
+let builderMoveMode = false;      // builder is in move mode (E key)
+let builderSelectedWall = null;   // builder selected wall to move
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
@@ -1409,8 +1429,22 @@ function fireWithPassives(baseAngle) {
     const total = 1 + passiveState.multishot + passiveState.trishot;
     for(let i=1;i<total;i++) { angles.push(baseAngle + (i%2===0?1:-1)*0.18*Math.ceil(i/2)); }
     angles.forEach(a=>{
+        let finalAngle = a;
+        if(passiveState.aimassist >= 1 && Math.random() < 0.25 && enemies.length > 0) {
+            let nearest = null, nDist = Infinity;
+            enemies.forEach(e => {
+                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                if(d < nDist && d < 400) {
+                    nDist = d;
+                    nearest = e;
+                }
+            });
+            if(nearest) {
+                finalAngle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
+            }
+        }
         const dmg = applyPassiveDamageBoost(getProjectileDamage());
-        const p = new Projectile(player.x,player.y,a,dmg,col,false,false,sk.isMachineGun);
+        const p = new Projectile(player.x,player.y,finalAngle,dmg,col,false,false,sk.isMachineGun);
         if(sk.isAdmin) { p.isAdmin=true; p.hue=adminHue; }
         if(passiveState.homingshot>0) p.homing=true;
         projectiles.push(p);
@@ -1577,6 +1611,14 @@ class Enemy {
             this.alive=false;
             for(let i=0;i<20;i++) particles.push(new Particle(this.x,this.y,this.color));
         }
+        // Builder walls take damage from nearby enemies
+        for(let w of builderWalls) {
+            const dwDist = Math.hypot(this.x - (w.x + w.w/2), this.y - (w.y + w.h/2));
+            if(dwDist < this.radius + Math.max(w.w, w.h)/2) {
+                w.hp -= 1;
+                if(w.hp <= 0) builderWalls = builderWalls.filter(bw => bw !== w);
+            }
+        }
     }
     draw() {
         ctx.save(); ctx.shadowBlur=20;
@@ -1604,7 +1646,7 @@ class Particle {
 }
 
 class Item {
-    constructor(x,y,type){this.x=x;this.y=y;this.type=type;this.radius=8;this.alive=true;this.color=type==='health'?'#22c55e':'#8b5cf6';this.pulse=0;}
+    constructor(x,y,type){this.x=x;this.y=y;this.type=type;this.radius=8;this.alive=true;this.color=type==='health'?'#22c55e':type==='aimassist'?'#fbbf24':'#8b5cf6';this.pulse=0;}
     update(dt=1){
         this.pulse+=0.1*dt;
         const dx=player.x-this.x, dy=player.y-this.y, dist=Math.sqrt(dx*dx+dy*dy);
@@ -1615,14 +1657,20 @@ class Item {
         }
         if(dist < this.radius+player.radius){
             if(this.type==='health')player.health=Math.min(player.health+30,player.maxHealth);
-            else player.mana=Math.min(player.mana+20,player.maxMana);
+            else if(this.type==='aimassist'){
+                if(passiveState.aimassist < 1) {
+                    passiveState.aimassist = 1;
+                    floatMoneyText('🎯 AIM ASSIST ACTIVATED!');
+                    for(let i=0;i<30;i++)particles.push(new Particle(this.x,this.y,'#fbbf24'));
+                }
+            } else player.mana=Math.min(player.mana+20,player.maxMana);
             this.alive=false;updateHUD();
         }
     }
     draw(){const ps=Math.sin(this.pulse)*3;ctx.save();ctx.shadowBlur=20;ctx.shadowColor=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.radius+ps,0,Math.PI*2);ctx.fillStyle=this.color;ctx.fill();ctx.restore();}
 }
 
-function getDifficulty(){return Math.floor(currentRound/10);}
+function getDifficulty(){return Math.floor(currentRound/50);}
 function getSpawnCount(){return Math.min(1+getDifficulty(),8);}
 function getSpawnInterval(){return Math.max(1500-getDifficulty()*80,300);}
 function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:50+d*20,speed:1.5+d*0.1,damage:20+d*5};return{health:20+d*8,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
@@ -1891,6 +1939,25 @@ function specialAttack(){
             floatMoneyText(`⚔️ ${t.name}: ${t.label}!`);
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},500); break;
         }
+        case 'reinforce': {
+            if (!builderWalls.length) {
+                floatMoneyText('🏗️ No walls to reinforce!');
+                break;
+            }
+            let nearest = null, nDist = Infinity;
+            builderWalls.forEach(w => {
+                const d = Math.hypot(w.x + w.w/2 - player.x, w.y + w.h/2 - player.y);
+                if (d < nDist) { nDist = d; nearest = w; }
+            });
+            if (nearest) {
+                nearest.reinforced = true;
+                nearest.maxHp *= 2;
+                nearest.hp = nearest.maxHp;
+                for(let i=0;i<40;i++) particles.push(new Particle(nearest.x + nearest.w/2, nearest.y + nearest.h/2, '#d2691e'));
+                floatMoneyText('🏗️ Wall reinforced!');
+            }
+            break;
+        }
         case 'inferno': {
             specialInProgress=true; autoFireEnabled=false;
             enemies.forEach(e=>{
@@ -1969,6 +2036,9 @@ function dash(){
 
 function handleKill(e) {
     if(Math.random()<0.3)items.push(new Item(e.x,e.y,Math.random()<0.5?'health':'mana'));
+    if(passiveState.aimassist < 1 && Math.random() < 0.25) {
+        items.push(new Item(e.x, e.y, 'aimassist'));
+    }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     if(passiveState.lifesteal>0){ player.health=Math.min(player.health+passiveState.lifesteal,player.maxHealth); updateHUD(); }
     earnRunGold(1);
@@ -2413,6 +2483,27 @@ function drawWalls() {
         ctx.fillRect(w.x + w.w - 2, w.y, 2, w.h);
         ctx.restore();
     });
+    // Draw builder walls
+    builderWalls.forEach(w => {
+        ctx.save();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = w.reinforced ? 'rgba(210,105,30,0.6)' : 'rgba(160,82,45,0.5)';
+        ctx.fillStyle = w.reinforced ? '#d2691e' : '#a0522d';
+        ctx.fillRect(w.x, w.y, w.w, w.h);
+        // HP bar
+        const barW = w.w;
+        const barH = 4;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(w.x, w.y - 8, barW, barH);
+        const hpPct = w.hp / w.maxHp;
+        ctx.fillStyle = hpPct > 0.5 ? '#22c55e' : (hpPct > 0.25 ? '#fbbf24' : '#ef4444');
+        ctx.fillRect(w.x, w.y - 8, barW * hpPct, barH);
+        // Border
+        ctx.strokeStyle = w.reinforced ? 'rgba(255,165,0,0.8)' : 'rgba(210,105,30,0.6)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(w.x, w.y, w.w, w.h);
+        ctx.restore();
+    });
 }
 
 function resolveCircleWall(cx, cy, radius) {
@@ -2433,17 +2524,53 @@ function resolveCircleWall(cx, cy, radius) {
             else ny += (ny < w.y + w.h/2) ? -overlapY - radius : overlapY + radius;
         }
     });
+    // Builder walls collision
+    builderWalls.forEach(w => {
+        const nearX = Math.max(w.x, Math.min(w.x + w.w, nx));
+        const nearY = Math.max(w.y, Math.min(w.y + w.h, ny));
+        const dx = nx - nearX, dy = ny - nearY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < radius && dist > 0) {
+            const overlap = radius - dist;
+            nx += (dx / dist) * overlap;
+            ny += (dy / dist) * overlap;
+        } else if (dist === 0) {
+            const overlapX = (nx < w.x + w.w/2) ? (nx - w.x) : (w.x + w.w - nx);
+            const overlapY = (ny < w.y + w.h/2) ? (ny - w.y) : (w.y + w.h - ny);
+            if (overlapX < overlapY) nx += (nx < w.x + w.w/2) ? -overlapX - radius : overlapX + radius;
+            else ny += (ny < w.y + w.h/2) ? -overlapY - radius : overlapY + radius;
+        }
+    });
     return { x: nx, y: ny };
 }
 
 function projectileHitsWall(proj) {
     if (proj.isPhantom) return false; // phantom shots phase through walls
-    return walls.some(w => {
+    let hit = walls.some(w => {
         const nearX = Math.max(w.x, Math.min(w.x + w.w, proj.x));
         const nearY = Math.max(w.y, Math.min(w.y + w.h, proj.y));
         const dist = Math.hypot(proj.x - nearX, proj.y - nearY);
         return dist < proj.radius + 1;
     });
+    // Builder walls collision
+    if (!hit) {
+        hit = builderWalls.some(w => {
+            const nearX = Math.max(w.x, Math.min(w.x + w.w, proj.x));
+            const nearY = Math.max(w.y, Math.min(w.y + w.h, proj.y));
+            const dist = Math.hypot(proj.x - nearX, proj.y - nearY);
+            if (dist < proj.radius + 1) {
+                // Wall takes damage from projectile
+                w.hp -= 5;
+                if (w.hp <= 0) {
+                    builderWalls = builderWalls.filter(bw => bw !== w);
+                    for(let i=0;i<30;i++) particles.push(new Particle(w.x + w.w/2, w.y + w.h/2, '#d2691e'));
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+    return hit;
 }
 
 function resetGame(){
@@ -2466,7 +2593,7 @@ function resetGame(){
     cyborgMode='rapid';
     timeWizardSnapshot=null; timeWizardSnapshotTimer=0;
     lastNewCharShot=0;
-    passiveState={lifesteal:0,thorns:0,regen:0,manaflow:0,armor:0,magnet:0,explosive:0,crit:0,multishot:0,ghostly:0,goldmag:0,overclock:0,trishot:0,homingshot:0,novaleak:0,novaHitCount:0,berserkerActive:false,berserkerTimer:0,timeslowActive:false,timeslowTimer:0,regenTimer:0,trishotTimer:0,homingTimer:0,blackholeActive:false,blackholeTimer:0};
+    passiveState={lifesteal:0,thorns:0,regen:0,manaflow:0,armor:0,magnet:0,explosive:0,crit:0,multishot:0,ghostly:0,goldmag:0,overclock:0,trishot:0,homingshot:0,novaleak:0,aimassist:0,novaHitCount:0,berserkerActive:false,berserkerTimer:0,timeslowActive:false,timeslowTimer:0,regenTimer:0,trishotTimer:0,homingTimer:0,blackholeActive:false,blackholeTimer:0};
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -3336,20 +3463,65 @@ document.addEventListener('keydown',e=>{
         for(let i=0;i<20;i++) particles.push(new Particle(player.x, player.y, cyborgMode==='rapid'?'#38bdf8':'#c084fc'));
         updateHUD();
     }
+    // Builder wall move toggle (E key)
+    if(k === 'e' && currentCharacter === 'builder' && gameRunning) {
+        builderMoveMode = !builderMoveMode;
+        builderSelectedWall = null;
+        floatMoneyText(builderMoveMode ? '🏗️ MOVE MODE ON' : '🏗️ MOVE MODE OFF');
+        for(let i=0;i<15;i++) particles.push(new Particle(player.x, player.y, '#d2691e'));
+    }
     if(currentCharacter==='admin'&&gameRunning){
         const n=parseInt(e.key);
         if(n>=1&&n<=9)doAdminAbility(n-1);
     }
 });
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
-canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mousePos.x=e.clientX-r.left;mousePos.y=e.clientY-r.top;});
+canvas.addEventListener('mousemove',e=>{
+    const r=canvas.getBoundingClientRect();
+    mousePos.x=e.clientX-r.left;
+    mousePos.y=e.clientY-r.top;
+    // Builder move wall with mouse
+    if(currentCharacter==='builder' && gameRunning && builderMoveMode && builderSelectedWall) {
+        builderSelectedWall.x = mousePos.x - builderSelectedWall.w/2;
+        builderSelectedWall.y = mousePos.y - builderSelectedWall.h/2;
+    }
+});
 
 // Pyromancer charge shot — hold to charge, release to fire
 canvas.addEventListener('mousedown',e=>{
+    // Builder wall move
+    if(currentCharacter==='builder' && gameRunning && builderMoveMode) {
+        const r = canvas.getBoundingClientRect();
+        const mx = e.clientX - r.left;
+        const my = e.clientY - r.top;
+        // Find wall at mouse position
+        for(let w of builderWalls) {
+            if(mx >= w.x && mx <= w.x + w.w && my >= w.y && my <= w.y + w.h) {
+                builderSelectedWall = w;
+                break;
+            }
+        }
+        return;
+    }
+    // Builder build wall (Shift+Click)
+    if(currentCharacter==='builder' && gameRunning && e.shiftKey) {
+        if(builderWalls.length >= 8) {
+            floatMoneyText('🏗️ Max 8 walls!');
+            return;
+        }
+        const r = canvas.getBoundingClientRect();
+        const mx = e.clientX - r.left;
+        const my = e.clientY - r.top;
+        builderWalls.push({ x: mx-20, y: my-20, w: 40, h: 40, hp: 50, maxHp: 50, reinforced: false });
+        floatMoneyText('🏗️ Wall built!');
+        for(let i=0;i<20;i++) particles.push(new Particle(mx, my, '#d2691e'));
+        return;
+    }
     if(currentCharacter==='pyromancer'&&gameRunning){pyroCharging=true;pyroChargeTimer=0;}
     else if(gameRunning) shootProjectile(currentCharacter==='admin');
 });
 canvas.addEventListener('mouseup',e=>{
+    builderSelectedWall = null;
     if(currentCharacter==='pyromancer'&&gameRunning&&pyroCharging){
         pyroCharging=false;
         const pct=Math.min(pyroChargeTimer/180,1);
@@ -3515,6 +3687,14 @@ const CHAR_INFO = {
         playstyle: 'A beginner-friendly sustain character. Stay alive and keep killing. Pairs extremely well with the Lifesteal wave shop passive.',
         tip: '💡 Tip: The teleport dash is extremely powerful for escaping surrounded situations.',
     },
+    builder: {
+        name: 'The Builder', tag: 'Free · Wall Master', icon: '🧱',
+        iconBg: 'linear-gradient(135deg,#a0522d,#d2691e)', iconGlow: '#d2691e',
+        stats: [{ label: 'Damage', value: '10 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Wall HP', value: '50 per wall' },{ label: 'Max Walls', value: '8 active' },{ label: 'Price', value: 'FREE' }],
+        abilities: `<b>Passive — Construction:</b> Walls are permanent obstacles that enemies must navigate around. You can have up to 8 walls active at once.<br><br><b>E — Move Walls:</b> Hold E and click on a wall to pick it up and relocate it. Perfect for repositioning your defenses mid-fight.<br><br><b>Shift+Click — Build New Walls:</b> Hold Shift and click on the ground to build a new wall at that location (costs no resources).<br><br><b>R — Reinforce (30 mana, 2s CD):</b> Strengthens the nearest wall, doubling its durability and making it glow with power.`,
+        playstyle: 'Strategic defense. Build walls to funnel enemies into kill zones. Move walls mid-fight to adapt to new threats. Use Reinforce to protect critical walls.',
+        tip: '💡 Tip: Build walls to create corridors, then position yourself to fire down the hallway. Reinforce walls that enemies are attacking repeatedly.',
+    },
     fire: {
         name: 'Fire Ball', tag: '$500 · Area Control', icon: '🔥',
         iconBg: 'linear-gradient(135deg,#ff4500,#7f1d1d)', iconGlow: '#ff4500',
@@ -3606,7 +3786,13 @@ function showCharInfo(skin) {
 
 function showCharacterShop(){document.getElementById('mainMenu').style.display='none';document.getElementById('characterShop').style.display='block';updateShopDisplay();}
 function backToMenu(){document.getElementById('tutorial').style.display='none';document.getElementById('characterShop').style.display='none';document.getElementById('moneyPopup').classList.remove('show');document.getElementById('mainMenu').style.display='block';updateMoneyDisplay();}
-function startGame(){document.getElementById('mainMenu').style.display='none';document.getElementById('gameContainer').style.display='block';gameRunning=true;resetGame();requestAnimationFrame(gameLoop);}
+function startGame(){
+    document.getElementById('mainMenu').style.display='none';
+    document.getElementById('gameContainer').style.display='block';
+    gameRunning=true;
+    resetGame();
+    requestAnimationFrame(gameLoop);
+}
 function backToMainMenu(){document.getElementById('gameOver').style.display='none';document.getElementById('gameContainer').style.display='none';skinOverlay.style.display='none';document.getElementById('mainMenu').style.display='block';updateMoneyDisplay();}
 function updateMoneyDisplay(){document.getElementById('totalMoney').textContent=totalMoney;document.getElementById('shopMoney').textContent=totalMoney;}
 function updateShopDisplay(){
@@ -3626,64 +3812,19 @@ function selectCharacter(name){
 }
 function savePersistentData(){localStorage.setItem('ballRPGMoney',totalMoney);localStorage.setItem('ballRPGCharacters',JSON.stringify(unlockedCharacters));localStorage.setItem('ballRPGCurrentCharacter',currentCharacter);}
 
-function exportSave(){
-    const d = {
-        totalMoney,
-        unlockedCharacters,
-        currentCharacter,
-        settings,
-        binds,
-        exportDate: new Date().toISOString(),
-        version: 2
-    };
-    const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'ball_survival_save.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert('Save exported! (includes settings & keybinds)');
-}
-
-function importSave(){
-    const input = document.createElement('input');
-    input.type = 'file'; input.accept = 'application/json';
-    input.onchange = e => {
-        const file = e.target.files[0]; if(!file) return;
-        const r = new FileReader();
-        r.onload = ev => {
-            try {
-                const d = JSON.parse(ev.target.result);
-                if(typeof d.totalMoney === 'number' && Array.isArray(d.unlockedCharacters) && typeof d.currentCharacter === 'string'){
-                    totalMoney = d.totalMoney;
-                    unlockedCharacters = d.unlockedCharacters;
-                    currentCharacter = d.currentCharacter;
-                    if(!unlockedCharacters.includes('goldhoarder')) unlockedCharacters.push('goldhoarder');
-                    if(!unlockedCharacters.includes('vampire')) unlockedCharacters.push('vampire');
-
-                    if(d.settings && typeof d.settings === 'object') {
-                        settings = { ...DEFAULT_SETTINGS, ...d.settings };
-                        localStorage.setItem('ballSurvivalSettings', JSON.stringify(settings));
-                    }
-                    if(d.binds && typeof d.binds === 'object') {
-                        binds = { ...DEFAULT_BINDS, ...d.binds };
-                        localStorage.setItem('ballSurvivalBinds', JSON.stringify(binds));
-                    }
-
-                    savePersistentData();
-                    applySettings();
-                    updateMoneyDisplay();
-                    updateMcSkinClass();
-                    const hasSettings = d.settings || d.binds;
-                    alert('Save imported!' + (hasSettings ? ' (settings & keybinds restored)' : ''));
-                } else {
-                    alert('Invalid save file!');
-                }
-            } catch(err) { alert('Error: ' + err.message); }
-        };
-        r.readAsText(file);
-    };
-    input.click();
+function resetAllProgress(){
+    if(confirm('Are you sure you want to reset ALL progress? This cannot be undone!')){
+        localStorage.clear();
+        totalMoney = 0;
+        unlockedCharacters = ['default', 'goldhoarder', 'vampire', 'builder'];
+        currentCharacter = 'default';
+        savePersistentData();
+        updateMoneyDisplay();
+        updateShopDisplay();
+        updateMcSkinClass();
+        alert('Progress reset! The page will reload.');
+        location.reload();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
