@@ -679,7 +679,7 @@
         </div>
         <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-value" id="hudMoney" style="color:#fbbf24;">0</div></div>
     </div>
-    <div id="controls">WASD: Move | SPACE: Dash | Click: Shoot | R: Special | F11: Fullscreen | Shop opens every 50 waves!</div>
+    <div id="controls">WASD: Move | SPACE: Dash | Click: Shoot | R: Special | F11: Fullscreen | Shop opens every 25 waves!</div>
 </div>
 
 <div id="tutorialOverlay">
@@ -3274,8 +3274,8 @@ function gameLoop(ts){
     }
 
     roundTimer+=dt;if(roundTimer>=120){currentRound++;roundTimer=0;
-        if(currentRound>0 && currentRound%50===0) earnMoney(25,`wave ${currentRound} milestone`);
-        if(currentRound>0 && currentRound%50===0 && currentRound!==lastShopWave) {
+        if(currentRound>0 && currentRound%25===0) earnMoney(25,`wave ${currentRound} milestone`);
+        if(currentRound>0 && currentRound%25===0 && currentRound!==lastShopWave) {
             lastShopWave=currentRound;
             openWaveShop(currentRound);
             return;
