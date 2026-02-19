@@ -167,6 +167,77 @@
         .death-msg .victim { color: #ffff55; }
         .death-msg .killer { color: #55ffff; }
 
+        #tutorialOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2500;
+        }
+        #tutorialPanel {
+            background: rgba(15,23,42,0.98);
+            border-radius: 10px;
+            border: 3px solid rgba(59,130,246,0.8);
+            padding: 24px 28px;
+            max-width: 520px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(15,23,42,0.9);
+            text-align: left;
+        }
+        #tutorialTitle {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            font-weight: bold;
+        }
+        #tutorialBody {
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 18px;
+        }
+        #tutorialHint {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 14px;
+        }
+        #tutorialButtons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .tutorial-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .tutorial-btn.primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .tutorial-btn.primary:hover {
+            background: #2563eb;
+        }
+        .tutorial-btn.ghost {
+            background: transparent;
+            color: #e5e7eb;
+            border: 1px solid rgba(148,163,184,0.7);
+        }
+        .tutorial-btn.ghost:hover {
+            background: rgba(15,23,42,0.8);
+        }
+        .tutorial-highlight {
+            position: relative;
+            z-index: 2600;
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.9), 0 0 25px rgba(250,204,21,0.8);
+            border-radius: 8px;
+            transition: box-shadow 0.2s;
+        }
+
         #moneyPopup {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
             background: rgba(0,0,0,0.95); border: 3px solid #fbbf24; border-radius: 8px;
@@ -394,36 +465,7 @@
     </div>
 </div>
 
-<div id="tutorial">
-    <h2>HOW TO PLAY</h2>
-    <div class="tutorial-section">
-        <h3>🎮 Controls</h3>
-        <p>• WASD / Arrow Keys — Move</p>
-        <p>• Mouse — Aim (auto-fires)</p>
-        <p>• Left Click — Manual shoot</p>
-        <p>• SPACE — Dash toward mouse</p>
-        <p>• R — Special ability</p>
-        <p>• 1-9 — Admin abilities (Admin only!)</p>
-        <p>• F11 / ⛶ Button — Fullscreen</p>
-    </div>
-    <div class="tutorial-section">
-        <h3>⭐ Objective</h3>
-        <p>• Survive waves of enemies</p>
-        <p>• Kill enemies to gain EXP</p>
-        <p>• Level up and pick upgrades</p>
-        <p>• Grab green/purple pickups</p>
-    </div>
-    <div class="tutorial-section">
-        <h3>💰 Ways to Earn Money</h3>
-        <p>• $1 per round survived (global currency)</p>
-        <p>• $5 per boss killed (global currency)</p>
-        <p>• $2 per 10 kills streak bonus</p>
-        <p>• $10 per level up / $50 at level 10</p>
-        <p>• 💰 1 Gold per kill (run currency for wave shop!)</p>
-        <p>• 🪙 Gold Hoarder character earns 5x ALL money (terrible fighter!)</p>
-    </div>
-    <button class="menu-btn" onclick="backToMenu()" style="margin-top:20px;">Back</button>
-</div>
+<div id="tutorial" style="display:none;"></div>
 
 <div id="characterShop">
     <h2>CHARACTER SHOP</h2>
@@ -611,6 +653,18 @@
         <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-value" id="hudMoney" style="color:#fbbf24;">0</div></div>
     </div>
     <div id="controls">WASD: Move | SPACE: Dash | Click: Shoot | R: Special | F11: Fullscreen | Shop opens every 50 waves!</div>
+</div>
+
+<div id="tutorialOverlay">
+    <div id="tutorialPanel">
+        <div id="tutorialTitle"></div>
+        <div id="tutorialBody"></div>
+        <div id="tutorialHint"></div>
+        <div id="tutorialButtons">
+            <button class="tutorial-btn ghost" onclick="skipTutorial()">Skip tutorial</button>
+            <button class="tutorial-btn primary" onclick="nextTutorialStep()">Next</button>
+        </div>
+    </div>
 </div>
 
 <div id="levelUpNotice">
@@ -3315,7 +3369,79 @@ canvas.addEventListener('mouseup',e=>{
 // Replace old click handler — only fires for non-pyromancer
 canvas.removeEventListener('click', null);  // clean slate, mousedown handles it now
 
-function showTutorial(){document.getElementById('mainMenu').style.display='none';document.getElementById('tutorial').style.display='block';}
+let tutorialActive = false;
+let tutorialStep = 0;
+
+function showTutorial(){
+    document.getElementById('mainMenu').style.display='none';
+    document.getElementById('tutorial').style.display='none';
+    document.getElementById('gameContainer').style.display='block';
+    if (!gameRunning) {
+        gameRunning = true;
+        resetGame();
+        requestAnimationFrame(gameLoop);
+    }
+    startInteractiveTutorial();
+}
+
+function startInteractiveTutorial(){
+    tutorialActive = true;
+    tutorialStep = 0;
+    const overlay = document.getElementById('tutorialOverlay');
+    overlay.style.display = 'flex';
+    applyTutorialStep();
+}
+
+function applyTutorialStep(){
+    const titleEl = document.getElementById('tutorialTitle');
+    const bodyEl = document.getElementById('tutorialBody');
+    const hintEl = document.getElementById('tutorialHint');
+    const controls = document.getElementById('controls');
+    const hud = document.getElementById('hud');
+
+    [controls, hud].forEach(el => { if (el) el.classList.remove('tutorial-highlight'); });
+
+    if (tutorialStep === 0){
+        titleEl.textContent = 'Welcome to Ball Survival';
+        bodyEl.innerHTML = 'You are the blue ball in the arena. Survive as long as you can while enemies chase you.';
+        hintEl.textContent = 'Press Next to learn how to move.';
+    } else if (tutorialStep === 1){
+        titleEl.textContent = 'Movement';
+        bodyEl.innerHTML = 'Use WASD or the arrow keys to move around. Try moving in any direction now.';
+        hintEl.textContent = 'Move for a couple of seconds, then press Next.';
+    } else if (tutorialStep === 2){
+        titleEl.textContent = 'Aiming & Shooting';
+        bodyEl.innerHTML = 'Aim with your mouse. Your ball auto-fires toward the cursor, and you can also click to shoot manually.';
+        hintEl.textContent = 'Move the mouse around the arena and press Next when you are ready.';
+    } else if (tutorialStep === 3){
+        titleEl.textContent = 'Dash & Special';
+        bodyEl.innerHTML = 'Press SPACE to dash toward your mouse for a quick escape. Press R to use your character\'s special ability when it is READY.';
+        if (hud) hud.classList.add('tutorial-highlight');
+        hintEl.textContent = 'Watch the R KEY box in the HUD light up when your ability is ready.';
+    } else if (tutorialStep === 4){
+        titleEl.textContent = 'Upgrades & Gold';
+        bodyEl.innerHTML = 'Killing enemies grants EXP and gold. When you level up, choose upgrades. Between big waves, spend gold in the Wave Shop.';
+        hintEl.textContent = 'You can always pause with ESC or P and change settings.';
+    } else {
+        endTutorial();
+    }
+}
+
+function nextTutorialStep(){
+    if (!tutorialActive) return;
+    tutorialStep++;
+    applyTutorialStep();
+}
+
+function skipTutorial(){
+    endTutorial();
+}
+
+function endTutorial(){
+    tutorialActive = false;
+    const overlay = document.getElementById('tutorialOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
 function closeCharInfo() {
     document.getElementById('infoModal').classList.remove('open');
 }
