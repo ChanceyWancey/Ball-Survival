@@ -1575,7 +1575,7 @@ class Enemy {
         this.x=x; this.y=y; this.type=type; 
         this.radius=type==='boss'?30:(type==='triangle'?12:15);
         this.speed=type==='boss'?1.5:(type==='triangle'?3.5:2+Math.random()); 
-        this.health=type==='boss'?50:(type==='triangle'?15:20);
+        this.health=type==='boss'?10000:(type==='triangle'?150:200);
         this.maxHealth=this.health; 
         this.damage=type==='boss'?20:(type==='triangle'?12:10);
         this.expValue=type==='boss'?50:(type==='triangle'?15:10); 
@@ -1861,7 +1861,7 @@ class Item {
 function getDifficulty(){return Math.floor(currentRound/50);}
 function getSpawnCount(){return Math.min(1+getDifficulty(),8);}
 function getSpawnInterval(){return Math.max(1500-getDifficulty()*80,300);}
-function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:50+d*20,speed:1.5+d*0.1,damage:20+d*5};if(type==='triangle')return{health:15,speed:3.5,damage:12};return{health:20+d*8,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
+function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:10000+d*2000,speed:1.5+d*0.1,damage:20+d*5};if(type==='triangle')return{health:150,speed:3.5,damage:12};return{health:200+d*80,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
 
 function spawnWave(){
     // Check if we should spawn the boss
