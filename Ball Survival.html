@@ -3376,11 +3376,8 @@ function showTutorial(){
     document.getElementById('mainMenu').style.display='none';
     document.getElementById('tutorial').style.display='none';
     document.getElementById('gameContainer').style.display='block';
-    if (!gameRunning) {
-        gameRunning = true;
-        resetGame();
-        requestAnimationFrame(gameLoop);
-    }
+    // Pause gameplay while the tutorial overlay is open
+    gameRunning = false;
     startInteractiveTutorial();
 }
 
@@ -3441,6 +3438,13 @@ function endTutorial(){
     tutorialActive = false;
     const overlay = document.getElementById('tutorialOverlay');
     if (overlay) overlay.style.display = 'none';
+    // Start a fresh run after tutorial so the player can immediately play
+    document.getElementById('gameContainer').style.display='block';
+    if (!gameRunning) {
+        gameRunning = true;
+        resetGame();
+        requestAnimationFrame(gameLoop);
+    }
 }
 function closeCharInfo() {
     document.getElementById('infoModal').classList.remove('open');
