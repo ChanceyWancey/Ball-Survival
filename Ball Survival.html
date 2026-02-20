@@ -774,12 +774,12 @@
             <div class="character-price">$2345</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('dice')">INFO</button>
         </div>
-        <div class="character-card limited-card" onclick="selectCharacter('hakari')" id="hakariCharacter">
+        <div class="character-card limited-card" onclick="selectCharacter('hakari_v2')" id="hakariCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#ec4899,#7c3aed);box-shadow:0 0 20px rgba(236,72,153,.9);"></div>
             <div class="character-name">Hakari</div>
             <div class="character-ability">R: Domain Expansion<br>0 mana • Safe zone<br>Roll for JACKPOT → 4:11 immortality</div>
             <div class="character-price">$35000</div>
-            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('hakari')">INFO</button>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('hakari_v2')">INFO</button>
         </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
@@ -989,29 +989,54 @@ let gameRunning = false, keys = {}, mousePos = { x: 0, y: 0 };
 
 const ADMIN_ABILITIES = [
     { key:'1', name:'BURST',      icon:'💥', fn:'admin_burst',    mana:0  },
-    { key:'2', name:'EXPLOSION',  icon:'🔥', fn:'admin_explosion', mana:0  },
-    { key:'3', name:'FREEZE',     icon:'❄️', fn:'admin_freeze',    mana:0  },
-    { key:'4', name:'CHAIN ⚡',   icon:'⚡', fn:'admin_chain',     mana:0  },
-    { key:'5', name:'SLAM',       icon:'💢', fn:'admin_slam',      mana:0  },
-    { key:'6', name:'BOW',        icon:'🏹', fn:'admin_bow',       mana:0  },
-    { key:'7', name:'BLOOD GOD',  icon:'🩸', fn:'admin_bloodgod',  mana:0  },
-    { key:'8', name:'NUKE',       icon:'☢️', fn:'admin_nuke',      mana:0  },
+    // ... rest of ADMIN_ABILITIES ...
     { key:'9', name:'TELEPORT',   icon:'🌀', fn:'admin_teleport',  mana:0  },
 ];
 let adminCooldowns = [0,0,0,0,0,0,0,0,0];
 const ADMIN_CDS    = [60,90,120,100,180,20,300,600,45];
 
+// ══════════════════════════════════════════════════════════════════
+// CHARACTER DEFINITIONS
+// ══════════════════════════════════════════════════════════════════
+const CHARACTERS = {
+    default:     { name:'Veteran',      color:'#3b82f6', shadow:'#1e3a8a', projColor:'#60a5fa', ability:'veteran',        manaCost:20, cdMax:0, messageNormal:'was eliminated', msgSpecial:'was obliterated',   isVeteran:true,  useImg:false },
+    goldhoarder: { name:'GoldHoarder',  color:'#fbbf24', shadow:'#ca8a04', projColor:'#fbbf24', ability:'goldRush',       manaCost:40, cdMax:0, isGoldHoarder:true, useImg:false },
+    vampire:     { name:'Vampire',      color:'#ef4444', shadow:'#7f1d1d', projColor:'#ef4444', ability:null,             manaCost:0,  cdMax:0, isVampire:true,     useImg:false },
+    builder:     { name:'Builder',      color:'#d2691e', shadow:'#8b5a2b', projColor:'#a0522d', ability:'reinforce',      manaCost:30, cdMax:0, useImg:false },
+    phantom:     { name:'Phantom',      color:'#7dd3fc', shadow:'#0369a1', projColor:'#7dd3fc', ability:'ghostwalk',      manaCost:20, cdMax:180, isPhantom:true,   useImg:false },
+    pyromancer:  { name:'Pyromancer',   color:'#fb923c', shadow:'#c2410c', projColor:'#fb923c', ability:'meteor',         manaCost:45, cdMax:0, isPyromancer:true, useImg:false },
+    druid:       { name:'Druid',        color:'#4ade80', shadow:'#16a34a', projColor:'#4ade80', ability:'mushrooms',      manaCost:35, cdMax:0, isDruid:true,      useImg:false },
+    cyborg:      { name:'Cyborg',       color:'#38bdf8', shadow:'#0284c7', projColor:'#38bdf8', ability:'lasersweep',     manaCost:30, cdMax:0, isCyborg:true,     useImg:false },
+    timewizard:  { name:'TimeWizard',   color:'#d8b4fe', shadow:'#7c3aed', projColor:'#d8b4fe', ability:'rewindtime',     manaCost:60, cdMax:300, isTimeWizard:true, useImg:false },
+    fire:        { name:'FireBall',     color:'#ff4500', shadow:'#c2410c', projColor:'#ff4500', ability:'inferno',        manaCost:25, cdMax:0, useImg:false },
+    ice:         { name:'IceBall',      color:'#67e8f9', shadow:'#0891b2', projColor:'#67e8f9', ability:'blizzard',       manaCost:30, cdMax:0, useImg:false },
+    electric:    { name:'Tesla',        color:'#facc15', shadow:'#a855f7', projColor:'#facc15', ability:'overload',       manaCost:35, cdMax:0, isElectric:true,   useImg:false },
+    boxer:       { name:'Boxer',        color:'#fca5a5', shadow:'#dc2626', projColor:'#fca5a5', ability:'dashpunch',      manaCost:25, cdMax:0, useImg:false },
+    wemmbu:      { name:'Wemmbu',       color:'#a855f7', shadow:'#6d28d9', projColor:'#c084fc', ability:'groundslam',     manaCost:35, cdMax:0, useImg:true },
+    eggchan:     { name:'Eggchan',      color:'#ec4899', shadow:'#db2777', projColor:'#f472b6', ability:'bowshot',        manaCost:1,  cdMax:0, isMachineGun:true, useImg:true },
+    dream:       { name:'Dream',        color:'#22c55e', shadow:'#15803d', projColor:'#4ade80', ability:null,             manaCost:0,  cdMax:0, useImg:true },
+    technoblade: { name:'Technoblade',  color:'#7c3aed', shadow:'#5b21b6', projColor:'#a78bfa', ability:'bloodgod',       manaCost:150, cdMax:0, useImg:true },
+    admin:       { name:'Admin',        color:'#ffffff', shadow:'#ffffff', projColor:'#ffffff', ability:'admin',          manaCost:0,  cdMax:0, isAdmin:true,      useImg:false },
+    dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
+    hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
+};
+
+const SKIN_URLS = {
+    wemmbu: 'https://minotar.net/helm/8af6c50833d54861b5c2dce1c16c6fae/512.png',
+    eggchan: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSU8qswuWvs5n8CSTMft-2QFR9Y54APiJ3q1g&s',
+    dream: 'https://www.reddit.com/media?url=https%3A%2F%2Fpreview.redd.it%2For0519g00aj51.jpg%3Fwidth%3D256%26format%3Dpjpg%26auto%3Dwebp%26s%3De6698fcbd023cb5aa3cef7b634b795d218e0e564',
+    technoblade: 'https://static.wikia.nocookie.net/qsmp/images/d/d7/Techno.Icon.png/revision/latest/scale-to-width-down/250?cb=20230607213749',
+};
+
+let currentRound = 0, roundTimer = 0, killStreak = 0, sessionMoney = 0;
+
 const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari:35000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000
 };
 
-// Beta testers get free Hakari unlock
-if (!unlockedCharacters.includes('hakari')) {
-    unlockedCharacters.push('hakari');
-}
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
 
 const GH_DAMAGE = 3;
@@ -2274,7 +2299,7 @@ function specialAttack(){
     if(player.mana<sk.manaCost)return;
     if(sk.cdMax>0&&player.specialCooldown>0)return;
     if(specialInProgress&&sk.ability!=='bowshot')return;
-    player.mana-=sk.manaCost;
+    if(sk.ability==='domainexpansion'){player.mana=0;}else{player.mana-=sk.manaCost;}
     if(sk.cdMax>0)player.specialCooldown=sk.cdMax;
     switch(sk.ability){
         // ── PHANTOM — Ghost Walk ──────────────────────────────────
@@ -4718,7 +4743,7 @@ const CHAR_INFO = {
         playstyle: 'Pure randomness. Every run is completely different — even your stats start random. Every R press is a mystery: different mana cost, different cooldown, different ability. Adapt or die trying.',
         tip: '🎲 Tip: The ability pool is carefully balanced — you\'ll never get stuck with a useless ability. But mana/cooldown? That\'s the real gamble.',
     },
-    hakari: {
+    hakari_v2: {
         name: 'Hakari', tag: 'LIMITED · Domain Master', icon: '🎰',
         iconBg: 'linear-gradient(135deg,#ec4899,#7c3aed)', iconGlow: '#ec4899',
         stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Domain Duration', value: '60 seconds' },{ label: 'Domain Size', value: '200px safe zone (enemies can\'t enter)' },{ label: 'Jackpot Immortality', value: '4 min 11 sec (one-shot everything)' },{ label: 'Jackpot Chance', value: '5% base + 0.8% per roll (max 60 rolls)' },{ label: 'Price', value: 'LIMITED (FREE)' }],
