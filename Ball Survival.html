@@ -1644,7 +1644,11 @@ class Enemy {
     }
     draw() {
         ctx.save(); ctx.shadowBlur=20;
-        if(this.frozen>0){ctx.shadowColor='#06b6d4';ctx.fillStyle='#67e8f9';}
+        if(this.frozen>0){
+            // Custom frozen colors per character
+            if(CHARACTERS[currentCharacter].isGoldHoarder){ctx.shadowColor='#b8860b';ctx.fillStyle='#daa520';}
+            else{ctx.shadowColor='#06b6d4';ctx.fillStyle='#67e8f9';}
+        }
         else{ctx.shadowColor=this.color;ctx.fillStyle=this.color;}
         
         if (this.isTriangle) {
@@ -1864,8 +1868,14 @@ function getSpawnInterval(){return Math.max(1500-getDifficulty()*80,300);}
 function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:10000+d*2000,speed:1.5+d*0.1,damage:20+d*5};if(type==='triangle')return{health:150,speed:3.5,damage:12};return{health:200+d*80,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
 
 function spawnWave(){
-    // Check if we should spawn the boss
-    if(!bossSpawned && (veteranTier >= 4 || player.level >= 5)) {
+    // Spawn mini-bosses every 15 waves
+    if(currentRound > 0 && currentRound % 15 === 0 && currentRound % 50 !== 0) {
+        spawnMiniBosse();
+        return;
+    }
+    
+    // Check if we should spawn the main triangle boss every 50 waves
+    if(currentRound > 0 && currentRound % 50 === 0) {
         spawnTheBoss();
         return;
     }
@@ -1889,11 +1899,43 @@ function spawnWave(){
     }
 }
 
+function spawnMiniBosse() {
+    // Spawn a mini-boss (tougher enemy) every 15 waves
+    const side=Math.floor(Math.random()*4);let x,y;
+    if(side===0){x=Math.random()*canvas.width;y=-30;}
+    else if(side===1){x=canvas.width+30;y=Math.random()*canvas.height;}
+    else if(side===2){x=Math.random()*canvas.width;y=canvas.height+30;}
+    else{x=-30;y=Math.random()*canvas.height;}
+    
+    const miniBoss = new Enemy(x, y, 'normal');
+    const difficulty = getDifficulty();
+    miniBoss.health = 600 + difficulty * 300;
+    miniBoss.maxHealth = miniBoss.health;
+    miniBoss.speed = 2.5 + difficulty * 0.2;
+    miniBoss.damage = 20 + difficulty * 5;
+    miniBoss.radius = 22;
+    miniBoss.color = '#ff6b6b';
+    miniBoss.isMiniBoss = true;
+    miniBoss.name = '⚔️ Mini Boss';
+    enemies.push(miniBoss);
+    floatMoneyText(`⚔️ MINI-BOSS SPAWNED!`);
+}
+
 function spawnTheBoss() {
     if(currentBoss) return;
     bossSpawned = true;
+    const bossNumber = Math.floor(currentRound / 50);
+    const healthMult = 1 + (bossNumber - 1) * 0.5; // 1x, 1.5x, 2x, etc.
+    const speedMult = 1 + (bossNumber - 1) * 0.2;
+    const damageMult = 1 + (bossNumber - 1) * 0.4;
+    
     currentBoss = new Boss(canvas.width / 2, canvas.height / 2);
-    floatMoneyText('👹 THE FIRST TRIANGLE APPEARS!');
+    currentBoss.health = Math.round(10000 * healthMult);
+    currentBoss.maxHealth = currentBoss.health;
+    // Increase attack frequency at higher difficulties
+    currentBoss.vertexAttackCooldown = Math.max(1500, 3000 - bossNumber * 300);
+    
+    floatMoneyText(`👹 THE TRIANGLE #${bossNumber} APPEARS! (${Math.round(healthMult*100)}% HP)`);
     for(let i=0;i<100;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#dc2626'));
 }
 
@@ -1985,12 +2027,14 @@ function doGoldRush() {
     enemies.forEach(e => {
         const dx = e.x - player.x, dy = e.y - player.y;
         if (Math.sqrt(dx*dx + dy*dy) < rad) {
-            e.alive = false;
-            player.kills++;
-            gainExp(e.expValue);
-            const bonus = 10 + Math.floor(Math.random() * 10);
-            earnRunGold(bonus * GH_GOLD_MULT);
-            earnMoney(3, 'Gold Rush!');
+            e.isGoldForm = true;
+            e.originalColor = e.color;
+            e.originalHealth = e.health;
+            e.originalMaxHealth = e.maxHealth;
+            e.color = '#fbbf24';
+            e.health = e.maxHealth * 0.25; // 25% health
+            e.frozen = 120; // freeze for 2 seconds
+            e.goldFormTimer = 120; // 2 seconds
             converted++;
             for(let i=0;i<20;i++) particles.push(new Particle(e.x, e.y, '#fbbf24'));
             for(let i=0;i<10;i++) particles.push(new Particle(e.x, e.y, '#ca8a04'));
@@ -2001,7 +2045,7 @@ function doGoldRush() {
             particles.push(new Particle(player.x+Math.cos(a)*r, player.y+Math.sin(a)*r, '#fbbf24'));
         }
     }
-    if (converted > 0) floatMoneyText(`💰 ${converted} enemies converted!`);
+    if (converted > 0) floatMoneyText(`💰 ${converted} enemies turned to gold!`);
     else floatMoneyText('💸 Nothing in range...');
     updateHUD();
     setTimeout(()=>{ specialInProgress=false; autoFireEnabled=true; }, 600);
@@ -2137,7 +2181,7 @@ function specialAttack(){
             }
             if(veteranTier >= 2) enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<160)e.health-=dmg*0.5;});
             if(veteranTier >= 3) enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<250)e.frozen=90;});
-            if(veteranTier >= 4) enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<350){e.alive=false;player.kills++;gainExp(e.expValue);handleKill(e);}});
+            if(veteranTier >= 4) enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<350)e.health-=dmg*2;});
             for(let i=0;i<30+veteranTier*20;i++) particles.push(new Particle(player.x,player.y,t.color));
             floatMoneyText(`⚔️ ${t.name}: ${t.label}!`);
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},500); break;
@@ -2285,7 +2329,9 @@ function handleKill(e) {
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     if(passiveState.lifesteal>0){ player.health=Math.min(player.health+passiveState.lifesteal,player.maxHealth); updateHUD(); }
-    earnRunGold(1);
+    // Gold enemy bonus: 10x money
+    if(e.isGoldForm) { earnRunGold(10); earnMoney(10, 'gold enemy'); }
+    else { earnRunGold(1); }
     if(e.isBoss) { earnMoney(5, 'boss kill'); }
     killStreak++;
     if(killStreak % 10 === 0) {
@@ -3252,12 +3298,28 @@ function doChainLightning(srcX, srcY, dmg, maxTargets, exclude) {
     });
 }
 
+function tickGoldFormEnemies(dt) {
+    enemies.forEach(e => {
+        if (e.isGoldForm) {
+            e.goldFormTimer -= dt;
+            if (e.goldFormTimer <= 0) {
+                e.isGoldForm = false;
+                e.color = e.originalColor;
+                for(let i=0;i<10;i++) particles.push(new Particle(e.x, e.y, e.originalColor));
+            }
+        }
+    });
+}
+
 let lastTs = 0;
 function gameLoop(ts){
     if(!gameRunning)return;
     const rawDt = lastTs ? Math.min(ts - lastTs, 50) : 16.667;
     const dt = (rawDt / 16.667) * (settings ? settings.gameSpeed : 1);
     lastTs = ts;
+
+    // Call gold form tick function
+    tickGoldFormEnemies(dt);
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.strokeStyle='rgba(59,130,246,0.07)';ctx.lineWidth=1;
@@ -3278,6 +3340,11 @@ function gameLoop(ts){
         if(currentRound>0 && currentRound%25===0 && currentRound!==lastShopWave) {
             lastShopWave=currentRound;
             openWaveShop(currentRound);
+            return;
+        }
+        if(currentRound>=600) {
+            floatMoneyText('🏆 WAVE 600 REACHED! YOU WIN!');
+            endGame();
             return;
         }
     }
@@ -3328,6 +3395,7 @@ function gameLoop(ts){
     tickPassives(dt);
     tickVeteran(dt);
     tickFireEffects(dt);
+    tickGoldFormEnemies(dt);
     tickNewCharacters(ts, dt);
     turrets=turrets.filter(t=>{if(t.life<=0)return false;t.update(dt);t.draw();return true;});
     tickAirstrikes(dt);
@@ -3547,6 +3615,7 @@ function gameLoop(ts){
                         for(let i=0;i<150;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#fbbf24'));
                         currentBoss = null;
                         bossBullets = [];
+                        earnMoney(50, 'triangle boss defeated!');
                     }
                     return false;
                 }
