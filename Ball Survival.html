@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BALL SURVIVAL</title>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,6 +29,54 @@
             transition: background 0.2s;
         }
         #fsBtn:hover { background: rgba(59,130,246,0.3); }
+
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #loginContainer {
+            background: rgba(0,0,0,0.9);
+            border-radius: 8px;
+            padding: 60px;
+            text-align: center;
+            border: 3px solid rgba(59,130,246,0.5);
+            box-shadow: 0 0 50px rgba(59,130,246,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        #loginContainer h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #3b82f6;
+            text-shadow: 3px 3px 0px #1e3a8a;
+            font-weight: bold;
+        }
+        #loginForm, #registerForm {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #loginForm input, #registerForm input {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-family: 'Arial', sans-serif;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        #loginForm input:focus, #registerForm input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59,130,246,0.15);
+            box-shadow: 0 0 20px rgba(59,130,246,0.3);
+        }
+        #loginForm input::placeholder, #registerForm input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
 
         #mainMenu {
             background: rgba(0,0,0,0.9); border-radius: 8px; padding: 60px;
@@ -451,7 +500,44 @@
             background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
             justify-content: center; align-items: center;
         }
-        #infoModal.open { display: flex; }
+        #infoModal.open { display: flex; animation: fadeInBlur 0.3s ease-out; }
+        @keyframes fadeInBlur {
+            from { background: rgba(0,0,0,0); backdrop-filter: blur(0px); }
+            to { background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); }
+        }
+        #infoBox {
+            animation: popBounce 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes popBounce {
+            0% {
+                transform: scale(0) rotateZ(-15deg);
+                opacity: 0;
+            }
+            15% {
+                transform: scale(1.15) rotateZ(8deg);
+                opacity: 1;
+            }
+            30% {
+                transform: scale(0.95) rotateZ(-3deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.08) rotateZ(2deg);
+                opacity: 1;
+            }
+            65% {
+                transform: scale(0.98) rotateZ(-1deg);
+                opacity: 1;
+            }
+            80% {
+                transform: scale(1.02) rotateZ(0.5deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotateZ(0deg);
+                opacity: 1;
+            }
+        }
         #infoBox {
             background: rgba(10,12,28,0.98); border-radius: 12px;
             padding: 36px 40px; max-width: 520px; width: 90%;
@@ -528,6 +614,8 @@
 <body>
 
 <button id="fsBtn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+
+
 
 <div id="mainMenu">
     <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">The First Limited (Will Be Gone Next Friday)</p>
@@ -685,6 +773,13 @@
             <div class="character-ability">Random damage (10-150)!<br>Random stats each run!<br>R: Random Special ability</div>
             <div class="character-price">$2345</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('dice')">INFO</button>
+        </div>
+        <div class="character-card limited-card" onclick="selectCharacter('hakari')" id="hakariCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#ec4899,#7c3aed);box-shadow:0 0 20px rgba(236,72,153,.9);"></div>
+            <div class="character-name">Hakari</div>
+            <div class="character-ability">R: Domain Expansion<br>0 mana • Safe zone<br>Roll for JACKPOT → 4:11 immortality</div>
+            <div class="character-price">$35000</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('hakari')">INFO</button>
         </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
@@ -885,40 +980,12 @@ let totalMoney = parseInt(localStorage.getItem('ballRPGMoney')) || 0;
 let unlockedCharacters = JSON.parse(localStorage.getItem('ballRPGCharacters')) || ['default', 'goldhoarder'];
 let currentCharacter = localStorage.getItem('ballRPGCurrentCharacter') || 'default';
 
+// Remove beta tester free Hakari unlock
+if (unlockedCharacters.includes('hakari')) {
+    unlockedCharacters = unlockedCharacters.filter(c => c !== 'hakari');
+}
+
 let gameRunning = false, keys = {}, mousePos = { x: 0, y: 0 };
-let roundTimer = 0, currentRound = 0;
-let killStreak = 0;
-
-let sessionMoney = 0;
-
-const SKIN_URLS = {
-    wemmbu:      'https://minotar.net/helm/8af6c50833d54861b5c2dce1c16c6fae/512.png',
-    eggchan:     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSU8qswuWvs5n8CSTMft-2QFR9Y54APiJ3q1g&s',
-    dream:       'https://www.reddit.com/media?url=https%3A%2F%2Fpreview.redd.it%2For0519g00aj51.jpg%3Fwidth%3D256%26format%3Dpjpg%26auto%3Dwebp%26s%3De6698fcbd023cb5aa3cef7b634b795d218e0e564',
-    technoblade: 'https://static.wikia.nocookie.net/qsmp/images/d/d7/Techno.Icon.png/revision/latest/scale-to-width-down/250?cb=20230607213749',
-};
-
-const CHARACTERS = {
-    default:     { color:'#3b82f6', shadow:'#3b82f6', projColor:'#3b82f6', ability:'veteran',    manaCost:20,  cdMax:0,   useImg:false, isVeteran:true },
-    goldhoarder: { color:'#eab308', shadow:'#ca8a04', projColor:'#fbbf24', ability:'goldrush',    manaCost:40,  cdMax:0,   useImg:false, isGoldHoarder:true },
-    vampire:     { color:'#7f1d1d', shadow:'#ef4444', projColor:'#b91c1c', ability:'none',        manaCost:0,   cdMax:0,   useImg:false, isVampire:true },
-    builder:     { color:'#a0522d', shadow:'#d2691e', projColor:'#8b6914', ability:'reinforce',  manaCost:30,  cdMax:120, useImg:false, isBuilder:true },
-    phantom:     { color:'#7dd3fc', shadow:'#38bdf8', projColor:'#e0f2fe', ability:'ghostwalk',   manaCost:20,  cdMax:180, useImg:false, isPhantom:true },
-    druid:       { color:'#16a34a', shadow:'#4ade80', projColor:'#bbf7d0', ability:'mushrooms',   manaCost:35,  cdMax:0,   useImg:false, isDruid:true },
-    pyromancer:  { color:'#c2410c', shadow:'#fb923c', projColor:'#fed7aa', ability:'meteor',      manaCost:45,  cdMax:0,   useImg:false, isPyromancer:true },
-    cyborg:      { color:'#0ea5e9', shadow:'#7c3aed', projColor:'#bae6fd', ability:'lasersweep',  manaCost:30,  cdMax:0,   useImg:false, isCyborg:true },
-    timewizard:  { color:'#d8b4fe', shadow:'#a78bfa', projColor:'#f3e8ff', ability:'rewindtime',  manaCost:60,  cdMax:300, useImg:false, isTimeWizard:true },
-    fire:        { color:'#ef4444', shadow:'#ff6b00', projColor:'#ff4500', ability:'inferno',     manaCost:25,  cdMax:0,   useImg:false, isFire:true },
-    ice:         { color:'#67e8f9', shadow:'#06b6d4', projColor:'#e0f7ff', ability:'blizzard',    manaCost:30,  cdMax:0,   useImg:false, isIce:true },
-    electric:    { color:'#facc15', shadow:'#a855f7', projColor:'#fde68a', ability:'overload',    manaCost:35,  cdMax:0,   useImg:false, isElectric:true },
-    wemmbu:      { color:'#a855f7', shadow:'#a855f7', projColor:'#c084fc', ability:'groundslam',  manaCost:35,  cdMax:180, useImg:true, msgNormal:'was slain by Wemmbu',       msgSpecial:'was slammed by Wemmbu' },
-    eggchan:     { color:'#f9a8d4', shadow:'#ec4899', projColor:'#a78bfa', ability:'bowshot',     manaCost:1,   cdMax:0,   useImg:true, msgNormal:'was slain by Eggchan',       msgSpecial:'was shot by Eggchan' },
-    dream:       { color:'#22c55e', shadow:'#22c55e', projColor:'#4ade80', ability:'passive',     manaCost:0,   cdMax:0,   useImg:true, msgNormal:'was slain by Dream' },
-    technoblade: { color:'#7c3aed', shadow:'#a855f7', projColor:'#c084fc', ability:'bloodgod',    manaCost:150, cdMax:0,   useImg:true, msgNormal:'was slain by Technoblade',   msgSpecial:'was slaughtered by Technoblade' },
-    admin:       { color:'#ff0000', shadow:'#ffffff', projColor:'#ffffff', ability:'admin_burst', manaCost:0,   cdMax:0,   useImg:false, isAdmin:true, isVampire:true,
-                   msgNormal:'was deleted by The Admin', msgSpecial:'was banned by The Admin' },
-    dice:        { color:'#f97316', shadow:'#ea580c', projColor:'#fbbf24', ability:'randomspecial', manaCost:0, cdMax:0, useImg:false, isDice:true, msgNormal:'was rolled by Dice' },
-};
 
 const ADMIN_ABILITIES = [
     { key:'1', name:'BURST',      icon:'💥', fn:'admin_burst',    mana:0  },
@@ -938,8 +1005,13 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari:35000
 };
+
+// Beta testers get free Hakari unlock
+if (!unlockedCharacters.includes('hakari')) {
+    unlockedCharacters.push('hakari');
+}
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
 
 const GH_DAMAGE = 3;
@@ -1295,6 +1367,14 @@ let builderWalls = [];            // {x,y,w,h,hp,maxHp,reinforced} — walls for
 let builderMoveMode = false;      // builder is in move mode (E key)
 let builderSelectedWall = null;   // builder selected wall to move
 
+// ── HAKARI domain state ──────────────────────────
+let hakariDomainActive = false;   // domain expansion is active
+let hakariDomainTimer = 0;        // frames remaining in domain (60 frames = 1 sec, so 3600 = 60 sec)
+let hakariRollTimer = 0;          // animation counter for rolling
+let hakariRollCount = 0;          // number of rolls so far
+let hakariJackpotTimer = 0;       // 4m 11s immortality (15060 frames at 60fps)
+let hakariJackpotActive = false;  // jackpot mode active (one-shot everything)
+
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
 
@@ -1554,7 +1634,7 @@ function earnRunGold(amount) {
 function earnMoney(amount, reason) {
     const mult = CHARACTERS[currentCharacter].isGoldHoarder ? GH_GOLD_MULT : 1;
     const actual = amount * mult;
-    totalMoney += actual;
+    totalMoney += actua
     sessionMoney += actual;
     savePersistentData();
     updateMoneyDisplay();
@@ -2435,11 +2515,11 @@ function specialAttack(){
             bloodGodAnnounce={timer:240};
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},800);break;
         case 'randomspecial': {
-            // Dice random special — pick a random ability (exclude Wemmbu, Technoblade, other Dice)
-            const excludeAbilities = ['groundslam', 'bloodgod', 'randomspecial', 'passive'];
+            // Dice random special — pick a random ability (exclude ones that need specific passives/setups)
+            // Excluded: ghostwalk (needs phantom phasing), rewindtime (needs snapshots), reinforce (builder walls), bowshot (eggchan only)
             const validAbilities = [
-                'ghostwalk', 'mushrooms', 'meteor', 'lasersweep', 'rewindtime',
-                'inferno', 'dashpunch', 'blizzard', 'overload', 'bowshot', 'reinforce'
+                'mushrooms', 'meteor', 'lasersweep',
+                'inferno', 'dashpunch', 'blizzard', 'overload', 'groundslam', 'bloodgod', 'veteran'
             ];
             
             // Random mana cost (1 to current maxMana)
@@ -2463,6 +2543,26 @@ function specialAttack(){
             sk.ability = 'randomspecial'; // restore original
             break;
         }
+        case 'domainexpansion': {
+            // HAKARI DOMAIN EXPANSION
+            if (hakariDomainActive) {
+                floatMoneyText('Domain already active!');
+                break;
+            }
+            
+            hakariDomainActive = true;
+            hakariDomainTimer = 3600; // 60 seconds = 3600 frames at 60fps
+            hakariRollCount = 0;
+            hakariRollTimer = 0;
+            hakariJackpotActive = false;
+            hakariJackpotTimer = 0;
+            
+            floatMoneyText('🎰 DOMAIN EXPANSION!');
+            for(let i=0;i<100;i++) particles.push(new Particle(player.x, player.y, '#ec4899'));
+            for(let r=30;r<200;r+=40) for(let a=0;a<Math.PI*2;a+=0.3) particles.push(new Particle(player.x+Math.cos(a)*r, player.y+Math.sin(a)*r, '#7c3aed'));
+            
+            break;
+        }
     }
     for(let i=0;i<15;i++)particles.push(new Particle(player.x,player.y,sk.color));
     updateHUD();
@@ -2471,13 +2571,13 @@ function specialAttack(){
 function dash(){
     if(player.dashCooldown>0)return;
     const sk = CHARACTERS[currentCharacter];
-    if(sk.isVampire || sk.isAdmin){
+    if(sk.isVampire || sk.isAdmin || sk.isDice){
         const oldX=player.x, oldY=player.y;
         player.x=Math.max(player.radius,Math.min(canvas.width-player.radius,mousePos.x));
         player.y=Math.max(player.radius,Math.min(canvas.height-player.radius,mousePos.y));
         player.dashCooldown=sk.isAdmin?30:60; player.invulnerable=15;
-        for(let i=0;i<25;i++)particles.push(new Particle(oldX,oldY,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:'#7f1d1d'));
-        for(let i=0;i<25;i++)particles.push(new Particle(player.x,player.y,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:'#ef4444'));
+        for(let i=0;i<25;i++)particles.push(new Particle(oldX,oldY,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:sk.isDice?'#f97316':'#7f1d1d'));
+        for(let i=0;i<25;i++)particles.push(new Particle(player.x,player.y,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:sk.isDice?'#ea580c':'#ef4444'));
     } else {
         const angle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
         player.x+=Math.cos(angle)*80;player.y+=Math.sin(angle)*80;
@@ -2523,15 +2623,30 @@ function gainExp(amount){
 function showLevelUp(){
     gameRunning=false;
     const dmgBtn = document.getElementById('damageUpgradeBtn');
-    if (CHARACTERS[currentCharacter].isMachineGun) {
+    const manaBtn = document.querySelector('.upgrade-btn[onclick*="mana"]');
+    const isDice = currentCharacter === 'dice';
+    const isMG = CHARACTERS[currentCharacter].isMachineGun;
+    
+    if (isMG || isDice) {
         dmgBtn.classList.add('disabled-upgrade');
-        dmgBtn.textContent = '🔒 Damage Locked (MG)';
-        dmgBtn.onclick = null;
+        dmgBtn.textContent = isDice ? '🎲 Damage Locked (Dice!)' : '🔒 Damage Locked (MG)';
+        dmgBtn.onclick = () => {};
     } else {
         dmgBtn.classList.remove('disabled-upgrade');
         dmgBtn.textContent = '⚔️ +5 Damage';
         dmgBtn.onclick = () => upgrade('damage');
     }
+    
+    if (isDice) {
+        manaBtn.classList.add('disabled-upgrade');
+        manaBtn.textContent = '🎲 Mana Locked (Dice!)';
+        manaBtn.onclick = () => {};
+    } else {
+        manaBtn.classList.remove('disabled-upgrade');
+        manaBtn.textContent = '💧 +20 Max Mana';
+        manaBtn.onclick = () => upgrade('mana');
+    }
+    
     document.getElementById('levelUpNotice').classList.add('show');
 }
 
@@ -3077,6 +3192,13 @@ function resetGame(){
     // Boss reset
     currentBoss=null; bossBullets=[]; miniTriangles=[]; bossSpawned=false; triangleEnemyUnlocked=false;
     passiveState={lifesteal:0,thorns:0,regen:0,manaflow:0,armor:0,magnet:0,explosive:0,crit:0,multishot:0,ghostly:0,goldmag:0,overclock:0,trishot:0,homingshot:0,novaleak:0,aimassist:0,novaHitCount:0,berserkerActive:false,berserkerTimer:0,timeslowActive:false,timeslowTimer:0,regenTimer:0,trishotTimer:0,homingTimer:0,blackholeActive:false,blackholeTimer:0};
+    // Hakari reset
+    hakariDomainActive = false;
+    hakariDomainTimer = 0;
+    hakariRollTimer = 0;
+    hakariRollCount = 0;
+    hakariJackpotActive = false;
+    hakariJackpotTimer = 0;
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -3528,7 +3650,7 @@ function gameLoop(ts){
             return;
         }
     }
-    if(ts-lastEnemySpawn>getSpawnInterval()){spawnWave();lastEnemySpawn=ts;}
+    if(!hakariDomainActive && ts-lastEnemySpawn>getSpawnInterval()){spawnWave();lastEnemySpawn=ts;}
 
     if (CHARACTERS[currentCharacter].isBoxer && gameRunning && !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (ts - boxerAuraLastHit > boxerAuraCooldown) {
@@ -3898,6 +4020,141 @@ function gameLoop(ts){
     
     items=items.filter(it=>{if(!it.alive)return false;it.update(dt);it.draw();return it.alive;});
     particles=particles.filter(p=>{if(p.life<=0)return false;p.update(dt);p.draw();return true;});
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // HAKARI DOMAIN EXPANSION LOGIC
+    // ═══════════════════════════════════════════════════════════════════
+    if (hakariDomainActive) {
+        // Pause enemy waves but keep gameplay running
+        hakariDomainTimer -= dt;
+        hakariRollTimer += dt;
+        
+        // Draw domain shield around player
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        const domainSize = 200;
+        const pulse = 0.3 + 0.2 * Math.sin(hakariRollTimer * 0.02);
+        ctx.strokeStyle = `rgba(236, 72, 153, ${pulse})`;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.arc(0, 0, domainSize, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Draw "DOMAIN" text
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ec4899';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ec4899';
+        ctx.fillText('🎰 DOMAIN EXPANSION 🎰', player.x, player.y - 220);
+        ctx.restore();
+        
+        // Draw roll count
+        ctx.save();
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#fbbf24';
+        ctx.fillText(`ROLLS: ${hakariRollCount}`, player.x, player.y - 190);
+        const timeLeft = Math.ceil(hakariDomainTimer / 60);
+        ctx.fillStyle = '#7c3aed';
+        ctx.shadowColor = '#7c3aed';
+        ctx.fillText(`TIME: ${timeLeft}s`, player.x, player.y - 160);
+        ctx.restore();
+        
+        // Rolling animation — spin text
+        if (hakariRollCount > 0) {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(hakariRollTimer * 0.05);
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ec4899';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ec4899';
+            ctx.fillText('🎰', 0, 30);
+            ctx.restore();
+        }
+        
+        // Auto-roll every ~1 second
+        if (Math.floor(hakariRollTimer / 60) > hakariRollCount && hakariRollCount < 60) {
+            hakariRollCount++;
+            // Random jackpot chance: increases slightly with each roll
+            const jackpotChance = 0.05 + (hakariRollCount * 0.008); // ~5% base, increases to ~53% by roll 60
+            if (Math.random() < jackpotChance) {
+                // JACKPOT HIT!
+                hakariJackpotActive = true;
+                hakariJackpotTimer = 15060; // 4m 11s = 251 seconds = 15060 frames at 60fps
+                hakariDomainActive = false; // exit domain
+                floatMoneyText('🎰 JACKPOT! IMMORTALITY UNLOCKED! 4:11 🎰');
+                for(let i=0;i<200;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#fbbf24'));
+                for(let i=0;i<200;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#ec4899'));
+            }
+        }
+        
+        // Time expired
+        if (hakariDomainTimer <= 0) {
+            hakariDomainActive = false;
+            floatMoneyText('⏱️ Domain time expired! No jackpot.');
+            for(let i=0;i<100;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*150, player.y + (Math.random()-0.5)*150, '#7c3aed'));
+        }
+        
+        // Return early to skip normal game updates while in domain
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // HAKARI JACKPOT IMMORTALITY
+    // ═══════════════════════════════════════════════════════════════════
+    if (hakariJackpotActive) {
+        hakariJackpotTimer -= dt;
+        
+        // Draw immortality aura
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        const auraRotation = Date.now() * 0.0005;
+        ctx.rotate(auraRotation);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(0, 0, player.radius + 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Draw jackpot countdown
+        const minLeft = Math.floor(hakariJackpotTimer / 3600);
+        const secLeft = Math.floor((hakariJackpotTimer % 3600) / 60);
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#fbbf24';
+        ctx.fillText(`🎰 IMMORTAL ${minLeft}:${secLeft.toString().padStart(2, '0')} 🎰`, player.x, player.y - 40);
+        ctx.restore();
+        
+        // Make all shots one-shot
+        projectiles.forEach(p => {
+            if (p.damage < player.damage * 50) {
+                p.damage = player.damage * 50; // one-shot damage
+            }
+        });
+        
+        // Invulnerability effect
+        player.invulnerable = Math.max(player.invulnerable, 1);
+        
+        // Time expired
+        if (hakariJackpotTimer <= 0) {
+            hakariJackpotActive = false;
+            floatMoneyText('⏰ Jackpot immortality ended!');
+        }
+    }
     
     // Draw Boxer aura
     if(currentCharacter==='boxer') {
@@ -4456,10 +4713,18 @@ const CHAR_INFO = {
     dice: {
         name: 'Dice', tag: '$2345 · Gambler\'s Paradise', icon: '🎲',
         iconBg: 'linear-gradient(135deg,#f97316,#ea580c)', iconGlow: '#fbbf24',
-        stats: [{ label: 'Damage', value: '10–150 (randomized per shot)' },{ label: 'Speed', value: '3–8 (randomized at start)' },{ label: 'Health', value: '80–175 (randomized at start)' },{ label: 'Dash', value: 'Teleport to mouse' },{ label: 'Price', value: '$2345' }],
-        abilities: `<b>Passive — Chaos Shots:</b> Every projectile deals random damage between 10–150. Your speed and max HP are randomized at the start of each run (3–8 speed, 80–175 max health).<br><br><b>R — Random Special:</b> Activates a random special ability from any other character (except Wemmbu and Technoblade). Could be Ghost Walk, Meteor, Laser Sweep, or anything else!`,
-        playstyle: 'Pure randomness. Every run is completely different. You might be slow and weak, or fast and overpowered. Roll the dice and adapt.',
-        tip: '🎲 Tip: 99% of gamblers quit right before they hit big. Keep rolling!',
+        stats: [{ label: 'Damage', value: '10–150 (randomized per shot)' },{ label: 'Speed', value: '3–8 (randomized at start)' },{ label: 'Health', value: '80–175 (randomized at start)' },{ label: 'Mana Cost', value: '1–max mana (random)' },{ label: 'Cooldown', value: '1–120 frames (random)' },{ label: 'Price', value: '$2345' }],
+        abilities: `<b>Passive — Chaos Shots:</b> Every projectile deals random damage between 10–150. Your speed and max HP are randomized at the start of each run (3–8 speed, 80–175 max health).<br><br><b>R — Random Special (Random mana/CD):</b> Activates a random ability guaranteed to work standalone. Each use costs random mana (1 to max) with random cooldown (1–120 frames). Possible abilities: Mushrooms, Meteor, Laser Sweep, Inferno, Dash Punch, Blizzard, Overload, Ground Slam, Blood God, or Veteran Burst. Never rolls abilities that need special character setups.`,
+        playstyle: 'Pure randomness. Every run is completely different — even your stats start random. Every R press is a mystery: different mana cost, different cooldown, different ability. Adapt or die trying.',
+        tip: '🎲 Tip: The ability pool is carefully balanced — you\'ll never get stuck with a useless ability. But mana/cooldown? That\'s the real gamble.',
+    },
+    hakari: {
+        name: 'Hakari', tag: 'LIMITED · Domain Master', icon: '🎰',
+        iconBg: 'linear-gradient(135deg,#ec4899,#7c3aed)', iconGlow: '#ec4899',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Domain Duration', value: '60 seconds' },{ label: 'Domain Size', value: '200px safe zone (enemies can\'t enter)' },{ label: 'Jackpot Immortality', value: '4 min 11 sec (one-shot everything)' },{ label: 'Jackpot Chance', value: '5% base + 0.8% per roll (max 60 rolls)' },{ label: 'Price', value: 'LIMITED (FREE)' }],
+        abilities: `<b>R — Domain Expansion (0 mana, no cooldown):</b> Creates a sacred domain around you for 60 seconds. Within the domain, you are completely safe — no enemies can enter. Waves automatically pause while in the domain.<br><br><b>Automatic Rolling:</b> Once in the domain, you begin rolling every second. Each roll has an increasing chance of landing a JACKPOT (5% base, +0.8% per roll, max 60 rolls = ~53% chance by end).<br><br><b>Jackpot Effect:</b> Hit a jackpot within the 60-second window to unlock 4 minutes and 11 seconds of IMMORTALITY. During this time, all your projectiles deal 50x damage (one-shot everything) and you are invulnerable. Waves resume immediately.`,
+        playstyle: 'High-risk gambling. Use Domain Expansion strategically when surrounded or at low health. Hope for a jackpot to become invincible for over 4 minutes and clean up the entire map. If you don\'t hit jackpot, you still got a breather but must survive normally after.',
+        tip: '🎰 Tip: Save Domain Expansion for when you\'re at moderate health with a big wave. The longer you stay in the domain, the higher your jackpot chances (rolls increment every second). A lucky jackpot turns the entire run into a victory lap.',
     },
 };
 
@@ -4508,11 +4773,35 @@ function updateMcSkinClass(){
     else document.body.classList.remove('mc-skin');
 }
 function selectCharacter(name){
-    if(!unlockedCharacters.includes(name)){if(totalMoney>=PRICES[name]){totalMoney-=PRICES[name];unlockedCharacters.push(name);currentCharacter=name;savePersistentData();updateShopDisplay();}else alert('Not enough money! The Admin costs $1,000,000,000!');}
-    else{currentCharacter=name;savePersistentData();updateShopDisplay();}
+    if(!unlockedCharacters.includes(name)){
+        const price = PRICES[name];
+        if(totalMoney >= price) {
+            // Show confirmation dialog for purchase
+            const charInfo = CHAR_INFO[name];
+            const charName = charInfo ? charInfo.name : name;
+            if(confirm(`Purchase ${charName} for $${price}?\n\nYour balance: $${totalMoney}`)) {
+                totalMoney -= price;
+                unlockedCharacters.push(name);
+                currentCharacter = name;
+                savePersistentData();
+                updateShopDisplay();
+                floatMoneyText(`✨ Unlocked: ${charName}!`);
+            }
+        } else {
+            alert(`Not enough money!\n\nNeed: $${price}\nYou have: $${totalMoney}`);
+        }
+    } else {
+        currentCharacter = name;
+        savePersistentData();
+        updateShopDisplay();
+    }
     updateMcSkinClass();
 }
-function savePersistentData(){localStorage.setItem('ballRPGMoney',totalMoney);localStorage.setItem('ballRPGCharacters',JSON.stringify(unlockedCharacters));localStorage.setItem('ballRPGCurrentCharacter',currentCharacter);}
+function savePersistentData(){
+    localStorage.setItem('ballRPGMoney',totalMoney);
+    localStorage.setItem('ballRPGCharacters',JSON.stringify(unlockedCharacters));
+    localStorage.setItem('ballRPGCurrentCharacter',currentCharacter);
+}
 
 function resetAllProgress(){
     if(confirm('Are you sure you want to reset ALL progress? This cannot be undone!')){
@@ -4533,7 +4822,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     updateMoneyDisplay();
     updateMcSkinClass();
+    document.getElementById('mainMenu').style.display = 'block';
 });
+
+
 </script>
 </body>
 </html>
