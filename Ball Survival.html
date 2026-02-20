@@ -1039,6 +1039,11 @@ const PRICES = {
 
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
 
+// Validate currentCharacter exists and is in unlocked characters, default to 'default' if not
+if (!unlockedCharacters.includes(currentCharacter) || !CHARACTERS[currentCharacter]) {
+    currentCharacter = 'default';
+}
+
 const GH_DAMAGE = 3;
 const GH_FIRE_INTERVAL = 700;
 const GH_SPREAD = 0.55;
@@ -1399,6 +1404,7 @@ let hakariRollTimer = 0;          // animation counter for rolling
 let hakariRollCount = 0;          // number of rolls so far
 let hakariJackpotTimer = 0;       // 4m 11s immortality (15060 frames at 60fps)
 let hakariJackpotActive = false;  // jackpot mode active (one-shot everything)
+let hakariJackpotCooldown = 0;    // cooldown after jackpot before domain can be released
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
@@ -1659,7 +1665,7 @@ function earnRunGold(amount) {
 function earnMoney(amount, reason) {
     const mult = CHARACTERS[currentCharacter].isGoldHoarder ? GH_GOLD_MULT : 1;
     const actual = amount * mult;
-    totalMoney += actua
+    totalMoney += actual;
     sessionMoney += actual;
     savePersistentData();
     updateMoneyDisplay();
@@ -2574,13 +2580,19 @@ function specialAttack(){
                 floatMoneyText('Domain already active!');
                 break;
             }
+            if (hakariJackpotActive) {
+                floatMoneyText('Cannot pop domain during jackpot!');
+                break;
+            }
+            if (hakariJackpotCooldown > 0) {
+                floatMoneyText(`Domain cooldown: ${Math.ceil(hakariJackpotCooldown/60)}s`);
+                break;
+            }
             
             hakariDomainActive = true;
             hakariDomainTimer = 3600; // 60 seconds = 3600 frames at 60fps
             hakariRollCount = 0;
             hakariRollTimer = 0;
-            hakariJackpotActive = false;
-            hakariJackpotTimer = 0;
             
             floatMoneyText('🎰 DOMAIN EXPANSION!');
             for(let i=0;i<100;i++) particles.push(new Particle(player.x, player.y, '#ec4899'));
@@ -2723,6 +2735,7 @@ function updateHUD(){
     }
     
     const sk=CHARACTERS[currentCharacter],rEl=document.getElementById('rReady'),rLabel=document.getElementById('rLabel');
+    if(!sk){currentCharacter='default';savePersistentData();return;}
     if(currentCharacter==='dream'||currentCharacter==='technoblade'||currentCharacter==='admin'){
         const tier=getDreamArmorTier(),nextTier=DREAM_ARMOR_TIERS[DREAM_ARMOR_TIERS.indexOf(tier)+1];
         if(rLabel)rLabel.textContent='ARMOR';rEl.style.fontSize='7px';rEl.style.color=tier.glow;rEl.textContent=tier.name;
@@ -2792,7 +2805,7 @@ function updateHUD(){
 
 function updateSkinOverlay(ts) {
     const sk = CHARACTERS[currentCharacter];
-    if (!sk.useImg || sk.isAdmin) { skinOverlay.style.display='none'; return; }
+    if (!sk || !sk.useImg || sk.isAdmin) { skinOverlay.style.display='none'; return; }
     const r = player.radius;
     skinOverlay.style.display = 'block';
     skinOverlay.style.left  = (player.x - r) + 'px';
@@ -3224,6 +3237,7 @@ function resetGame(){
     hakariRollCount = 0;
     hakariJackpotActive = false;
     hakariJackpotTimer = 0;
+    hakariJackpotCooldown = 0;
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -4108,12 +4122,13 @@ function gameLoop(ts){
         // Auto-roll every ~1 second
         if (Math.floor(hakariRollTimer / 60) > hakariRollCount && hakariRollCount < 60) {
             hakariRollCount++;
-            // Random jackpot chance: increases slightly with each roll
-            const jackpotChance = 0.05 + (hakariRollCount * 0.008); // ~5% base, increases to ~53% by roll 60
+            // Fixed jackpot chance: no pity system
+            const jackpotChance = 0.10; // 10% flat chance per roll
             if (Math.random() < jackpotChance) {
                 // JACKPOT HIT!
                 hakariJackpotActive = true;
                 hakariJackpotTimer = 15060; // 4m 11s = 251 seconds = 15060 frames at 60fps
+                hakariJackpotCooldown = 1200; // 20 second cooldown before domain can be popped again (1200 frames at 60fps)
                 hakariDomainActive = false; // exit domain
                 floatMoneyText('🎰 JACKPOT! IMMORTALITY UNLOCKED! 4:11 🎰');
                 for(let i=0;i<200;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#fbbf24'));
@@ -4178,6 +4193,11 @@ function gameLoop(ts){
         if (hakariJackpotTimer <= 0) {
             hakariJackpotActive = false;
             floatMoneyText('⏰ Jackpot immortality ended!');
+        }
+        
+        // Handle jackpot cooldown
+        if (hakariJackpotCooldown > 0) {
+            hakariJackpotCooldown -= dt;
         }
     }
     
@@ -4746,10 +4766,10 @@ const CHAR_INFO = {
     hakari_v2: {
         name: 'Hakari', tag: 'LIMITED · Domain Master', icon: '🎰',
         iconBg: 'linear-gradient(135deg,#ec4899,#7c3aed)', iconGlow: '#ec4899',
-        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Domain Duration', value: '60 seconds' },{ label: 'Domain Size', value: '200px safe zone (enemies can\'t enter)' },{ label: 'Jackpot Immortality', value: '4 min 11 sec (one-shot everything)' },{ label: 'Jackpot Chance', value: '5% base + 0.8% per roll (max 60 rolls)' },{ label: 'Price', value: 'LIMITED (FREE)' }],
-        abilities: `<b>R — Domain Expansion (0 mana, no cooldown):</b> Creates a sacred domain around you for 60 seconds. Within the domain, you are completely safe — no enemies can enter. Waves automatically pause while in the domain.<br><br><b>Automatic Rolling:</b> Once in the domain, you begin rolling every second. Each roll has an increasing chance of landing a JACKPOT (5% base, +0.8% per roll, max 60 rolls = ~53% chance by end).<br><br><b>Jackpot Effect:</b> Hit a jackpot within the 60-second window to unlock 4 minutes and 11 seconds of IMMORTALITY. During this time, all your projectiles deal 50x damage (one-shot everything) and you are invulnerable. Waves resume immediately.`,
-        playstyle: 'High-risk gambling. Use Domain Expansion strategically when surrounded or at low health. Hope for a jackpot to become invincible for over 4 minutes and clean up the entire map. If you don\'t hit jackpot, you still got a breather but must survive normally after.',
-        tip: '🎰 Tip: Save Domain Expansion for when you\'re at moderate health with a big wave. The longer you stay in the domain, the higher your jackpot chances (rolls increment every second). A lucky jackpot turns the entire run into a victory lap.',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Domain Duration', value: '60 seconds' },{ label: 'Domain Size', value: '200px safe zone (enemies can\'t enter)' },{ label: 'Jackpot Immortality', value: '4 min 11 sec (one-shot everything)' },{ label: 'Jackpot Chance', value: '10% per roll (FIXED)' },{ label: 'Jackpot Cooldown', value: '20 seconds after jackpot' }],
+        abilities: `<b>R — Domain Expansion (0 mana, no cooldown):</b> Creates a sacred domain around you for 60 seconds. Within the domain, you are completely safe — no enemies can enter. Waves automatically pause while in the domain. Cannot be activated during jackpot immortality.<br><br><b>Automatic Rolling:</b> Once in the domain, you begin rolling every second. Each roll has a FIXED 10% chance of landing a JACKPOT (no pity system — pure luck every time).<br><br><b>Jackpot Effect:</b> Hit a jackpot within the 60-second window to unlock 4 minutes and 11 seconds of IMMORTALITY. During this time, all your projectiles deal 50x damage (one-shot everything) and you are invulnerable. After jackpot ends, Domain Expansion has a 20-second cooldown before you can pop it again.`,
+        playstyle: 'High-risk gambling with no pity safety net. Use Domain Expansion strategically when surrounded or at low health. Each roll is a 10/100 lottery — some runs you hit immediately, others you never hit. If you don\'t hit jackpot within 60 seconds, you exit and must survive normally.',
+        tip: '🎰 Tip: The 10% roll makes it even more unpredictable than before. Pure luck means sometimes you hit on roll 1, sometimes never. Use domains when you can afford to lose time if you don\'t hit. After hitting jackpot, you\'ll have a 20-second vulnerability window before you can pop domain again.',
     },
 };
 
