@@ -60,7 +60,55 @@
             background: #3b82f6; color: white; border: none; border-bottom: 4px solid #1d4ed8;
             padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
             font-family: 'Arial', sans-serif; font-weight: bold;
-            transition: transform 0.1s; margin-top: 20px; display: inline-block;
+            transition: transform 0.1s;
+            position: fixed; bottom: 20px; right: 20px; z-index: 1001;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            animation: slideInFromRight 0.3s ease-out;
+            width: 100px;
+            text-align: center;
+            background: #3b82f6; border: none; border-bottom: 4px solid #1d4ed8;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            font-family: 'Arial', sans-serif; font-weight: bold;
+            transition: transform 0.1s;
+            position: fixed; bottom: 20px; right: 20px; z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        #charShopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
+        #charShopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
+        #shopBackBtn {
+            background: #3b82f6; color: white; border: none; border-bottom: 4px solid #1d4ed8;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            font-family: 'Arial', sans-serif; font-weight: bold;
+            transition: transform 0.1s;
+            position: fixed; bottom: 20px; right: 20px; z-index: 1001;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            animation: slideInFromRight 0.3s ease-out;
+            width: auto;
+            text-align: center;
+        }
+        #waveShop.show #shopBackBtn {
+            display: inline-block;
+        }
+        #waveShop::-webkit-scrollbar-track { background: transparent; }
+        #shopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
+        #shopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
+        #waveShopBackBtn {
+            background: #3b82f6; color: white; border: none; border-bottom: 4px solid #1d4ed8;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            font-family: 'Arial', sans-serif; font-weight: bold;
+            transition: transform 0.1s;
+            position: fixed; bottom: 20px; right: 20px; z-index: 1001;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            animation: slideInFromRight 0.3s ease-out;
+        }
+        #waveShopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
+        #waveShopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
+        @keyframes slideInFromRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         #charShopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
         #charShopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
@@ -69,10 +117,6 @@
         #characterShop::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         #characterShop h2 { font-size: 28px; color: #3b82f6; margin-bottom: 30px; text-align: center; font-weight: bold; }
         .character-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 30px; }
-        .character-card {
-            background: rgba(255,255,255,0.08); border-radius: 8px; padding: 18px;
-            text-align: center; border: 3px solid rgba(255,255,255,0.2); cursor: pointer; transition: all 0.2s;
-        }
         .character-card:hover { transform: scale(1.04); border-color: #3b82f6; }
         .character-card.selected { border-color: #22c55e; box-shadow: 0 0 20px rgba(34,197,94,0.4); }
         .character-card.locked { opacity: 0.5; cursor: not-allowed; }
@@ -1914,7 +1958,7 @@ class Item {
 
 function getDifficulty(){return Math.floor(currentRound/50);}
 function getSpawnCount(){
-    if(currentRound>=500 && currentRound<600) return Math.min(12+Math.floor((currentRound-500)/10),18); // 12-18 enemies in final waves
+    if(currentRound>=500 && currentRound<600) return 50; // 50 enemies total in final waves
     // Gradual difficulty from wave 50-499: scales from 1 to 8 enemies
     if(currentRound>=50 && currentRound<500) {
         const progress = (currentRound - 50) / 450; // 0 to 1 over waves 50-499
@@ -4268,26 +4312,26 @@ const CHAR_INFO = {
     phantom: {
         name: 'Phantom', tag: '$250 · Wall Phaser', icon: '👻',
         iconBg: 'linear-gradient(135deg,#0ea5e9,#1e1b4b)', iconGlow: '#7dd3fc',
-        stats: [{ label: 'Damage', value: '22 (10% bonus)' },{ label: 'Projectiles', value: 'Pierce through walls' },{ label: 'Phase Bonus', value: '+50% damage while phasing' },{ label: 'Cooldown', value: '3 seconds' },{ label: 'Price', value: '$250' }],
-        abilities: `<b>Passive — Ethereal Shots:</b> All projectiles pass directly through walls and terrain, opening unique attack angles enemies can't navigate around.<br><br><b>R — Ghost Walk (20 mana, 3s CD):</b> Phase through walls for 4 seconds, gain massive speed, become temporarily invulnerable, and deal +50% bonus damage on all hits while phasing.`,
-        playstyle: 'Excels at hitting enemies through walls before they can reach you. Position behind cover and fire freely, then Ghost Walk to reposition.',
-        tip: '💡 Tip: Fire from inside or behind walls — enemies must path around while you shoot through. Ghost Walk is a powerful repositioning escape.',
+        stats: [{ label: 'Damage', value: '22 (1.1x base)' },{ label: 'Projectiles', value: 'Pierce through walls' },{ label: 'Phase Bonus', value: '+50% damage while phasing' },{ label: 'Mana Cost', value: '20 mana' },{ label: 'Cooldown', value: '3 seconds' }],
+        abilities: `<b>Passive — Ethereal Shots:</b> All projectiles pass directly through walls and terrain, opening unique attack angles.<br><br><b>R — Ghost Walk (20 mana, 180 frame CD):</b> Phase through walls for 4 seconds (240 frames), gain massive speed boost (1.8x), become temporarily invulnerable, and deal +50% bonus damage on all hits while phasing.`,
+        playstyle: 'Excels at hitting enemies through walls before they can reach you. Position behind cover and fire freely, then Ghost Walk to reposition and burst.',
+        tip: '💡 Tip: Fire from inside or behind walls — enemies must navigate around while you shoot through. Ghost Walk lets you escape surrounded situations instantly.',
     },
     druid: {
         name: 'Druid', tag: '$750 · Root & Heal', icon: '🌿',
         iconBg: 'linear-gradient(135deg,#15803d,#052e16)', iconGlow: '#4ade80',
-        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Root Duration', value: '1.5 seconds per hit' },{ label: 'Mushroom Heal', value: '~3 HP/sec inside zone' },{ label: 'Mushroom Duration', value: '8 seconds, 5 spawned' },{ label: 'Price', value: '$750' }],
-        abilities: `<b>Passive — Vine Shots:</b> Every projectile roots hit enemies in place for 1.5 seconds.<br><br><b>R — Heal Mushrooms (35 mana):</b> Spawns 5 healing mushrooms in a ring. Stand inside any mushroom's radius to slowly regenerate HP (~3/sec). Each lasts 8 seconds.`,
-        playstyle: 'Control + sustain. Root groups to create stationary targets, position mushrooms as a safe healing zone in a corner.',
-        tip: '💡 Tip: Drop mushrooms in a corner before a wave hits, then root enemies as they approach and walk back to heal between engagements.',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Root Duration', value: '1.5 seconds (90 frames)' },{ label: 'Mushroom Heal', value: '~3 HP/sec in zone' },{ label: 'Mushroom Zone', value: '55px radius, 8 seconds' },{ label: 'Mana Cost', value: '35 mana' }],
+        abilities: `<b>Passive — Vine Shots:</b> Every projectile roots hit enemies in place for 1.5 seconds, making them stationary targets.<br><br><b>R — Heal Mushrooms (35 mana):</b> Spawns 5 healing mushrooms in a ring around you. Stand inside any mushroom's radius to slowly regenerate HP (~3 HP per second). Each lasts 8 seconds.`,
+        playstyle: 'Control + sustain. Root groups of enemies to create stationary targets, position mushrooms as a safe healing zone in a corner.',
+        tip: '💡 Tip: Drop mushrooms in a corner before a big wave hits, then root enemies as they approach and retreat to heal between engagements.',
     },
     pyromancer: {
         name: 'Pyromancer', tag: '$1500 · Charge Blaster', icon: '🔮',
         iconBg: 'linear-gradient(135deg,#c2410c,#431407)', iconGlow: '#fb923c',
-        stats: [{ label: 'Damage', value: '10–50 (1x–5x based on charge)' },{ label: 'Fire Method', value: 'Hold+release mouse to charge' },{ label: 'Shot Size', value: 'Grows with charge level' },{ label: 'Meteor DMG', value: '160 (8x base)' },{ label: 'Price', value: '$1500' }],
-        abilities: `<b>Active — Charge Shot:</b> Hold the mouse button to charge (up to 3s = 100%). Release to fire. Fully charged: 5x damage, massive radius, fire patches.<br><br><b>R — Meteor Strike (45 mana):</b> After 0.8s delay, a meteor crashes at cursor dealing 8x damage in 120px AoE.`,
-        playstyle: 'Sniper/burst. Charge shots against clusters, drop Meteor on bosses.',
-        tip: '💡 Tip: Meteor shows a warning ring — aim at rooted or slow enemies. Combine with Druid-style root passives from the wave shop.',
+        stats: [{ label: 'Damage', value: '10–50 (1x–5x based on charge)' },{ label: 'Charge Time', value: 'Up to 3 seconds max' },{ label: 'Shot Size', value: 'Grows with charge level' },{ label: 'Meteor DMG', value: '160 (8x base), 120px AoE' },{ label: 'Mana Cost', value: '45 mana' }],
+        abilities: `<b>Active — Charge Shot:</b> Hold the mouse button to charge (max 3s = 100%). Release to fire. Fully charged: 5x damage, massive radius, fire patches.<br><br><b>R — Meteor Strike (45 mana):</b> After 0.8s telegraph, a meteor crashes at cursor dealing 8x damage in 120px radius AoE.`,
+        playstyle: 'Sniper/burst damage. Charge shots against clusters, drop Meteor on bosses and elite groups.',
+        tip: '💡 Tip: Meteor shows a warning ring before impact — aim at rooted or slow enemies. Combine with root passives from the wave shop for guaranteed hits.',
     },
     cyborg: {
         name: 'Cyborg', tag: '$3000 · Dual Mode', icon: '🤖',
@@ -4308,7 +4352,7 @@ const CHAR_INFO = {
     default: {
         name: 'The Veteran', tag: 'Free · Evolving Fighter', icon: '⭐',
         iconBg: 'linear-gradient(135deg,#3b82f6,#1e3a8a)', iconGlow: '#3b82f6',
-        stats: [{ label: 'Damage', value: '20 (scales with tier)' },{ label: 'Speed', value: '5 (+0.5–2.5 per evolution)' },{ label: 'Mana Cost', value: '20' },{ label: 'Price', value: 'FREE' }],
+        stats: [{ label: 'Damage', value: '20 (scales with tier)' },{ label: 'Speed', value: '5 (+0.5–2.5 per evolution)' },{ label: 'Mana Cost', value: '20' },{ label: 'Evolution Rate', value: 'Every 30 seconds' },{ label: 'Price', value: 'FREE' }],
         abilities: `<b>Passive — Evolution:</b> Every 30 seconds you automatically evolve to the next tier, gaining bonus damage, speed, and a more powerful R ability. There are 5 tiers: Rookie → Soldier → Elite → Commander → Legend.<br><br><b>R — Adaptive Strike:</b> Changes with each tier.<br>• <span style="color:#3b82f6">Rookie:</span> 8-shot burst ring (1.0x dmg)<br>• <span style="color:#22c55e">Soldier:</span> 12-shot volley (1.4x dmg)<br>• <span style="color:#f97316">Elite:</span> 16-shot nova + area damage (2.0x dmg)<br>• <span style="color:#a855f7">Commander:</span> 20-shot shockwave + freezes enemies (2.8x dmg)<br>• <span style="color:#fbbf24">Legend:</span> 32-shot annihilation + kills everything in 350px (4.0x dmg)`,
         playstyle: 'Starts weak but becomes one of the most powerful characters over time. Focus on surviving the early waves, then snowball hard once you hit Elite and Commander.',
         tip: '💡 Tip: Tier 3+ shots auto-freeze enemies on hit. Tier 4+ also ignites them. Stack speed upgrades on level-up to make the most of the speed bonuses each evolution gives you.',
@@ -4316,18 +4360,18 @@ const CHAR_INFO = {
     goldhoarder: {
         name: 'Gold Hoarder', tag: 'Free · Money Specialist', icon: '🪙',
         iconBg: 'linear-gradient(135deg,#ca8a04,#713f12)', iconGlow: '#fbbf24',
-        stats: [{ label: 'Damage', value: '3 (very low)' },{ label: 'Fire Rate', value: 'Slow (700ms)' },{ label: 'Speed', value: '55% of normal' },{ label: 'Accuracy', value: '⚠️ Poor (heavy spread)' },{ label: 'Gold Mult', value: '5x ALL gold sources' },{ label: 'Price', value: 'FREE' }],
-        abilities: `<b>Passive — Gold Multiplier:</b> Every source of gold is multiplied by 5x.<br><br><b>R — Gold Rush (40 mana):</b> Converts all enemies within 180px into gold coins instantly.`,
+        stats: [{ label: 'Damage', value: '3 (very low)' },{ label: 'Fire Rate', value: 'Slow (700ms)' },{ label: 'Speed', value: '55% of normal' },{ label: 'Accuracy', value: '⚠️ Heavy spread' },{ label: 'Gold Mult', value: '5x ALL gold sources' }],
+        abilities: `<b>Passive — Gold Multiplier:</b> Every source of gold is multiplied by 5x (kills, bosses, wave milestones).<br><br><b>R — Gold Rush (40 mana):</b> Converts all enemies within 180px into gold coins instantly, giving you coins for free.`,
         playstyle: 'This character is intentionally bad at combat. Focus on kiting, surviving, and using Gold Rush whenever enemies cluster near you.',
         tip: '⚠️ Warning: You will struggle to kill even basic enemies. Prioritize HP upgrades and use Gold Rush aggressively.',
     },
     vampire: {
-        name: 'Vampire', tag: 'Free · Lifesteal Tank', icon: '🧛',
+        name: 'Vampire', tag: '100 · Lifesteal Tank', icon: '🧛',
         iconBg: 'linear-gradient(135deg,#7f1d1d,#450a0a)', iconGlow: '#ef4444',
-        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Heal on Kill', value: '+8 HP per kill' },{ label: 'Dash', value: 'Teleport to mouse' },{ label: 'Price', value: 'FREE' }],
-        abilities: `<b>Passive — Bloodsucker:</b> Every enemy you kill heals you for 8 HP.<br><br><b>Dash — Vampire Blink:</b> Teleports directly to your mouse cursor.<br><br><b>No R ability</b>`,
-        playstyle: 'A beginner-friendly sustain character. Stay alive and keep killing. Pairs extremely well with the Lifesteal wave shop passive.',
-        tip: '💡 Tip: The teleport dash is extremely powerful for escaping surrounded situations.',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Heal on Kill', value: '+8 HP per kill' },{ label: 'Dash Type', value: 'Teleport (instant blink)' },{ label: 'Dash Cooldown', value: '60 frames (1 second)' },{ label: 'Price', value: '$100' }],
+        abilities: `<b>Passive — Bloodsucker:</b> Every enemy you kill instantly heals you for 8 HP. No resource cost — the more you kill, the more you sustain.<br><br><b>Dash — Vampire Blink (SPACE, 60 frame CD):</b> Instantly teleports directly to your mouse cursor location. No dash distance limit — appears exactly where you aimed. Grants 15 frames of invulnerability on arrival, perfect for repositioning or escaping surrounded situations.<br><br><b>No R ability — Focus on raw killing power to maximize heal output.</b>`,
+        playstyle: 'Beginner-friendly sustain character. The core loop: kill enemy → heal 8 HP → stay alive longer → kill more → spiral into dominance. The teleport dash is your primary mobility and escape tool. Stack Lifesteal passives from the wave shop for insane healing (up to +5 HP per stack).',
+        tip: '💡 Tip: Teleport dash is on a 1-second cooldown, so you can chain them for rapid repositioning. Combine with Lifesteal passives: at 3 stacks you heal 23 HP per kill, essentially negating all small enemy damage.',
     },
     builder: {
         name: 'The Builder', tag: 'Free · Wall Master', icon: '🧱',
@@ -4356,10 +4400,10 @@ const CHAR_INFO = {
     ice: {
         name: 'Ice Ball', tag: '$1000 · Cryo Sniper', icon: '❄️',
         iconBg: 'linear-gradient(135deg,#e0f7ff,#06b6d4)', iconGlow: '#67e8f9',
-        stats: [{ label: 'Damage', value: '10 base / 30 on shatter (3x)' },{ label: 'Shot Type', value: 'Piercing' },{ label: 'Price', value: '$1000' }],
-        abilities: `<b>Passive — Piercing Cryo Shots:</b> Projectiles pass through enemies and freeze each hit for 1.5s.<br><br><b>Passive — Shatter:</b> Shooting a frozen enemy deals 3x damage.<br><br><b>R — Blizzard (30 mana):</b> Freezes all enemies within 350px and drops a blizzard zone.`,
+        stats: [{ label: 'Damage', value: '10 base / 30 on shatter (3x)' },{ label: 'Shot Type', value: 'Piercing' },{ label: 'Freeze Duration', value: '1.5 seconds per hit' },{ label: 'Shatter Bonus', value: '3x damage on frozen enemies' },{ label: 'Mana Cost', value: '30 mana' }],
+        abilities: `<b>Passive — Piercing Cryo Shots:</b> Projectiles pass through enemies and freeze each hit for 1.5s.<br><br><b>Passive — Shatter:</b> Shooting a frozen enemy deals 3x damage and is the key to burst potential.<br><br><b>R — Blizzard (30 mana):</b> Freezes all enemies within 350px and drops a blizzard zone that reapplies freeze.`,
         playstyle: 'High skill ceiling. Managing freeze→shatter combos is key to maximizing damage.',
-        tip: '💡 Tip: Use Blizzard to freeze a group, then walk through them triggering shatter combos.',
+        tip: '💡 Tip: Use Blizzard to freeze a group, then walk through them triggering shatter combos. Pair with root/slow shop passives.',
     },
     electric: {
         name: 'Tesla', tag: '$2500 · Chain Lightning', icon: '⚡',
@@ -4380,10 +4424,10 @@ const CHAR_INFO = {
     eggchan: {
         name: 'Eggchan', tag: '$5000 · Spam Archer', icon: '🏹',
         iconBg: 'linear-gradient(135deg,#f9a8d4,#db2777)', iconGlow: '#ec4899',
-        stats: [{ label: 'Damage', value: '10 base / 20 on bow shots (2x)' },{ label: 'Mana Cost', value: '1 per arrow (spammable!)' },{ label: 'Price', value: '$5000' }],
-        abilities: `<b>R — Bow Shot (1 mana):</b> Fires a fast arrow dealing 2x damage. Spammable at only 1 mana cost.`,
-        playstyle: 'Spam-focused. Press R constantly while normal shots auto-fire.',
-        tip: '💡 Tip: With 100 mana you can fire 100 arrows. Grab Mana upgrades.',
+        stats: [{ label: 'Damage', value: '10 base / 20 on bow shots (2x)' },{ label: 'Mana Cost', value: '1 per arrow (spammable!)' },{ label: 'Arrow Speed', value: 'Fast (18px/frame)' },{ label: 'Fire Rate', value: 'Auto-fire + R spam' },{ label: 'Price', value: '$5000' }],
+        abilities: `<b>R — Bow Shot (1 mana):</b> Fires a fast arrow dealing 2x damage. Spammable at only 1 mana cost — at 100 max mana you can fire 100 arrows.`,
+        playstyle: 'Spam-focused character. Press R constantly while normal shots auto-fire. The goal is constant output.',
+        tip: '💡 Tip: With 100 mana you can fire 100 arrows. Grab Mana Flow and Max Mana upgrades to maximize your spam potential.',
     },
     dream: {
         name: 'Dream', tag: '$5000 · Kill-Scaling Tank', icon: '🌿',
@@ -4396,16 +4440,16 @@ const CHAR_INFO = {
     technoblade: {
         name: 'Technoblade', tag: '$50000 · God of Combat', icon: '👑',
         iconBg: 'linear-gradient(135deg,#7c3aed,#4c1d95)', iconGlow: '#a855f7',
-        stats: [{ label: 'Max Mana', value: '200 (doubled)' },{ label: 'Armor', value: 'Same as Dream (kill-scaling)' },{ label: 'Price', value: '$50,000' }],
-        abilities: `<b>Passive — Dream Armor:</b> Identical to Dream's passive armor system.<br><br><b>R — Blood for the Blood God (150 mana):</b> Instantly kills EVERY enemy on screen.`,
-        playstyle: 'Ultimate power fantasy. Doubled mana, screen-clearing genocide, and Dream\'s armor passive.',
-        tip: '💡 Tip: Grab Mana Flow passives to speed up regen between Blood God uses.',
+        stats: [{ label: 'Max Mana', value: '200 (doubled)' },{ label: 'Armor', value: 'Same as Dream (kill-scaling)' },{ label: 'Blood God DMG', value: 'Instant kill ALL' },{ label: 'Mana Cost', value: '150 mana' },{ label: 'Price', value: '$50,000' }],
+        abilities: `<b>Passive — Dream Armor:</b> Identical to Dream's passive armor system. Scales with kill count up to 80% reduction.<br><br><b>R — Blood for the Blood God (150 mana):</b> Instantly kills EVERY enemy on screen. Full crowd-clear ability.`,
+        playstyle: 'Ultimate power fantasy. Doubled mana pool, screen-clearing genocide button, and Dream\'s armor passive.',
+        tip: '💡 Tip: Grab Mana Flow passives from the wave shop to speed up regen between Blood God uses. At 200 max mana, you can nearly chain them.',
     },
     admin: {
         name: 'THE ADMIN', tag: '$1,000,000,000 · Absolute Power', icon: '👑',
         iconBg: 'linear-gradient(135deg,#7c3aed,#000)', iconGlow: '#ffffff',
         stats: [{ label: 'Health', value: '500 (5x normal)' },{ label: 'Mana', value: '9999 (unlimited)' },{ label: 'Damage', value: '100 (5x normal)' },{ label: 'Speed', value: '7 (fastest)' },{ label: 'Price', value: '$1,000,000,000' }],
-        abilities: `All 9 abilities via 1-9 keys. All passives active. Rainbow visuals. Vampire lifesteal. Dream armor.`,
+        abilities: `<b>All 9 Godlike Abilities (Press 1-9):</b><br>1️⃣ BURST — 12-shot ring<br>2️⃣ EXPLOSION — 16-shot + area nuke<br>3️⃣ FREEZE — Instant freeze all<br>4️⃣ CHAIN ⚡ — Instant electrocute all<br>5️⃣ SLAM — Instant kill 350px radius<br>6️⃣ BOW — 5 rapid arrows<br>7️⃣ BLOOD GOD — Instant kill ALL<br>8️⃣ NUKE — Kill all + full heal<br>9️⃣ TELEPORT — Blink to mouse<br><br>All passives active. Vampire lifesteal. Dream armor. Auto-fire.`,
         playstyle: 'Cheat character. 9 god-tier abilities, 5x stats, unlimited mana, all passives. There is no challenge — that\'s the point.',
         tip: '💰 You need $1,000,000,000 to unlock this. Play Gold Hoarder for a very long time.',
     },
