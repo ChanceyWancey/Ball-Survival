@@ -494,14 +494,14 @@
             <div class="character-preview" style="background:linear-gradient(135deg,#7f1d1d,#450a0a);box-shadow:0 0 20px rgba(185,28,28,.8);"></div>
             <div class="character-name">Vampire</div>
             <div class="character-ability">PASSIVE: Heal 8 HP<br>on every kill<br>No special ability</div>
-            <div class="character-price">FREE</div>
+            <div class="character-price">$100</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('vampire')">INFO</button>
         </div>
         <div class="character-card" onclick="selectCharacter('builder')" id="builderCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#8b5a2b,#d2691e);box-shadow:0 0 20px rgba(160,82,45,.9);"></div>
             <div class="character-name">The Builder</div>
             <div class="character-ability">E: Move nearby walls!<br>Shift+Click: Build new<br>walls for defense<br>R: Reinforce — strengthen walls</div>
-            <div class="character-price">FREE</div>
+            <div class="character-price">$100</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('builder')">INFO</button>
         </div>
         <div class="character-card" onclick="selectCharacter('phantom')" id="phantomCharacter">
@@ -862,7 +862,7 @@ let adminCooldowns = [0,0,0,0,0,0,0,0,0];
 const ADMIN_CDS    = [60,90,120,100,180,20,300,600,45];
 
 const PRICES = {
-    default:0, goldhoarder:0, vampire:0, builder:0,
+    default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
     wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000
@@ -907,7 +907,7 @@ let player = resetPlayerObj();
 function resetPlayerObj() {
     return { x:canvas.width/2, y:canvas.height/2, radius:20, speed:5,
              health:100, maxHealth:100, mana:100, maxMana:100,
-             exp:0, level:1, damage:10, kills:0,
+             exp:0, level:1, damage:20, kills:0,
              dashCooldown:0, manaRegen:0, invulnerable:0, specialCooldown:0 };
 }
 
@@ -2878,7 +2878,7 @@ function projectileHitsWall(proj) {
 function resetGame(){
     player=resetPlayerObj();
     if(currentCharacter==='technoblade'){player.maxMana=200;player.mana=200;}
-    if(currentCharacter==='admin'){player.maxHealth=500;player.health=500;player.maxMana=9999;player.mana=9999;player.damage=50;player.speed=7;}
+    if(currentCharacter==='admin'){player.maxHealth=500;player.health=500;player.maxMana=9999;player.mana=9999;player.damage=100;player.speed=7;}
     expToNextLevel=100;projectiles=[];enemies=[];particles=[];items=[];floatingTexts=[];
     walls=[];generateWalls();
     lastEnemySpawn=0;roundTimer=0;currentRound=0;killStreak=0;sessionMoney=0;
@@ -4113,7 +4113,7 @@ const CHAR_INFO = {
     phantom: {
         name: 'Phantom', tag: '$250 · Wall Phaser', icon: '👻',
         iconBg: 'linear-gradient(135deg,#0ea5e9,#1e1b4b)', iconGlow: '#7dd3fc',
-        stats: [{ label: 'Damage', value: '11 (10% bonus)' },{ label: 'Projectiles', value: 'Pierce through walls' },{ label: 'Phase Bonus', value: '+50% damage while phasing' },{ label: 'Cooldown', value: '3 seconds' },{ label: 'Price', value: '$250' }],
+        stats: [{ label: 'Damage', value: '22 (10% bonus)' },{ label: 'Projectiles', value: 'Pierce through walls' },{ label: 'Phase Bonus', value: '+50% damage while phasing' },{ label: 'Cooldown', value: '3 seconds' },{ label: 'Price', value: '$250' }],
         abilities: `<b>Passive — Ethereal Shots:</b> All projectiles pass directly through walls and terrain, opening unique attack angles enemies can't navigate around.<br><br><b>R — Ghost Walk (20 mana, 3s CD):</b> Phase through walls for 4 seconds, gain massive speed, become temporarily invulnerable, and deal +50% bonus damage on all hits while phasing.`,
         playstyle: 'Excels at hitting enemies through walls before they can reach you. Position behind cover and fire freely, then Ghost Walk to reposition.',
         tip: '💡 Tip: Fire from inside or behind walls — enemies must path around while you shoot through. Ghost Walk is a powerful repositioning escape.',
@@ -4121,7 +4121,7 @@ const CHAR_INFO = {
     druid: {
         name: 'Druid', tag: '$750 · Root & Heal', icon: '🌿',
         iconBg: 'linear-gradient(135deg,#15803d,#052e16)', iconGlow: '#4ade80',
-        stats: [{ label: 'Damage', value: '10 (standard)' },{ label: 'Root Duration', value: '1.5 seconds per hit' },{ label: 'Mushroom Heal', value: '~3 HP/sec inside zone' },{ label: 'Mushroom Duration', value: '8 seconds, 5 spawned' },{ label: 'Price', value: '$750' }],
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Root Duration', value: '1.5 seconds per hit' },{ label: 'Mushroom Heal', value: '~3 HP/sec inside zone' },{ label: 'Mushroom Duration', value: '8 seconds, 5 spawned' },{ label: 'Price', value: '$750' }],
         abilities: `<b>Passive — Vine Shots:</b> Every projectile roots hit enemies in place for 1.5 seconds.<br><br><b>R — Heal Mushrooms (35 mana):</b> Spawns 5 healing mushrooms in a ring. Stand inside any mushroom's radius to slowly regenerate HP (~3/sec). Each lasts 8 seconds.`,
         playstyle: 'Control + sustain. Root groups to create stationary targets, position mushrooms as a safe healing zone in a corner.',
         tip: '💡 Tip: Drop mushrooms in a corner before a wave hits, then root enemies as they approach and walk back to heal between engagements.',
@@ -4129,7 +4129,7 @@ const CHAR_INFO = {
     pyromancer: {
         name: 'Pyromancer', tag: '$1500 · Charge Blaster', icon: '🔮',
         iconBg: 'linear-gradient(135deg,#c2410c,#431407)', iconGlow: '#fb923c',
-        stats: [{ label: 'Damage', value: '10–50 (1x–5x based on charge)' },{ label: 'Fire Method', value: 'Hold+release mouse to charge' },{ label: 'Shot Size', value: 'Grows with charge level' },{ label: 'Meteor DMG', value: '8x in 120px radius' },{ label: 'Price', value: '$1500' }],
+        stats: [{ label: 'Damage', value: '10–50 (1x–5x based on charge)' },{ label: 'Fire Method', value: 'Hold+release mouse to charge' },{ label: 'Shot Size', value: 'Grows with charge level' },{ label: 'Meteor DMG', value: '160 (8x base)' },{ label: 'Price', value: '$1500' }],
         abilities: `<b>Active — Charge Shot:</b> Hold the mouse button to charge (up to 3s = 100%). Release to fire. Fully charged: 5x damage, massive radius, fire patches.<br><br><b>R — Meteor Strike (45 mana):</b> After 0.8s delay, a meteor crashes at cursor dealing 8x damage in 120px AoE.`,
         playstyle: 'Sniper/burst. Charge shots against clusters, drop Meteor on bosses.',
         tip: '💡 Tip: Meteor shows a warning ring — aim at rooted or slow enemies. Combine with Druid-style root passives from the wave shop.',
@@ -4137,7 +4137,7 @@ const CHAR_INFO = {
     cyborg: {
         name: 'Cyborg', tag: '$3000 · Dual Mode', icon: '🤖',
         iconBg: 'linear-gradient(135deg,#0ea5e9,#4c1d95)', iconGlow: '#38bdf8',
-        stats: [{ label: 'Rapid Mode DMG', value: '6.5 (65%) · 110ms fire rate' },{ label: 'Heavy Mode DMG', value: '28 (2.8x) · 550ms fire rate' },{ label: 'Mode Toggle', value: 'E key — instant switch' },{ label: 'Laser Sweep DMG', value: '3.5x total over 360°' },{ label: 'Price', value: '$3000' }],
+        stats: [{ label: 'Rapid Mode DMG', value: '13 (65%) · 110ms fire rate' },{ label: 'Heavy Mode DMG', value: '56 (2.8x) · 550ms fire rate' },{ label: 'Mode Toggle', value: 'E key — instant switch' },{ label: 'Laser Sweep DMG', value: '3.5x total over 360°' },{ label: 'Price', value: '$3000' }],
         abilities: `<b>Passive — Dual Mode (E key toggle):</b><br>• <span style="color:#38bdf8">RAPID:</span> Ultra-fast weak shots (110ms), slight spread.<br>• <span style="color:#c084fc">HEAVY:</span> Slow massive shots (550ms), 2.8x damage, large hitbox.<br><br><b>R — Laser Sweep (30 mana):</b> Spins a 360° laser over 1.4s, hitting every enemy in its path.`,
         playstyle: 'Adaptive. Rapid for clearing small enemies, Heavy for elites and bosses. Laser Sweep when surrounded.',
         tip: '💡 Tip: Heavy mode single shots outdamage Rapid against bosses. Learn to swap mid-fight.',
@@ -4145,7 +4145,7 @@ const CHAR_INFO = {
     timewizard: {
         name: 'Time Wizard', tag: '$4500 · Echo & Rewind', icon: '⏳',
         iconBg: 'linear-gradient(135deg,#7c3aed,#1e1b4b)', iconGlow: '#d8b4fe',
-        stats: [{ label: 'Main Shot DMG', value: '10 (standard)' },{ label: 'Echo Shot DMG', value: '6 (60%) after 0.3s delay' },{ label: 'Rewind Snapshot', value: 'Saved every 5 seconds' },{ label: 'Cooldown', value: '5 seconds' },{ label: 'Price', value: '$4500' }],
+        stats: [{ label: 'Main Shot DMG', value: '20 (standard)' },{ label: 'Echo Shot DMG', value: '12 (60%) after 0.3s delay' },{ label: 'Rewind Snapshot', value: 'Saved every 5 seconds' },{ label: 'Cooldown', value: '5 seconds' },{ label: 'Price', value: '$4500' }],
         abilities: `<b>Passive — Time Echo:</b> Every shot fires a ghost echo 0.3s later at the same angle — effectively 1.6x DPS output.<br><br><b>R — Rewind (60 mana, 5s CD):</b> Restores HP to value from 5 seconds ago. Best used immediately after taking burst damage.`,
         playstyle: 'Sustained pressure — every shot is two shots. Save Rewind for emergencies right after big damage spikes.',
         tip: '💡 Tip: Use Rewind proactively right after taking big damage, not when already near death. Snapshot updates every 5 seconds.',
@@ -4153,7 +4153,7 @@ const CHAR_INFO = {
     default: {
         name: 'The Veteran', tag: 'Free · Evolving Fighter', icon: '⭐',
         iconBg: 'linear-gradient(135deg,#3b82f6,#1e3a8a)', iconGlow: '#3b82f6',
-        stats: [{ label: 'Damage', value: '10 (scales with tier)' },{ label: 'Speed', value: '5 (+0.5–2.5 per evolution)' },{ label: 'Mana Cost', value: '20' },{ label: 'Price', value: 'FREE' }],
+        stats: [{ label: 'Damage', value: '20 (scales with tier)' },{ label: 'Speed', value: '5 (+0.5–2.5 per evolution)' },{ label: 'Mana Cost', value: '20' },{ label: 'Price', value: 'FREE' }],
         abilities: `<b>Passive — Evolution:</b> Every 30 seconds you automatically evolve to the next tier, gaining bonus damage, speed, and a more powerful R ability. There are 5 tiers: Rookie → Soldier → Elite → Commander → Legend.<br><br><b>R — Adaptive Strike:</b> Changes with each tier.<br>• <span style="color:#3b82f6">Rookie:</span> 8-shot burst ring (1.0x dmg)<br>• <span style="color:#22c55e">Soldier:</span> 12-shot volley (1.4x dmg)<br>• <span style="color:#f97316">Elite:</span> 16-shot nova + area damage (2.0x dmg)<br>• <span style="color:#a855f7">Commander:</span> 20-shot shockwave + freezes enemies (2.8x dmg)<br>• <span style="color:#fbbf24">Legend:</span> 32-shot annihilation + kills everything in 350px (4.0x dmg)`,
         playstyle: 'Starts weak but becomes one of the most powerful characters over time. Focus on surviving the early waves, then snowball hard once you hit Elite and Commander.',
         tip: '💡 Tip: Tier 3+ shots auto-freeze enemies on hit. Tier 4+ also ignites them. Stack speed upgrades on level-up to make the most of the speed bonuses each evolution gives you.',
@@ -4169,7 +4169,7 @@ const CHAR_INFO = {
     vampire: {
         name: 'Vampire', tag: 'Free · Lifesteal Tank', icon: '🧛',
         iconBg: 'linear-gradient(135deg,#7f1d1d,#450a0a)', iconGlow: '#ef4444',
-        stats: [{ label: 'Damage', value: '10 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Heal on Kill', value: '+8 HP per kill' },{ label: 'Dash', value: 'Teleport to mouse' },{ label: 'Price', value: 'FREE' }],
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Heal on Kill', value: '+8 HP per kill' },{ label: 'Dash', value: 'Teleport to mouse' },{ label: 'Price', value: 'FREE' }],
         abilities: `<b>Passive — Bloodsucker:</b> Every enemy you kill heals you for 8 HP.<br><br><b>Dash — Vampire Blink:</b> Teleports directly to your mouse cursor.<br><br><b>No R ability</b>`,
         playstyle: 'A beginner-friendly sustain character. Stay alive and keep killing. Pairs extremely well with the Lifesteal wave shop passive.',
         tip: '💡 Tip: The teleport dash is extremely powerful for escaping surrounded situations.',
@@ -4177,7 +4177,7 @@ const CHAR_INFO = {
     builder: {
         name: 'The Builder', tag: 'Free · Wall Master', icon: '🧱',
         iconBg: 'linear-gradient(135deg,#a0522d,#d2691e)', iconGlow: '#d2691e',
-        stats: [{ label: 'Damage', value: '10 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Wall HP', value: '50 per wall' },{ label: 'Max Walls', value: '8 active' },{ label: 'Price', value: 'FREE' }],
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Wall HP', value: '50 per wall' },{ label: 'Max Walls', value: '8 active' },{ label: 'Price', value: 'FREE' }],
         abilities: `<b>Passive — Construction:</b> Walls are permanent obstacles that enemies must navigate around. You can have up to 8 walls active at once.<br><br><b>E — Move Walls:</b> Hold E and click on a wall to pick it up and relocate it. Perfect for repositioning your defenses mid-fight.<br><br><b>Shift+Click — Build New Walls:</b> Hold Shift and click on the ground to build a new wall at that location (costs no resources).<br><br><b>R — Reinforce (30 mana, 2s CD):</b> Strengthens the nearest wall, doubling its durability and making it glow with power.`,
         playstyle: 'Strategic defense. Build walls to funnel enemies into kill zones. Move walls mid-fight to adapt to new threats. Use Reinforce to protect critical walls.',
         tip: '💡 Tip: Build walls to create corridors, then position yourself to fire down the hallway. Reinforce walls that enemies are attacking repeatedly.',
@@ -4185,7 +4185,7 @@ const CHAR_INFO = {
     boxer: {
         name: 'Boxer', tag: '$500 · Melee Rushdown', icon: '👊',
         iconBg: 'linear-gradient(135deg,#dc2626,#991b1b)', iconGlow: '#ef4444',
-        stats: [{ label: 'Damage', value: '20 (2x)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Dash Damage', value: 'Hits all enemies in path' },{ label: 'Cooldown', value: '2 seconds per dash' },{ label: 'Price', value: '$500' }],
+        stats: [{ label: 'Damage', value: '40 (2x)' },{ label: 'Speed', value: '5 (standard)' },{ label: 'Dash Damage', value: 'Hits all enemies in path' },{ label: 'Cooldown', value: '2 seconds per dash' },{ label: 'Price', value: '$500' }],
         abilities: `<b>Passive — Close-Range Fighter:</b> Deal 2x normal damage. All projectiles are short-range but devastating at close quarters.<br><br><b>R — Power Dash (25 mana, 2s CD):</b> Dash forward in a straight line, damaging every enemy you pass through. The dash itself carries your full damage output.`,
         playstyle: 'Aggressive melee character. Get close, spam shots, and use Power Dash to burst through clusters. You trade defense for raw output.',
         tip: '💡 Tip: Master the dash range — it hits harder than shots but puts you in danger. Dash to escape when surrounded and deal damage simultaneously.',
@@ -4249,7 +4249,7 @@ const CHAR_INFO = {
     admin: {
         name: 'THE ADMIN', tag: '$1,000,000,000 · Absolute Power', icon: '👑',
         iconBg: 'linear-gradient(135deg,#7c3aed,#000)', iconGlow: '#ffffff',
-        stats: [{ label: 'Health', value: '500 (5x normal)' },{ label: 'Mana', value: '9999 (unlimited)' },{ label: 'Damage', value: '50 (5x normal)' },{ label: 'Speed', value: '7 (fastest)' },{ label: 'Price', value: '$1,000,000,000' }],
+        stats: [{ label: 'Health', value: '500 (5x normal)' },{ label: 'Mana', value: '9999 (unlimited)' },{ label: 'Damage', value: '100 (5x normal)' },{ label: 'Speed', value: '7 (fastest)' },{ label: 'Price', value: '$1,000,000,000' }],
         abilities: `All 9 abilities via 1-9 keys. All passives active. Rainbow visuals. Vampire lifesteal. Dream armor.`,
         playstyle: 'Cheat character. 9 god-tier abilities, 5x stats, unlimited mana, all passives. There is no challenge — that\'s the point.',
         tip: '💰 You need $1,000,000,000 to unlock this. Play Gold Hoarder for a very long time.',
