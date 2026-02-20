@@ -1931,7 +1931,7 @@ function spawnTheBoss() {
     const damageMult = 1 + (bossNumber - 1) * 0.4;
     
     currentBoss = new Boss(canvas.width / 2, canvas.height / 2);
-    currentBoss.health = Math.round(10000 * healthMult);
+    currentBoss.health = Math.round(5000 * healthMult);
     currentBoss.maxHealth = currentBoss.health;
     // Increase attack frequency at higher difficulties
     currentBoss.vertexAttackCooldown = Math.max(1500, 3000 - bossNumber * 300);
