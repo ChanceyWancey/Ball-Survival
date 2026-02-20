@@ -76,6 +76,31 @@
         .character-card:hover { transform: scale(1.04); border-color: #3b82f6; }
         .character-card.selected { border-color: #22c55e; box-shadow: 0 0 20px rgba(34,197,94,0.4); }
         .character-card.locked { opacity: 0.5; cursor: not-allowed; }
+        .character-card.limited-card {
+            border: 3px solid #00008b;
+            box-shadow: 0 0 20px rgba(0,0,139,0.6), inset 0 0 15px rgba(0,0,139,0.2);
+            animation: limitedGlow 2s ease-in-out infinite;
+            position: relative;
+        }
+        @keyframes limitedGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,0,139,0.6), inset 0 0 15px rgba(0,0,139,0.2); }
+            50% { box-shadow: 0 0 30px rgba(0,0,139,0.8), inset 0 0 20px rgba(0,0,139,0.3); }
+        }
+        .character-card.limited-card::before {
+            content: '⏱️ LIMITED';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: linear-gradient(135deg, rgba(0,0,139,0.9), rgba(0,0,205,0.9));
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            border: 1px solid #00008b;
+            box-shadow: 0 0 10px rgba(0,0,139,0.6);
+            letter-spacing: 0.5px;
+        }
         .character-card.admin-card {
             background: linear-gradient(135deg, rgba(255,0,0,0.15), rgba(255,165,0,0.15), rgba(255,255,0,0.15), rgba(0,255,0,0.15), rgba(0,0,255,0.15), rgba(128,0,128,0.15));
             border: 3px solid transparent;
@@ -461,7 +486,7 @@
 <button id="fsBtn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
 
 <div id="mainMenu">
-    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">The Triangle Update?</p>
+    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">The First Limited (Will Be Gone Next Friday)</p>
     <h1>⚔️ BALL SURVIVAL ⚔️</h1>
     <div class="currency-display">💰 $<span id="totalMoney">0</span></div>
     <button class="menu-btn" onclick="showTutorial()">📖 Tutorial</button>
@@ -610,11 +635,19 @@
             <div class="character-price">$1,000,000,000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('admin')">INFO</button>
         </div>
+        <div class="character-card limited-card" onclick="selectCharacter('dice')" id="diceCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 0 20px rgba(249,115,22,.9);"></div>
+            <div class="character-name">Dice</div>
+            <div class="character-ability">Random damage (10-150)!<br>Random stats each run!<br>R: Random Special ability</div>
+            <div class="character-price">$2345</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('dice')">INFO</button>
+        </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
         <button id="charShopBackBtn" onclick="backToMenu()">← Back</button>
     </div>
 </div>
+
 
 <div id="infoModal" onclick="if(event.target===this)closeCharInfo()">
     <div id="infoBox">
@@ -805,12 +838,8 @@ const ctx = canvas.getContext('2d');
 const skinOverlay = document.getElementById('playerSkinOverlay');
 
 let totalMoney = parseInt(localStorage.getItem('ballRPGMoney')) || 0;
-let unlockedCharacters = JSON.parse(localStorage.getItem('ballRPGCharacters')) || ['default'];
+let unlockedCharacters = JSON.parse(localStorage.getItem('ballRPGCharacters')) || ['default', 'goldhoarder'];
 let currentCharacter = localStorage.getItem('ballRPGCurrentCharacter') || 'default';
-
-if (!unlockedCharacters.includes('goldhoarder')) { unlockedCharacters.push('goldhoarder'); savePersistentData(); }
-if (!unlockedCharacters.includes('vampire')) { unlockedCharacters.push('vampire'); savePersistentData(); }
-if (!unlockedCharacters.includes('builder')) { unlockedCharacters.push('builder'); savePersistentData(); }
 
 let gameRunning = false, keys = {}, mousePos = { x: 0, y: 0 };
 let roundTimer = 0, currentRound = 0;
@@ -844,7 +873,7 @@ const CHARACTERS = {
     technoblade: { color:'#7c3aed', shadow:'#a855f7', projColor:'#c084fc', ability:'bloodgod',    manaCost:150, cdMax:0,   useImg:true, msgNormal:'was slain by Technoblade',   msgSpecial:'was slaughtered by Technoblade' },
     admin:       { color:'#ff0000', shadow:'#ffffff', projColor:'#ffffff', ability:'admin_burst', manaCost:0,   cdMax:0,   useImg:false, isAdmin:true, isVampire:true,
                    msgNormal:'was deleted by The Admin', msgSpecial:'was banned by The Admin' },
-    boxer:       { color:'#dc2626', shadow:'#991b1b', projColor:'#fca5a5', ability:'dashpunch',    manaCost:25,  cdMax:120, useImg:false, isBoxer:true },
+    dice:        { color:'#f97316', shadow:'#ea580c', projColor:'#fbbf24', ability:'randomspecial', manaCost:0, cdMax:0, useImg:false, isDice:true, msgNormal:'was rolled by Dice' },
 };
 
 const ADMIN_ABILITIES = [
@@ -865,7 +894,7 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345
 };
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
 
@@ -915,6 +944,10 @@ function getProjectileDamage() {
     if (CHARACTERS[currentCharacter].isMachineGun) return 1;
     if (CHARACTERS[currentCharacter].isGoldHoarder) return GH_DAMAGE;
     if (CHARACTERS[currentCharacter].isBoxer) return player.damage * 2;
+    if (CHARACTERS[currentCharacter].isDice) {
+        // Random damage between 10 and 150 — rolled EACH SHOT
+        return Math.floor(10 + Math.random() * 140);
+    }
     return player.damage;
 }
 
@@ -1401,7 +1434,7 @@ function shootNewChar(ts) {
 
 function applyPassiveDamageBoost(baseDmg) {
     let dmg = baseDmg;
-    if(passiveState.crit > 0 && Math.random() < passiveState.crit) { dmg *= 3; floatMoneyText('CRIT!'); }
+    if(passiveState.crit > 0 && Math.random() < passiveState.crit) { dmg *= 3; }
     if(passiveState.berserkerActive) dmg *= 2;
     return dmg;
 }
@@ -1486,8 +1519,22 @@ function earnMoney(amount, reason) {
 }
 
 let floatingTexts = [];
+let notificationQueue = [];
+let currentNotification = null;
+let notificationTimer = 0;
+
 function floatMoneyText(text) {
-    floatingTexts.push({ text, x: 50 + Math.random()*100, y: canvas.height - 40, life: 120, vy: -0.7 });
+    // Replace queue instead of pushing — only show latest notification
+    notificationQueue = [text];
+    currentNotification = text;
+    notificationTimer = 180; // 3 seconds at 60 FPS
+}
+
+function processNotificationQueue() {
+    // Keep current notification alive, don't queue up
+    if(notificationTimer <= 0) {
+        currentNotification = null;
+    }
 }
 
 function showDeathMsg(victim, action) {
@@ -1672,12 +1719,14 @@ class Enemy {
             ctx.fillStyle='#fbbf24'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
             ctx.fillText('BOSS',this.x,this.y-this.radius-4);
         }
+        ctx.restore();
+        
+        // Draw HP bar in screen space (not affected by transforms)
         if(this.health<this.maxHealth){
             const bw=this.radius*2,bh=4,bx=this.x-this.radius,by=this.y-this.radius-10;
             ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(bx,by,bw,bh);
             ctx.fillStyle='#22c55e'; ctx.fillRect(bx,by,bw*(this.health/this.maxHealth),bh);
         }
-        ctx.restore();
     }
 }
 
@@ -1864,9 +1913,50 @@ class Item {
 }
 
 function getDifficulty(){return Math.floor(currentRound/50);}
-function getSpawnCount(){return Math.min(1+getDifficulty(),8);}
-function getSpawnInterval(){return Math.max(1500-getDifficulty()*80,300);}
-function getEnemyStats(type){const d=getDifficulty();if(type==='boss')return{health:10000+d*2000,speed:1.5+d*0.1,damage:20+d*5};if(type==='triangle')return{health:150,speed:3.5,damage:12};return{health:200+d*80,speed:Math.min(2+Math.random()+d*0.15,6),damage:10+d*3};}
+function getSpawnCount(){
+    if(currentRound>=500 && currentRound<600) return Math.min(12+Math.floor((currentRound-500)/10),18); // 12-18 enemies in final waves
+    // Gradual difficulty from wave 50-499: scales from 1 to 8 enemies
+    if(currentRound>=50 && currentRound<500) {
+        const progress = (currentRound - 50) / 450; // 0 to 1 over waves 50-499
+        return Math.min(1 + Math.floor(progress * 7), 8); // 1 to 8
+    }
+    return Math.min(1+getDifficulty(),8);
+}
+function getSpawnInterval(){
+    if(currentRound>=500 && currentRound<600) return Math.max(600-Math.floor((currentRound-500)/5),120); // spawn every 0.6-2s in final waves
+    // Gradual spawn rate increase from wave 50-499
+    if(currentRound>=50 && currentRound<500) {
+        const progress = (currentRound - 50) / 450; // 0 to 1
+        return Math.max(1500 - progress * 1200, 300); // 1500ms down to 300ms
+    }
+    return Math.max(1500-getDifficulty()*80,300);
+}
+function getEnemyStats(type){
+    const d=getDifficulty();
+    if(type==='boss')return{health:10000+d*2000,speed:1.5+d*0.1,damage:20+d*5};
+    if(type==='triangle')return{health:150,speed:3.5,damage:12};
+    
+    // Gradual enemy stat scaling from wave 50-499
+    let healthMult = 1, speedMult = 1, damageMult = 1;
+    if(currentRound>=50 && currentRound<500) {
+        const progress = (currentRound - 50) / 450; // 0 to 1
+        healthMult = 1 + progress * 0.5; // 1x to 1.5x
+        speedMult = 1 + progress * 0.25; // 1x to 1.25x
+        damageMult = 1 + progress * 0.33; // 1x to 1.33x
+    }
+    // Endgame scaling (waves 500-600)
+    else if(currentRound>=500 && currentRound<600) {
+        healthMult = 1.5;
+        speedMult = 1.5;
+        damageMult = 1.5;
+    }
+    
+    return{
+        health:(200+d*80)*healthMult, 
+        speed:Math.min(2+Math.random()+d*0.15,6)*speedMult, 
+        damage:(10+d*3)*damageMult
+    };
+}
 
 function spawnWave(){
     // Spawn mini-bosses every 15 waves
@@ -2300,6 +2390,35 @@ function specialAttack(){
             for(let i=0;i<80;i++)particles.push(new Particle(player.x,player.y,'#7c3aed'));
             bloodGodAnnounce={timer:240};
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},800);break;
+        case 'randomspecial': {
+            // Dice random special — pick a random ability (exclude Wemmbu, Technoblade, other Dice)
+            const excludeAbilities = ['groundslam', 'bloodgod', 'randomspecial', 'passive'];
+            const validAbilities = [
+                'ghostwalk', 'mushrooms', 'meteor', 'lasersweep', 'rewindtime',
+                'inferno', 'dashpunch', 'blizzard', 'overload', 'bowshot', 'reinforce'
+            ];
+            
+            // Random mana cost (1 to current maxMana)
+            const randomManaCost = 1 + Math.floor(Math.random() * player.maxMana);
+            // Random cooldown (1 to 120 frames, roughly 1-2 seconds)
+            const randomCooldown = 1 + Math.floor(Math.random() * 120);
+            
+            if(player.mana < randomManaCost) {
+                floatMoneyText(`🎲 Not enough mana! Need ${randomManaCost}/${player.maxMana}`);
+                break;
+            }
+            
+            player.mana -= randomManaCost;
+            player.specialCooldown = randomCooldown;
+            
+            const randomAbility = validAbilities[Math.floor(Math.random() * validAbilities.length)];
+            floatMoneyText(`🎲 Dice rolled: ${randomAbility}! (${randomManaCost} mana, ${(randomCooldown/60).toFixed(1)}s CD)`);
+            // Trigger that ability
+            sk.ability = randomAbility;
+            specialAttack();
+            sk.ability = 'randomspecial'; // restore original
+            break;
+        }
     }
     for(let i=0;i<15;i++)particles.push(new Particle(player.x,player.y,sk.color));
     updateHUD();
@@ -2879,8 +2998,24 @@ function resetGame(){
     player=resetPlayerObj();
     if(currentCharacter==='technoblade'){player.maxMana=200;player.mana=200;}
     if(currentCharacter==='admin'){player.maxHealth=500;player.health=500;player.maxMana=9999;player.mana=9999;player.damage=100;player.speed=7;}
+    if(currentCharacter==='dice'){
+        player.speed=3+Math.random()*5; // 3-8 speed
+        player.maxHealth=Math.round(80+Math.random()*95); // 80-175 health
+        player.health=player.maxHealth;
+        player.damage=Math.round(10+Math.random()*140); // 10-150 damage
+    }
     expToNextLevel=100;projectiles=[];enemies=[];particles=[];items=[];floatingTexts=[];
     walls=[];generateWalls();
+    // Builder spawns initial walls
+    if(currentCharacter==='builder'){
+        builderWalls=[];
+        const positions=[[150,150],[canvas.width-150,150],[150,canvas.height-150],[canvas.width-150,canvas.height-150]];
+        positions.forEach(([x,y])=>{
+            builderWalls.push({x:x-25,y:y-25,w:50,h:50,hp:50,maxHp:50,reinforced:false});
+        });
+    } else {
+        builderWalls=[];
+    }
     lastEnemySpawn=0;roundTimer=0;currentRound=0;killStreak=0;sessionMoney=0;
     autoFireEnabled=true;specialInProgress=false;
     dreamArmorAnnounce=null;lastDreamTierIdx=-1;bloodGodAnnounce=null;
@@ -3524,7 +3659,7 @@ function gameLoop(ts){
         for(let e of enemies){if(!e.alive)continue;const dx=e.x-proj.x,dy=e.y-proj.y;
             if(Math.sqrt(dx*dx+dy*dy)<e.radius+proj.radius){
                 let pdmg = proj.damage;
-                if(passiveState.crit>0&&Math.random()<passiveState.crit){pdmg*=3;floatMoneyText('CRIT!');}
+                if(passiveState.crit>0&&Math.random()<passiveState.crit){pdmg*=3;}
 
                 if(currentCharacter==='ice'||proj.isIce){
                     if(e.frozen>0){ pdmg*=3; floatMoneyText('💎 SHATTER!'); for(let i=0;i<25;i++) particles.push(new Particle(e.x,e.y,'#e0f7ff')); }
@@ -3739,6 +3874,25 @@ function gameLoop(ts){
         ctx.textAlign='left';ctx.fillText(ft.text,ft.x,ft.y);ctx.restore();
         return ft.life>0;
     });
+
+    // Process and render current notification
+    processNotificationQueue();
+    if(currentNotification !== null) {
+        notificationTimer -= dt;
+        const alpha = notificationTimer < 60 ? notificationTimer / 60 : 1;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#fbbf24';
+        ctx.fillText(currentNotification, canvas.width / 2, 80);
+        ctx.restore();
+        if(notificationTimer <= 0) {
+            currentNotification = null;
+        }
+    }
 
     if(currentCharacter==='admin')updateAdminKeys();
 
@@ -4005,7 +4159,8 @@ canvas.addEventListener('mouseup',e=>{
         const angle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
         const dmg=applyPassiveDamageBoost(player.damage*(1+pct*4)); // 1x–5x
         const radius=5+pct*12;
-        const p=new Projectile(player.x,player.y,angle,dmg,SKINS.pyromancer.projColor,false);
+        const sk=CHARACTERS[currentCharacter];
+        const p=new Projectile(player.x,player.y,angle,dmg,sk.projColor,false);
         p.radius=radius;
         p.speed=Math.max(5,9-pct*3); // bigger = slower
         p.isFire=true;
@@ -4254,6 +4409,14 @@ const CHAR_INFO = {
         playstyle: 'Cheat character. 9 god-tier abilities, 5x stats, unlimited mana, all passives. There is no challenge — that\'s the point.',
         tip: '💰 You need $1,000,000,000 to unlock this. Play Gold Hoarder for a very long time.',
     },
+    dice: {
+        name: 'Dice', tag: '$2345 · Gambler\'s Paradise', icon: '🎲',
+        iconBg: 'linear-gradient(135deg,#f97316,#ea580c)', iconGlow: '#fbbf24',
+        stats: [{ label: 'Damage', value: '10–150 (randomized per shot)' },{ label: 'Speed', value: '3–8 (randomized at start)' },{ label: 'Health', value: '80–175 (randomized at start)' },{ label: 'Dash', value: 'Teleport to mouse' },{ label: 'Price', value: '$2345' }],
+        abilities: `<b>Passive — Chaos Shots:</b> Every projectile deals random damage between 10–150. Your speed and max HP are randomized at the start of each run (3–8 speed, 80–175 max health).<br><br><b>R — Random Special:</b> Activates a random special ability from any other character (except Wemmbu and Technoblade). Could be Ghost Walk, Meteor, Laser Sweep, or anything else!`,
+        playstyle: 'Pure randomness. Every run is completely different. You might be slow and weak, or fast and overpowered. Roll the dice and adapt.',
+        tip: '🎲 Tip: 99% of gamblers quit right before they hit big. Keep rolling!',
+    },
 };
 
 function showCharInfo(skin) {
@@ -4294,7 +4457,7 @@ function updateShopDisplay(){
     updateMoneyDisplay();
     document.querySelectorAll('.character-card').forEach(c=>c.classList.remove('selected'));
     const idx=CHARACTER_ORDER.indexOf(currentCharacter);if(idx>=0)document.querySelectorAll('.character-card')[idx].classList.add('selected');
-    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
+    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
 }
 function updateMcSkinClass(){
     if(['wemmbu','eggchan','dream','technoblade'].includes(currentCharacter))document.body.classList.add('mc-skin');
@@ -4311,7 +4474,7 @@ function resetAllProgress(){
     if(confirm('Are you sure you want to reset ALL progress? This cannot be undone!')){
         localStorage.clear();
         totalMoney = 0;
-        unlockedCharacters = ['default', 'goldhoarder', 'vampire', 'builder'];
+        unlockedCharacters = ['default', 'goldhoarder'];
         currentCharacter = 'default';
         savePersistentData();
         updateMoneyDisplay();
