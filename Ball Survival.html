@@ -781,6 +781,13 @@
             <div class="character-price">$35000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('hakari_v2')">INFO</button>
         </div>
+        <div class="character-card limited-card" onclick="selectCharacter('yuji_itadori')" id="yujiCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#e84d4d,#7f1d1d);box-shadow:0 0 20px rgba(232,77,77,.9);"></div>
+            <div class="character-name">Yuji Itadori</div>
+            <div class="character-ability">Enemies drop Sukuna Fingers<br>At 20 fingers → Transform to Sukuna<br>R: Malevolent Shrine</div>
+            <div class="character-price">$28000</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('yuji_itadori')">INFO</button>
+        </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
         <button id="charShopBackBtn" onclick="backToMenu()">← Back</button>
@@ -1019,6 +1026,7 @@ const CHARACTERS = {
     admin:       { name:'Admin',        color:'#ffffff', shadow:'#ffffff', projColor:'#ffffff', ability:'admin',          manaCost:0,  cdMax:0, isAdmin:true,      useImg:false },
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
+    yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'cursedslash',   manaCost:0,  cdMax:0, isYuji:true,       useImg:false },
 };
 
 const SKIN_URLS = {
@@ -1034,7 +1042,7 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000
 };
 
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
@@ -1044,11 +1052,11 @@ if (!unlockedCharacters.includes(currentCharacter) || !CHARACTERS[currentCharact
     currentCharacter = 'default';
 }
 
-const GH_DAMAGE = 3;
+const GH_DAMAGE = 15;
 const GH_FIRE_INTERVAL = 700;
 const GH_SPREAD = 0.55;
-const GH_GOLD_MULT = 5;
-const GH_SPEED_MULT = 0.55;
+const GH_GOLD_MULT = 6.25;
+const GH_SPEED_MULT = 0.6875;
 
 const DREAM_ARMOR_TIERS = [
     { name:'No Armor',          kills:0,   defense:0,    glow:'#22c55e', ringColor:null },
@@ -1405,6 +1413,14 @@ let hakariRollCount = 0;          // number of rolls so far
 let hakariJackpotTimer = 0;       // 4m 11s immortality (15060 frames at 60fps)
 let hakariJackpotActive = false;  // jackpot mode active (one-shot everything)
 let hakariJackpotCooldown = 0;    // cooldown after jackpot before domain can be released
+
+// ── YUJI ITADORI state ───────────────────────────
+let yujiSukunaFingers = 0;        // number of sukuna fingers collected (0-20)
+let yujiIsSukuna = false;         // true when transformed to sukuna at 20 fingers
+let yujiFingerParticles = [];     // visual particles for sukuna fingers
+let sukunaMalevolentActive = false; // malevolent shrine active (continuous damage enabled)
+let sukunaMalevolentTimer = 0;    // frames remaining in malevolent shrine effect display
+let sukunaMalevolentCooldown = 0; // cooldown before shrine can be used again (300 frames = 5 seconds)
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
@@ -2302,10 +2318,12 @@ function specialAttack(){
     if(sk.isMachineGun) return;
     if(sk.isGoldHoarder) { doGoldRush(); return; }
     if(sk.isAdmin) { doAdminAbility(0); return; }
+    // YUJI: Dynamically change ability based on Sukuna transformation
+    if(sk.isYuji && yujiIsSukuna) { sk.ability = 'malevolentshrine'; sk.manaCost = 0; }
     if(player.mana<sk.manaCost)return;
     if(sk.cdMax>0&&player.specialCooldown>0)return;
     if(specialInProgress&&sk.ability!=='bowshot')return;
-    if(sk.ability==='domainexpansion'){player.mana=0;}else{player.mana-=sk.manaCost;}
+    if(sk.ability==='domainexpansion'||sk.ability==='cursedslash'||sk.ability==='malevolentshrine'){player.mana=0;}else{player.mana-=sk.manaCost;}
     if(sk.cdMax>0)player.specialCooldown=sk.cdMax;
     switch(sk.ability){
         // ── PHANTOM — Ghost Walk ──────────────────────────────────
@@ -2600,6 +2618,30 @@ function specialAttack(){
             
             break;
         }
+        case 'cursedslash': {
+            // YUJI ITADORI normal attack (before Sukuna transformation)
+            for(let a=0;a<Math.PI*2;a+=0.4) {
+                const p = new Projectile(player.x, player.y, a, player.damage, '#e84d4d', true);
+                projectiles.push(p);
+            }
+            for(let i=0;i<20;i++) particles.push(new Particle(player.x, player.y, '#e84d4d'));
+            break;
+        }
+        case 'malevolentshrine': {
+            // SUKUNA MALEVOLENT SHRINE - activate continuous damage effect
+            if(sukunaMalevolentCooldown > 0) {
+                floatMoneyText('Malevolent Shrine on cooldown!');
+                break;
+            }
+            
+            sukunaMalevolentActive = true;
+            sukunaMalevolentTimer = 180; // visual effect for 3 seconds
+            sukunaMalevolentCooldown = 300; // 5 second cooldown (300 frames at 60fps)
+            
+            floatMoneyText('MALEVOLENT SHRINE');
+            for(let i=0;i<100;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*300, player.y + (Math.random()-0.5)*300, '#8b0000'));
+            break;
+        }
     }
     for(let i=0;i<15;i++)particles.push(new Particle(player.x,player.y,sk.color));
     updateHUD();
@@ -2629,6 +2671,20 @@ function handleKill(e) {
         items.push(new Item(e.x, e.y, 'aimassist'));
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
+    
+    // YUJI ITADORI: 5% chance to drop Sukuna Finger
+    if(currentCharacter === 'yuji_itadori' && Math.random() < 0.05 && yujiSukunaFingers < 20) {
+        yujiSukunaFingers++;
+        floatMoneyText(`🩸 Sukuna Finger ${yujiSukunaFingers}/20`);
+        for(let i=0;i<15;i++) particles.push(new Particle(e.x, e.y, '#8b0000'));
+        // Check if transformed to Sukuna at 20 fingers
+        if(yujiSukunaFingers >= 20 && !yujiIsSukuna) {
+            yujiIsSukuna = true;
+            floatMoneyText('SUKUNA AWAKENED!');
+            for(let i=0;i<100;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#8b0000'));
+        }
+    }
+    
     if(passiveState.lifesteal>0){ player.health=Math.min(player.health+passiveState.lifesteal,player.maxHealth); updateHUD(); }
     // Gold enemy bonus: 10x money
     if(e.isGoldForm) { earnRunGold(10); earnMoney(10, 'gold enemy'); }
@@ -3238,6 +3294,12 @@ function resetGame(){
     hakariJackpotActive = false;
     hakariJackpotTimer = 0;
     hakariJackpotCooldown = 0;
+    // Yuji reset
+    yujiSukunaFingers = 0;
+    yujiIsSukuna = false;
+    sukunaMalevolentActive = false;
+    sukunaMalevolentTimer = 0;
+    sukunaMalevolentCooldown = 0;
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -4201,6 +4263,64 @@ function gameLoop(ts){
         }
     }
     
+    // ═══════════════════════════════════════════════════════════════════
+    // YUJI ITADORI - SUKUNA TRANSFORMATION VISUALS
+    // ═══════════════════════════════════════════════════════════════════
+    if(currentCharacter === 'yuji_itadori') {
+        // Draw Sukuna finger counter
+        ctx.save();
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = yujiIsSukuna ? '#8b0000' : '#e84d4d';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = yujiIsSukuna ? '#8b0000' : '#e84d4d';
+        const fingerText = yujiIsSukuna ? 'SUKUNA' : `🩸 Fingers: ${yujiSukunaFingers}/20`;
+        ctx.fillText(fingerText, player.x, player.y - 60);
+        ctx.restore();
+        
+        // If Sukuna, draw red aura
+        if(yujiIsSukuna) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(139, 0, 0, 0.4)';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius + 40, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+    
+    // Malevolent Shrine continuous damage effect
+    if(sukunaMalevolentActive) {
+        // Apply 5% of enemy maxHealth as damage per frame
+        enemies.forEach(e => {
+            const damagePerFrame = e.maxHealth * 0.05 * (dt / 60); // 5% per second
+            e.health -= damagePerFrame;
+            // Visual damage indicator
+            particles.push(new Particle(e.x + (Math.random()-0.5)*30, e.y + (Math.random()-0.5)*30, '#8b0000'));
+        });
+    }
+    
+    // Malevolent Shrine effect visualization and cooldown
+    if(sukunaMalevolentActive && sukunaMalevolentTimer > 0) {
+        sukunaMalevolentTimer -= dt;
+        ctx.save();
+        ctx.fillStyle = `rgba(139, 0, 0, ${0.3 * (sukunaMalevolentTimer / 180)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = `rgba(139, 0, 0, ${0.6 * (sukunaMalevolentTimer / 180)})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    } else if(sukunaMalevolentActive && sukunaMalevolentTimer <= 0) {
+        sukunaMalevolentActive = false;
+    }
+    
+    // Handle Malevolent Shrine cooldown
+    if(sukunaMalevolentCooldown > 0) {
+        sukunaMalevolentCooldown -= dt;
+    }
+    
     // Draw Boxer aura
     if(currentCharacter==='boxer') {
         ctx.save();
@@ -4662,10 +4782,10 @@ const CHAR_INFO = {
     goldhoarder: {
         name: 'Gold Hoarder', tag: 'Free · Money Specialist', icon: '🪙',
         iconBg: 'linear-gradient(135deg,#ca8a04,#713f12)', iconGlow: '#fbbf24',
-        stats: [{ label: 'Damage', value: '3 (very low)' },{ label: 'Fire Rate', value: 'Slow (700ms)' },{ label: 'Speed', value: '55% of normal' },{ label: 'Accuracy', value: '⚠️ Heavy spread' },{ label: 'Gold Mult', value: '5x ALL gold sources' }],
-        abilities: `<b>Passive — Gold Multiplier:</b> Every source of gold is multiplied by 5x (kills, bosses, wave milestones).<br><br><b>R — Gold Rush (40 mana):</b> Converts all enemies within 180px into gold coins instantly, giving you coins for free.`,
-        playstyle: 'This character is intentionally bad at combat. Focus on kiting, surviving, and using Gold Rush whenever enemies cluster near you.',
-        tip: '⚠️ Warning: You will struggle to kill even basic enemies. Prioritize HP upgrades and use Gold Rush aggressively.',
+        stats: [{ label: 'Damage', value: '15 (strong!)' },{ label: 'Fire Rate', value: 'Slow (700ms)' },{ label: 'Speed', value: '68.75% of normal' },{ label: 'Accuracy', value: '⚠️ Heavy spread' },{ label: 'Gold Mult', value: '6.25x ALL gold' }],
+        abilities: `<b>Passive — Gold Multiplier:</b> Every source of gold is multiplied by 6.25x (kills, bosses, wave milestones). Increased from original 5x via 25% buff.<br><br><b>R — Gold Rush (40 mana):</b> Converts all enemies within 180px into gold coins instantly, giving you coins for free.`,
+        playstyle: 'Weak at combat but more viable after the 25% buff. Focus on kiting, surviving, and using Gold Rush when enemies cluster. Extra speed and damage make dodging easier.',
+        tip: '💡 Tip: With the buff, use Gold Rush more aggressively early on. The higher damage helps survive longer between uses. Stack gold bonuses from wave shops to snowball your advantage.',
     },
     vampire: {
         name: 'Vampire', tag: '100 · Lifesteal Tank', icon: '🧛',
@@ -4771,6 +4891,14 @@ const CHAR_INFO = {
         playstyle: 'High-risk gambling with no pity safety net. Use Domain Expansion strategically when surrounded or at low health. Each roll is a 10/100 lottery — some runs you hit immediately, others you never hit. If you don\'t hit jackpot within 60 seconds, you exit and must survive normally.',
         tip: '🎰 Tip: The 10% roll makes it even more unpredictable than before. Pure luck means sometimes you hit on roll 1, sometimes never. Use domains when you can afford to lose time if you don\'t hit. After hitting jackpot, you\'ll have a 20-second vulnerability window before you can pop domain again.',
     },
+    yuji_itadori: {
+        name: 'Yuji Itadori', tag: 'LIMITED · Cursed Spirit Host', icon: '🩸',
+        iconBg: 'linear-gradient(135deg,#e84d4d,#7f1d1d)', iconGlow: '#e84d4d',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Sukuna Fingers', value: 'Collect from enemies (5% drop)' },{ label: 'Transformation', value: 'At 20 fingers → Becomes Sukuna' },{ label: 'Shrine Cooldown', value: '5 seconds' },{ label: 'Price', value: 'LIMITED ($28,000)' }],
+        abilities: `<b>Passive — Sukuna Finger Collection:</b> Enemies have a 5% chance to drop Sukuna Fingers when killed. Collect 20 fingers to transform into Sukuna permanently.<br><br><b>R — Cursed Slash (Yuji Form, 0 mana):</b> Fires an 8-shot projectile ring of cursed slashes.<br><br><b>R — Malevolent Shrine (Sukuna Form, 0 mana, 5s CD):</b> Activate a continuous damage aura that deals 5% of each enemy's max health per second for 3 seconds. Can only be activated once every 5 seconds.`,
+        playstyle: 'Scaling character with a transformation mechanic. Early game: focus on collecting fingers while surviving. At 20 fingers: transform into Sukuna and gain a sustained damage ability with strategic cooldown management.',
+        tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 5% health damage scales with enemy toughness, making it effective against bosses.',
+    },
 };
 
 function showCharInfo(skin) {
@@ -4811,7 +4939,7 @@ function updateShopDisplay(){
     updateMoneyDisplay();
     document.querySelectorAll('.character-card').forEach(c=>c.classList.remove('selected'));
     const idx=CHARACTER_ORDER.indexOf(currentCharacter);if(idx>=0)document.querySelectorAll('.character-card')[idx].classList.add('selected');
-    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
+    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice','hakari_v2','yuji_itadori'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
 }
 function updateMcSkinClass(){
     if(['wemmbu','eggchan','dream','technoblade'].includes(currentCharacter))document.body.classList.add('mc-skin');
