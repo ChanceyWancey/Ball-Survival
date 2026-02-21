@@ -636,6 +636,21 @@
             background: rgba(0,0,0,0.55); z-index: 2999;
             backdrop-filter: blur(3px);
         }
+        #statsPanel {
+            display: none; position: fixed; bottom: 20px; right: 20px;
+            background: rgba(0,0,0,0.95); border: 3px solid #3b82f6;
+            border-radius: 8px; padding: 20px; color: white;
+            font-family: 'Arial', sans-serif; z-index: 999;
+            min-width: 280px; box-shadow: 0 0 40px rgba(59,130,246,0.3);
+        }
+        #statsPanel.show { display: block; }
+        #statsPanel h3 { color: #3b82f6; margin-bottom: 15px; font-size: 18px; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .stat-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .stat-label { color: #a0aec0; font-weight: bold; }
+        .stat-value { color: #4ade80; font-weight: bold; }
+        #biomeIndicator { position: fixed; top: 80px; right: 20px; background: rgba(0,0,0,0.8); border: 2px solid #fbbf24; border-radius: 6px; padding: 12px 16px; color: white; font-size: 13px; z-index: 100; }
+        #biomeIndicator .biome-name { color: #fbbf24; font-weight: bold; margin-bottom: 4px; }
+        #biomeIndicator .biome-effect { color: rgba(255,255,255,0.7); font-size: 11px; }
     </style>
 </head>
 <body>
@@ -822,6 +837,14 @@
             <div class="limited-timer" id="yujiTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('yuji_itadori')">INFO</button>
         </div>
+        <div class="character-card limited-card" onclick="selectCharacter('toji')" id="tojiCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#6b4423,#3d2817);box-shadow:0 0 20px rgba(107,68,35,.9);"></div>
+            <div class="character-name">Toji Fushiguro</div>
+            <div class="character-ability">R: Tool Swap<br>Switch between weapons for<br>increased damage & speed</div>
+            <div class="character-price">$20000</div>
+            <div class="limited-timer" id="tojiTimer"></div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('toji')">INFO</button>
+        </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
         <button id="charShopBackBtn" onclick="backToMenu()">← Back</button>
@@ -894,6 +917,23 @@
         <div class="stat-box"><div class="stat-label">GOLD</div><div class="stat-value" id="hudMoney" style="color:#fbbf24;">0</div></div>
     </div>
     <div id="controls">WASD: Move | SPACE: Dash | Click: Shoot | R: Special | F11: Fullscreen | Shop opens every 25 waves!</div>
+    <div id="statsPanel">
+        <h3>📊 STATS (Press TAB to hide)</h3>
+        <div class="stat-row"><div class="stat-label">Biome:</div><div class="stat-value" id="statBiome">🌲 Forest</div></div>
+        <div class="stat-row"><div class="stat-label">Effect:</div><div class="stat-value" id="statBiomeEffect">Normal</div></div>
+        <div class="stat-row"><div class="stat-label">Health:</div><div class="stat-value" id="statHealth">100/100</div></div>
+        <div class="stat-row"><div class="stat-label">Damage:</div><div class="stat-value" id="statDamage">20</div></div>
+        <div class="stat-row"><div class="stat-label">Speed:</div><div class="stat-value" id="statSpeed">5</div></div>
+        <div class="stat-row"><div class="stat-label">Level:</div><div class="stat-value" id="statLevel">1</div></div>
+        <div class="stat-row"><div class="stat-label">Kills:</div><div class="stat-value" id="statKills">0</div></div>
+        <div class="stat-row"><div class="stat-label">Wave:</div><div class="stat-value" id="statWave">0</div></div>
+        <div class="stat-row"><div class="stat-label">Armor Reduction:</div><div class="stat-value" id="statArmor">0%</div></div>
+        <div class="stat-row"><div class="stat-label">Lifesteal:</div><div class="stat-value" id="statLifesteal">0%</div></div>
+    </div>
+    <div id="biomeIndicator" style="display:none;">
+        <div class="biome-name" id="biomeName">🌲 Forest</div>
+        <div class="biome-effect" id="biomeEffect">Normal conditions</div>
+    </div>
 </div>
 
 <div id="tutorialOverlay">
@@ -1027,16 +1067,18 @@ if (unlockedCharacters.includes('hakari')) {
 }
 
 // Limited character timer (Feb 27 2026 12 PM CST)
-const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori'];
+const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori', 'toji'];
 const LIMITED_CARD_IDS = {
     'dice': 'diceCharacter',
     'hakari_v2': 'hakariCharacter',
-    'yuji_itadori': 'yujiCharacter'
+    'yuji_itadori': 'yujiCharacter',
+    'toji': 'tojiCharacter'
 };
 const LIMITED_EXPIRY = {
     'dice': new Date(2026, 1, 27, 12, 0, 0),
     'hakari_v2': new Date(2026, 1, 27, 12, 0, 0),
-    'yuji_itadori': new Date(2026, 1, 27, 12, 0, 0)
+    'yuji_itadori': new Date(2026, 1, 27, 12, 0, 0),
+    'toji': new Date(2026, 1, 28, 12, 0, 0)
 };
 
 function updateLimitedTimers() {
@@ -1110,6 +1152,7 @@ const CHARACTERS = {
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
     yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'cursedslash',   manaCost:0,  cdMax:0, isYuji:true,       useImg:false },
+    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'toolswap',       manaCost:40, cdMax:120, isToji:true,       useImg:false },
 };
 
 const SKIN_URLS = {
@@ -1125,7 +1168,7 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000, toji:20000
 };
 
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
@@ -1258,6 +1301,32 @@ let passiveState = {
     timeslowActive: false, timeslowTimer: 0,
     regenTimer: 0,
 };
+
+// Biome system - changes every 50 waves
+const BIOMES = [
+    { name: '🌲 Forest', effect: 'none', damageBonus: 0, speedBonus: 0, description: 'Normal conditions', gridColor: 'rgba(59,130,246,0.07)', playerGlow: '#3b82f6', uiColor: '#3b82f6', bgOverlay: 'rgba(0,0,0,0)' },
+    { name: '❄️ Blizzard', effect: 'freeze', damageBonus: 0, speedBonus: -0.5, description: '-50% movement speed', gridColor: 'rgba(96,165,250,0.1)', playerGlow: '#06b6d4', uiColor: '#0891b2', bgOverlay: 'rgba(135, 206, 250, 0.08)' },
+    { name: '🔥 Lava Fields', effect: 'burn', damageBonus: 0.3, speedBonus: 0, description: '+30% damage, enemies burn', gridColor: 'rgba(255,100,0,0.12)', playerGlow: '#ff4500', uiColor: '#ea580c', bgOverlay: 'rgba(255, 100, 0, 0.06)' },
+    { name: '⚡ Storm', effect: 'electric', damageBonus: 0.2, speedBonus: 0.2, description: '+20% damage & speed', gridColor: 'rgba(250,204,21,0.12)', playerGlow: '#facc15', uiColor: '#a855f7', bgOverlay: 'rgba(255, 255, 0, 0.04)' },
+    { name: '🌙 Twilight', effect: 'dark', damageBonus: 0, speedBonus: 0.3, description: '+30% attack speed', gridColor: 'rgba(168,85,247,0.08)', playerGlow: '#7c3aed', uiColor: '#d8b4fe', bgOverlay: 'rgba(100, 100, 150, 0.12)' },
+    { name: '🌊 Flooded', effect: 'water', damageBonus: -0.15, speedBonus: -0.3, description: '-15% damage, -30% speed', gridColor: 'rgba(96,165,250,0.12)', playerGlow: '#0ea5e9', uiColor: '#0284c7', bgOverlay: 'rgba(100, 150, 200, 0.08)' },
+];
+
+function getBiomeColors() {
+    return {
+        gridColor: currentBiome.gridColor || 'rgba(59,130,246,0.07)',
+        playerGlow: currentBiome.playerGlow || '#3b82f6',
+        uiColor: currentBiome.uiColor || '#3b82f6',
+        bgOverlay: currentBiome.bgOverlay || 'rgba(0,0,0,0)'
+    };
+}
+
+let currentBiome = BIOMES[0];
+let biomeDamageBonus = 0;
+let biomeSpeedBonus = 0;
+let statsDisplayOpen = false;
+let statsUpdateTimer = 0;
+let nextBiomeChangeWave = 5 + Math.floor(Math.random() * 10); // Random biome change between waves 5-15
 
 let turrets = [];
 let shopCurrentOffer = { abilities: [], passives: [] };
@@ -1505,8 +1574,19 @@ let sukunaMalevolentActive = false; // malevolent shrine active (continuous dama
 let sukunaMalevolentTimer = 0;    // frames remaining in malevolent shrine effect display
 let sukunaMalevolentCooldown = 0; // cooldown before shrine can be used again (300 frames = 5 seconds)
 
+// Toji Fushiguro variables
+let tojiToolMode = 'sharp';       // 'sharp' or 'heavy'
+let tojiSharpModeTimer = 0;       // frames remaining in sharp mode (+30% dmg)
+let tojiHeavyModeTimer = 0;       // frames remaining in heavy mode (+20% dmg, 50% slow)
+
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
+
+    // ── TOJI ──────────────────────────────────
+    if (skin === 'toji') {
+        if(tojiSharpModeTimer > 0) tojiSharpModeTimer -= dt;
+        if(tojiHeavyModeTimer > 0) tojiHeavyModeTimer -= dt;
+    }
 
     // ── PHANTOM ──────────────────────────────────
     if (skin === 'phantom') {
@@ -1747,7 +1827,14 @@ function fireWithPassives(baseAngle) {
                 finalAngle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
             }
         }
-        const dmg = applyPassiveDamageBoost(getProjectileDamage());
+        let dmg = applyPassiveDamageBoost(getProjectileDamage());
+        // Apply biome damage bonus
+        dmg *= (1 + biomeDamageBonus);
+        // Apply Toji mode bonuses
+        if(sk.isToji) {
+            if(tojiSharpModeTimer > 0) dmg *= 1.30; // +30% damage in sharp mode
+            if(tojiHeavyModeTimer > 0) dmg *= 1.20; // +20% damage in heavy mode
+        }
         const p = new Projectile(player.x,player.y,finalAngle,dmg,col,false,false,sk.isMachineGun);
         if(sk.isAdmin) { p.isAdmin=true; p.hue=adminHue; }
         if(passiveState.homingshot>0) p.homing=true;
@@ -1788,6 +1875,94 @@ function processNotificationQueue() {
     // Keep current notification alive, don't queue up
     if(notificationTimer <= 0) {
         currentNotification = null;
+    }
+}
+
+function toggleStatsDisplay() {
+    statsDisplayOpen = !statsDisplayOpen;
+    const panel = document.getElementById('statsPanel');
+    if(statsDisplayOpen) { panel.classList.add('show'); statsUpdateTimer = 0; updateStatsDisplay(); }
+    else { panel.classList.remove('show'); }
+}
+
+function updateStatsDisplay() {
+    if(!statsDisplayOpen) return;
+    const totalArmor = Math.min(passiveState.armor * 15, 60);
+    const lifestealPct = passiveState.lifesteal * 5;
+    document.getElementById('statBiome').textContent = currentBiome.name;
+    document.getElementById('statBiomeEffect').textContent = currentBiome.description;
+    document.getElementById('statHealth').textContent = `${Math.floor(player.health)}/${player.maxHealth}`;
+    document.getElementById('statDamage').textContent = Math.floor(getProjectileDamage() + (getProjectileDamage() * biomeDamageBonus));
+    document.getElementById('statSpeed').textContent = (player.speed + biomeSpeedBonus).toFixed(2);
+    document.getElementById('statLevel').textContent = player.level;
+    document.getElementById('statKills').textContent = player.kills;
+    document.getElementById('statWave').textContent = currentRound;
+    document.getElementById('statArmor').textContent = totalArmor + '%';
+    document.getElementById('statLifesteal').textContent = lifestealPct + '%';
+}
+
+function updateBiome() {
+    // Randomly change biome at scheduled waves
+    if(currentRound >= nextBiomeChangeWave) {
+        let randomIndex = Math.floor(Math.random() * BIOMES.length);
+        // Avoid picking the same biome twice in a row
+        while(BIOMES[randomIndex].name === currentBiome.name) {
+            randomIndex = Math.floor(Math.random() * BIOMES.length);
+        }
+        currentBiome = BIOMES[randomIndex];
+        biomeDamageBonus = currentBiome.damageBonus;
+        biomeSpeedBonus = currentBiome.speedBonus;
+        floatMoneyText(`🌍 BIOME CHANGED: ${currentBiome.name}`);
+        // Schedule next biome change at random interval (8-15 waves from now for frequent changes)
+        nextBiomeChangeWave = currentRound + 8 + Math.floor(Math.random() * 8);
+        
+        // Update HUD colors based on biome
+        updateBiomeColors();
+    }
+    document.getElementById('biomeName').textContent = currentBiome.name;
+    document.getElementById('biomeEffect').textContent = currentBiome.description;
+}
+
+function updateBiomeColors() {
+    const colors = getBiomeColors();
+    const hud = document.getElementById('hud');
+    const statsPanel = document.getElementById('statsPanel');
+    const biomeIndicator = document.getElementById('biomeIndicator');
+    
+    // Update HUD border and accent colors
+    if(hud) {
+        hud.style.setProperty('--biome-color', colors.uiColor);
+        const statBoxes = hud.querySelectorAll('.stat-box');
+        statBoxes.forEach(box => {
+            box.style.borderColor = colors.uiColor;
+        });
+        const progressBars = hud.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            if(!bar.classList.contains('health-bar') && !bar.classList.contains('mana-bar') && !bar.classList.contains('exp-bar')) {
+                bar.style.background = colors.uiColor;
+            }
+        });
+    }
+    
+    // Update stats panel
+    if(statsPanel) {
+        statsPanel.style.borderColor = colors.uiColor;
+        const title = statsPanel.querySelector('h3');
+        if(title) title.style.color = colors.uiColor;
+    }
+    
+    // Update biome indicator
+    if(biomeIndicator) {
+        biomeIndicator.style.borderColor = colors.uiColor;
+        const biomeName = biomeIndicator.querySelector('.biome-name');
+        if(biomeName) biomeName.style.color = colors.uiColor;
+    }
+}
+
+function showBiomeIndicator() {
+    const indicator = document.getElementById('biomeIndicator');
+    if(document.getElementById('gameContainer').style.display === 'block') {
+        indicator.style.display = 'block';
     }
 }
 
@@ -1889,6 +2064,14 @@ class Enemy {
     }
     update(dt=1) {
         if(this.frozen>0){this.frozen-=dt;return;}
+        
+        // Apply Toji heavy mode slow
+        let effectiveSlowMult = 1;
+        if(this.slowTimer !== undefined && this.slowTimer > 0) {
+            this.slowTimer -= dt;
+            effectiveSlowMult = 1 - this.slowAmount;
+        }
+        
         const slowMult = passiveState.timeslowActive ? 0.2 : 1;
 
         if (!this.path) this.path = [];
@@ -1919,8 +2102,8 @@ class Enemy {
 
         const ddx = tx - this.x, ddy = ty - this.y, ddist = Math.sqrt(ddx*ddx + ddy*ddy);
         if(ddist > 0) {
-            this.x += (ddx/ddist) * this.speed * dt * slowMult;
-            this.y += (ddy/ddist) * this.speed * dt * slowMult;
+            this.x += (ddx/ddist) * this.speed * dt * slowMult * effectiveSlowMult;
+            this.y += (ddy/ddist) * this.speed * dt * slowMult * effectiveSlowMult;
         }
 
         const eRes = resolveCircleWall(this.x, this.y, this.radius);
@@ -2699,6 +2882,32 @@ function specialAttack(){
             for(let i=0;i<100;i++) particles.push(new Particle(player.x, player.y, '#ec4899'));
             for(let r=30;r<200;r+=40) for(let a=0;a<Math.PI*2;a+=0.3) particles.push(new Particle(player.x+Math.cos(a)*r, player.y+Math.sin(a)*r, '#7c3aed'));
             
+            break;
+        }
+        case 'toolswap': {
+            // TOJI FUSHIGURO — Tool Swap between modes
+            if(!tojiToolMode) tojiToolMode = 'sharp';
+            if(tojiToolMode === 'sharp') {
+                // Switch to Heavy mode
+                tojiToolMode = 'heavy';
+                player.speedBoost = 0;
+                tojiHeavyModeTimer = 120; // 2 seconds
+                floatMoneyText('🪵 HEAVY MODE: +20% DMG, 50% SLOW');
+                for(let i=0;i<30;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*60, player.y + (Math.random()-0.5)*60, '#8b6914'));
+                // Slow nearby enemies
+                enemies.forEach(e => {
+                    if(Math.hypot(e.x - player.x, e.y - player.y) < 300) {
+                        e.slowTimer = 120;
+                        e.slowAmount = 0.5;
+                    }
+                });
+            } else {
+                // Switch to Sharp mode
+                tojiToolMode = 'sharp';
+                tojiSharpModeTimer = 180; // 3 seconds
+                floatMoneyText('⚔️ SHARP MODE: +30% DMG');
+                for(let i=0;i<30;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*60, player.y + (Math.random()-0.5)*60, '#f59e0b'));
+            }
             break;
         }
         case 'cursedslash': {
@@ -3807,8 +4016,25 @@ function gameLoop(ts){
     // Call gold form tick function
     tickGoldFormEnemies(dt);
 
+    // Update biome every frame
+    updateBiome();
+
+    // Update stats display every second if open
+    if(statsDisplayOpen) {
+        statsUpdateTimer += dt;
+        if(statsUpdateTimer >= 60) {
+            statsUpdateTimer = 0;
+            updateStatsDisplay();
+        }
+    }
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.strokeStyle='rgba(59,130,246,0.07)';ctx.lineWidth=1;
+    
+    // Draw biome background effect
+    drawBiomeBackground();
+    
+    const biomeColors = getBiomeColors();
+    ctx.strokeStyle=biomeColors.gridColor;ctx.lineWidth=1;
     for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
     for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
 
@@ -3869,7 +4095,7 @@ function gameLoop(ts){
     let mx=0,my=0;
     if(keys[binds.moveUp]||keys['arrowup'])my-=1;if(keys[binds.moveDown]||keys['arrowdown'])my+=1;
     if(keys[binds.moveLeft]||keys['arrowleft'])mx-=1;if(keys[binds.moveRight]||keys['arrowright'])mx+=1;
-    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd;}
+    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;const biomeSpd=1+biomeSpeedBonus;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;}
     player.x=Math.max(player.radius,Math.min(canvas.width-player.radius,player.x));
     player.y=Math.max(player.radius,Math.min(canvas.height-player.radius,player.y));
     const pResolved = (currentCharacter==='phantom'&&phantomPhasing) ? {x:player.x,y:player.y} : resolveCircleWall(player.x, player.y, player.radius);
@@ -3901,12 +4127,25 @@ function gameLoop(ts){
 
     updateSkinOverlay(ts);
     drawPlayer(ts, dt);
+    
+    // Apply biome tint overlay
+    if(biomeColors.playerGlow && biomeColors.playerGlow !== '#3b82f6') {
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = biomeColors.playerGlow;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
 
     const diff=getDifficulty();
     ctx.save();ctx.font='bold 13px Arial';
     ctx.fillStyle=diff===0?'rgba(255,255,255,0.4)':`hsl(${Math.max(0,120-diff*15)},90%,55%)`;
-    ctx.textAlign='right';ctx.fillText(`Wave ${currentRound} • Tier ${diff+1}`,canvas.width-12,22);
+    ctx.textAlign='right';
+    ctx.shadowColor = biomeColors.uiColor;
+    ctx.shadowBlur = 8;
+    ctx.fillText(`Wave ${currentRound} • Tier ${diff+1}`,canvas.width-12,22);
     const sc=getSpawnCount();ctx.font='bold 11px Arial';ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
     ctx.fillText(`${sc} enemy${sc>1?'s':''}/wave`,canvas.width-12,40);
     ctx.fillStyle='rgba(251,191,36,0.7)';ctx.fillText(`💰 ${runGold} gold`,canvas.width-12,60);
     ctx.textAlign='left';ctx.restore();
@@ -4625,6 +4864,68 @@ function drawNavDebug() {
     ctx.restore();
 }
 
+function drawBiomeBackground() {
+    ctx.save();
+    switch(currentBiome.effect) {
+        case 'freeze':
+            ctx.fillStyle = 'rgba(135, 206, 250, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 3; i++) {
+                ctx.fillStyle = `rgba(200, 220, 255, ${0.05 + Math.random() * 0.05})`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 100 + 50, 2);
+            }
+            break;
+        case 'burn':
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.06)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 2; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, 100);
+                grad.addColorStop(0, 'rgba(255, 140, 0, 0.08)');
+                grad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(x - 100, y - 100, 200, 200);
+            }
+            break;
+        case 'electric':
+            ctx.fillStyle = 'rgba(255, 255, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255, 255, 100, 0.1)';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < 2; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, Math.random() * canvas.height);
+                ctx.lineTo(canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+            break;
+        case 'dark':
+            ctx.fillStyle = 'rgba(100, 100, 150, 0.12)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 5; i++) {
+                ctx.fillStyle = `rgba(80, 80, 120, ${Math.random() * 0.05})`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 150, Math.random() * 150);
+            }
+            break;
+        case 'water':
+            ctx.fillStyle = 'rgba(100, 150, 200, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(150, 170, 200, 0.06)';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 3; i++) {
+                const y = (canvas.height / 3) * (i + 1);
+                ctx.beginPath();
+                for(let x = 0; x < canvas.width; x += 30) {
+                    ctx.lineTo(x, y + Math.sin(x * 0.01) * 10);
+                }
+                ctx.stroke();
+            }
+            break;
+    }
+    ctx.restore();
+}
+
 document.addEventListener('keydown',e=>{
     if(listeningFor) return;
     const k = e.key.toLowerCase();
@@ -4634,6 +4935,7 @@ document.addEventListener('keydown',e=>{
         if(gamePaused) resumeGame(); else pauseGame();
         return;
     }
+    if(k === 'tab' && gameRunning) { e.preventDefault(); toggleStatsDisplay(); return; }
     if(k === binds.dash) { e.preventDefault(); if(gameRunning) dash(); }
     if(k === binds.special && gameRunning) specialAttack();
     // Cyborg mode toggle (E key)
@@ -4763,25 +5065,57 @@ function applyTutorialStep(){
 
     if (tutorialStep === 0){
         titleEl.textContent = 'Welcome to Ball Survival';
-        bodyEl.innerHTML = 'You are the blue ball in the arena. Survive as long as you can while enemies chase you.';
+        bodyEl.innerHTML = 'You are the blue ball in the arena. Survive waves of enemies as long as you can. The longer you survive, the stronger enemies become, but you also get stronger!';
         hintEl.textContent = 'Press Next to learn how to move.';
     } else if (tutorialStep === 1){
-        titleEl.textContent = 'Movement';
-        bodyEl.innerHTML = 'Use WASD or the arrow keys to move around. Try moving in any direction now.';
-        hintEl.textContent = 'Move for a couple of seconds, then press Next.';
+        titleEl.textContent = 'Movement Controls';
+        bodyEl.innerHTML = '<b>WASD</b> or <b>Arrow Keys</b> - Move around the arena<br/>Your character will automatically move in the direction you press. Use this to dodge incoming enemies!';
+        hintEl.textContent = 'Try moving around now, then press Next.';
     } else if (tutorialStep === 2){
         titleEl.textContent = 'Aiming & Shooting';
-        bodyEl.innerHTML = 'Aim with your mouse. Your ball auto-fires toward the cursor, and you can also click to shoot manually.';
-        hintEl.textContent = 'Move the mouse around the arena and press Next when you are ready.';
+        bodyEl.innerHTML = '<b>Mouse Movement</b> - Aim toward any direction<br/><b>Left Click</b> - Fire projectiles (or auto-attack)<br/>Your projectiles deal damage to enemies and help you clear waves faster!';
+        hintEl.textContent = 'Move your mouse and press Next when ready.';
     } else if (tutorialStep === 3){
-        titleEl.textContent = 'Dash & Special';
-        bodyEl.innerHTML = 'Press SPACE to dash toward your mouse for a quick escape. Press R to use your character\'s special ability when it is READY.';
+        titleEl.textContent = 'Dash Mechanic';
+        bodyEl.innerHTML = '<b>SPACE</b> - Dash toward your mouse position<br/>Dash quickly moves you out of danger with a short cooldown. Use it to escape from enemy groups or to reposition for better angles.';
         if (hud) hud.classList.add('tutorial-highlight');
-        hintEl.textContent = 'Watch the R KEY box in the HUD light up when your ability is ready.';
+        hintEl.textContent = 'Try dashing a few times to understand the mechanic.';
     } else if (tutorialStep === 4){
-        titleEl.textContent = 'Upgrades & Gold';
-        bodyEl.innerHTML = 'Killing enemies grants EXP and gold. When you level up, choose upgrades. Between big waves, spend gold in the Wave Shop.';
-        hintEl.textContent = 'You can always pause with ESC or P and change settings.';
+        titleEl.textContent = 'Special Abilities';
+        bodyEl.innerHTML = '<b>R Key</b> - Activate your character\'s special ability<br/>Each character has a unique ability with a cooldown. The ability name is shown on the HUD when ready. Press R to unleash powerful effects!';
+        hintEl.textContent = 'Watch for the R cooldown indicator in the HUD.';
+    } else if (tutorialStep === 5){
+        titleEl.textContent = 'Enemy Types';
+        bodyEl.innerHTML = '<b>Red Circles</b> (Speed 2-3) - Basic enemies, easy to handle<br/><b>Purple Triangles</b> (Speed 3.5) - Faster, deal more damage<br/><b>Pink Mini-Boss</b> (Spawns every 15 waves) - Much tougher, high health<br/><b>Red Triangle Boss</b> (Spawns every 50 waves) - THE TRIANGLE, extremely dangerous!';
+        hintEl.textContent = 'Learn to identify which enemies pose the greatest threat.';
+    } else if (tutorialStep === 6){
+        titleEl.textContent = 'Leveling & Experience';
+        bodyEl.innerHTML = 'Every enemy you kill grants EXP. When your EXP bar fills up, you level up and can choose 2 active abilities or 2 passive upgrades. Stack synergistic upgrades to become powerful!';
+        hintEl.textContent = 'Choosing upgrades wisely is key to surviving longer waves!';
+    } else if (tutorialStep === 7){
+        titleEl.textContent = 'Gold & Wave Shop';
+        bodyEl.innerHTML = 'Enemies drop gold when defeated. Between waves (every 5 waves at checkpoints), visit the Wave Shop with <b>E Key</b> to spend gold on powerful permanent upgrades like more health, damage, speed, and armor!';
+        hintEl.textContent = 'Save gold for the Wave Shop rather than using abilities you don\'t need.';
+    } else if (tutorialStep === 8){
+        titleEl.textContent = 'Biome System';
+        bodyEl.innerHTML = 'The arena changes to different biomes every 25-75 waves, each with unique effects:<br/>🌲 <b>Forest</b> - Normal<br/>❄️ <b>Blizzard</b> - -50% speed<br/>🔥 <b>Lava Fields</b> - +30% damage<br/>⚡ <b>Storm</b> - +20% damage & speed<br/>🌙 <b>Twilight</b> - +30% attack speed<br/>🌊 <b>Flooded</b> - -15% damage, -30% speed';
+        hintEl.textContent = 'Study biome bonuses to adjust your strategy!';
+    } else if (tutorialStep === 9){
+        titleEl.textContent = 'Stats Display (TAB Key)';
+        bodyEl.innerHTML = 'Press <b>TAB</b> during gameplay to open your stats panel showing:<br/>• Current Health & Max Health<br/>• Total Damage (with biome bonus)<br/>• Movement Speed (with biome bonus)<br/>• Level, Kills, Wave Count<br/>• Armor Percentage & Lifesteal Percentage';
+        hintEl.textContent = 'Use TAB to monitor your progression and build effectiveness!';
+    } else if (tutorialStep === 10){
+        titleEl.textContent = 'Character Selection';
+        bodyEl.innerHTML = 'Visit the Character Shop to unlock 18 unique characters, each with different starting stats, special abilities, and playstyles. <b>Toji Fushiguro</b> is a limited-time character that expires on Feb 28, 2026 at 12 PM CST with a weapon-swap ability!';
+        hintEl.textContent = 'Different characters excel at different strategies!';
+    } else if (tutorialStep === 11){
+        titleEl.textContent = 'Game Pause & Settings';
+        bodyEl.innerHTML = 'Press <b>ESC</b> or <b>P</b> during gameplay to pause and access settings. You can adjust volume, toggle graphics effects, and return to the main menu anytime.';
+        hintEl.textContent = 'Take breaks whenever you need!';
+    } else if (tutorialStep === 12){
+        titleEl.textContent = 'Survival Tips';
+        bodyEl.innerHTML = '<b>Dodge Patterns:</b> Circle enemies move in straight lines, triangles are faster<br/><b>Manage Gold:</b> Invest in health & armor early, then damage<br/><b>Use Abilities:</b> Time your R ability when surrounded<br/><b>Wave Milestones:</b> Bosses appear every 50 waves, mini-bosses every 15<br/><b>Biome Advantage:</b> Capitalize on biome bonuses for your current stats!';
+        hintEl.textContent = 'Apply these strategies to beat your high score!';
     } else {
         endTutorial();
     }
@@ -4982,6 +5316,14 @@ const CHAR_INFO = {
         playstyle: 'Scaling character with a transformation mechanic. Early game: focus on collecting fingers while surviving. At 20 fingers: transform into Sukuna and gain a sustained damage ability with strategic cooldown management.',
         tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 5% health damage scales with enemy toughness, making it effective against bosses.',
     },
+    toji: {
+        name: 'Toji Fushiguro', tag: 'LIMITED · Tool Master', icon: '🪵',
+        iconBg: 'linear-gradient(135deg,#6b4423,#3d2817)', iconGlow: '#f59e0b',
+        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Tool Swap Cooldown', value: '2 seconds' },{ label: 'Damage Bonus', value: '+30% while active' },{ label: 'Speed Bonus', value: '+20% while active' },{ label: 'Price', value: 'LIMITED ($20,000)' }],
+        abilities: `<b>Passive — Cursed Tool Mastery:</b> No cursed energy = pure combat skill. Gain +10% damage and +5% attack speed permanently.<br><br><b>R — Tool Swap (40 mana, 2s CD):</b> Swap between Sharp (maximum damage) and Heavy (stun) weapon modes. Sharp mode: +30% damage for 3 seconds. Heavy mode: +20% damage + slow enemies by 50% for 2 seconds. Choose your strategy mid-fight.`,
+        playstyle: 'Adaptable warrior. Switch between aggressive damage bursts and defensive slow modes depending on the situation. High mobility and raw combat prowess with no reliance on cursed techniques.',
+        tip: '💡 Tip: Use Sharp mode for high-priority targets. Use Heavy mode when surrounded to create breathing room. The tool swap cooldown is short (2 seconds) allowing frequent strategy switches during combat.',
+    },
 };
 
 function showCharInfo(skin) {
@@ -5014,6 +5356,9 @@ function startGame(){
     document.getElementById('gameContainer').style.display='block';
     gameRunning=true;
     resetGame();
+    updateBiome();
+    updateBiomeColors();
+    showBiomeIndicator();
     requestAnimationFrame(gameLoop);
 }
 function backToMainMenu(){document.getElementById('gameOver').style.display='none';document.getElementById('gameContainer').style.display='none';skinOverlay.style.display='none';document.getElementById('mainMenu').style.display='block';updateMoneyDisplay();}
@@ -5022,7 +5367,7 @@ function updateShopDisplay(){
     updateMoneyDisplay();
     document.querySelectorAll('.character-card').forEach(c=>c.classList.remove('selected'));
     const idx=CHARACTER_ORDER.indexOf(currentCharacter);if(idx>=0)document.querySelectorAll('.character-card')[idx].classList.add('selected');
-    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice','hakari_v2','yuji_itadori'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
+    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice','hakari_v2','yuji_itadori','toji'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
 }
 function updateMcSkinClass(){
     if(['wemmbu','eggchan','dream','technoblade'].includes(currentCharacter))document.body.classList.add('mc-skin');
@@ -5087,6 +5432,7 @@ function resetAllProgress(){
 }
 
 const CODES = {
+    '/give @s all': { reward: 'allclaims', amount: 50000, message: '🎁 COMMAND EXECUTED: All characters & $50,000 unlocked!' }
 };
 
 let usedCodes = JSON.parse(localStorage.getItem('ballRPGUsedCodes')) || [];
@@ -5156,6 +5502,21 @@ function submitCode() {
         updateMoneyDisplay();
         floatMoneyText(codeData.message);
         alert('✨ Claimed: Hakari + Yuji Itadori + $10,000!');
+    } else if (codeData.reward === 'allclaims') {
+        totalMoney += codeData.amount;
+        const allChars = Object.keys(CHARACTERS);
+        let newCharsAdded = 0;
+        allChars.forEach(char => {
+            if (!unlockedCharacters.includes(char)) {
+                unlockedCharacters.push(char);
+                newCharsAdded++;
+            }
+        });
+        usedCodes.push(code);
+        savePersistentData();
+        updateMoneyDisplay();
+        floatMoneyText(codeData.message);
+        alert(codeData.message);
     }
     
     codeInput.value = '';
