@@ -625,6 +625,10 @@
     <button class="menu-btn" onclick="showCharacterShop()">Characters</button>
     <button class="menu-btn" onclick="startGame()">▶️ Play Game</button>
     <button class="menu-btn" onclick="showSettings(false)" style="background:#6b7280;border-bottom-color:#374151;">⚙️ Settings</button>
+    <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
+        <input type="text" id="codeInput" placeholder="Enter code..." style="padding: 8px 12px; border: 2px solid #fbbf24; background: #1a1a1a; color: #fbbf24; font-family: monospace; border-radius: 4px; width: 150px;">
+        <button class="menu-btn" onclick="submitCode()" style="padding: 8px 16px; font-size: 14px; border-bottom: 3px solid #ca8a04; margin: 0;">Submit</button>
+    </div>
 </div>
 
 <div id="tutorial" style="display:none;"></div>
@@ -4990,6 +4994,79 @@ function resetAllProgress(){
         location.reload();
     }
 }
+
+const CODES = {
+    'kaiden': { reward: 'combo', message: '✨ Kaiden Code Activated!' },
+};
+
+function submitCode() {
+    const codeInput = document.getElementById('codeInput');
+    const code = codeInput.value.toLowerCase().trim();
+    
+    if (!code) {
+        alert('Please enter a code!');
+        return;
+    }
+    
+    if (!CODES[code]) {
+        alert('Invalid code!');
+        codeInput.value = '';
+        return;
+    }
+    
+    const codeData = CODES[code];
+    
+    if (codeData.reward === 'money') {
+        totalMoney += codeData.amount;
+        savePersistentData();
+        updateMoneyDisplay();
+        floatMoneyText(codeData.message);
+        alert(codeData.message);
+    } else if (codeData.reward === 'character') {
+        if (!unlockedCharacters.includes(codeData.character)) {
+            unlockedCharacters.push(codeData.character);
+            savePersistentData();
+            alert(codeData.message);
+        } else {
+            alert('You already have this character!');
+        }
+    } else if (codeData.reward === 'allcharacters') {
+        const allChars = Object.keys(CHARACTERS);
+        let newCharsAdded = 0;
+        allChars.forEach(char => {
+            if (!unlockedCharacters.includes(char)) {
+                unlockedCharacters.push(char);
+                newCharsAdded++;
+            }
+        });
+        if (newCharsAdded > 0) {
+            savePersistentData();
+            alert('🎉 All characters unlocked!');
+        } else {
+            alert('You already have all characters!');
+        }
+    } else if (codeData.reward === 'combo') {
+        totalMoney += 10000;
+        if (!unlockedCharacters.includes('hakari_v2')) unlockedCharacters.push('hakari_v2');
+        if (!unlockedCharacters.includes('yuji_itadori')) unlockedCharacters.push('yuji_itadori');
+        savePersistentData();
+        updateMoneyDisplay();
+        floatMoneyText(codeData.message);
+        alert('✨ Claimed: Hakari + Yuji Itadori + $10,000!');
+    }
+    
+    codeInput.value = '';
+}
+
+// Allow Enter key to submit code
+document.addEventListener('DOMContentLoaded', () => {
+    const codeInput = document.getElementById('codeInput');
+    if (codeInput) {
+        codeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitCode();
+        });
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
