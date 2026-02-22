@@ -1053,9 +1053,44 @@
 </div>
 
 <script>
+// ========== EASY EDIT: DAILY CODE (Change this to your code) ==========
+const DAILY_CODE = 'freegold';  // <-- EDIT THIS! Change to whatever daily code you want
+const DAILY_CODE_REWARD = 10000; // Gold reward when code is claimed (default: $10,000)
+// =========================================================================
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const skinOverlay = document.getElementById('playerSkinOverlay');
+
+// Daily code variables
+let dailyCodeWave = 0;
+let dailyCodeRevealed = false;
+
+function scheduleDailyCodeWave() {
+    dailyCodeWave = 3 + Math.floor(Math.random() * 8);
+    dailyCodeRevealed = false;
+}
+
+function revealDailyCode() {
+    if(dailyCodeRevealed || !DAILY_CODE) return;
+    dailyCodeRevealed = true;
+    floatMoneyText('🎁 Daily Code Claimed: ' + DAILY_CODE);
+    alert('Daily Code Claimed: ' + DAILY_CODE);
+    
+    // Add daily code to CODES system and auto-submit
+    CODES[DAILY_CODE] = { reward: 'money', amount: DAILY_CODE_REWARD, message: '🎁 Daily Code: +$' + DAILY_CODE_REWARD + '!' };
+    
+    // Auto-submit the daily code
+    const codeInput = document.getElementById('codeInput');
+    if(codeInput) codeInput.value = DAILY_CODE;
+    
+    // Process the reward
+    totalMoney += DAILY_CODE_REWARD;
+    usedCodes.push(DAILY_CODE);
+    savePersistentData();
+    updateMoneyDisplay();
+    alert('✨ Reward Claimed: +$' + DAILY_CODE_REWARD + '!');
+}
 
 let totalMoney = parseInt(localStorage.getItem('ballRPGMoney')) || 0;
 let unlockedCharacters = JSON.parse(localStorage.getItem('ballRPGCharacters')) || ['default', 'goldhoarder'];
@@ -3562,6 +3597,7 @@ function resetGame(){
         builderWalls=[];
     }
     lastEnemySpawn=0;roundTimer=0;currentRound=0;killStreak=0;sessionMoney=0;
+    scheduleDailyCodeWave();
     autoFireEnabled=true;specialInProgress=false;
     dreamArmorAnnounce=null;lastDreamTierIdx=-1;bloodGodAnnounce=null;
     mgLastShot=0; adminHue=0; adminCooldowns=[0,0,0,0,0,0,0,0,0]; lastTs=0;
@@ -4047,7 +4083,7 @@ function gameLoop(ts){
         for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
     }
 
-    roundTimer+=dt;if(roundTimer>=120){currentRound++;roundTimer=0;
+    roundTimer+=dt;if(roundTimer>=120){currentRound++;if(currentRound===dailyCodeWave){revealDailyCode();}roundTimer=0;
         if(currentRound>0 && currentRound%25===0) earnMoney(25,`wave ${currentRound} milestone`);
         if(currentRound>0 && currentRound%25===0 && currentRound!==lastShopWave) {
             lastShopWave=currentRound;
