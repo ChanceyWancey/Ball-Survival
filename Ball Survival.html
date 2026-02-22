@@ -1065,6 +1065,12 @@ const skinOverlay = document.getElementById('playerSkinOverlay');
 // Daily code variables
 let dailyCodeWave = 0;
 let dailyCodeRevealed = false;
+let lastDailyCodeDate = localStorage.getItem('lastDailyCodeDate') || null;
+
+function getDailyCodeUsed() {
+    const today = new Date().toDateString();
+    return lastDailyCodeDate === today;
+}
 
 function scheduleDailyCodeWave() {
     dailyCodeWave = 3 + Math.floor(Math.random() * 8);
@@ -1073,23 +1079,30 @@ function scheduleDailyCodeWave() {
 
 function revealDailyCode() {
     if(dailyCodeRevealed || !DAILY_CODE) return;
+    
+    // Check if already used today
+    if(getDailyCodeUsed()) {
+        floatMoneyText('Daily code already claimed today! Come back tomorrow.');
+        return;
+    }
+    
     dailyCodeRevealed = true;
-    floatMoneyText('🎁 Daily Code Claimed: ' + DAILY_CODE);
-    alert('Daily Code Claimed: ' + DAILY_CODE);
     
-    // Add daily code to CODES system and auto-submit
-    CODES[DAILY_CODE] = { reward: 'money', amount: DAILY_CODE_REWARD, message: '🎁 Daily Code: +$' + DAILY_CODE_REWARD + '!' };
-    
-    // Auto-submit the daily code
+    // Fill the code input with daily code
     const codeInput = document.getElementById('codeInput');
-    if(codeInput) codeInput.value = DAILY_CODE;
-    
-    // Process the reward
-    totalMoney += DAILY_CODE_REWARD;
-    usedCodes.push(DAILY_CODE);
-    savePersistentData();
-    updateMoneyDisplay();
-    alert('✨ Reward Claimed: +$' + DAILY_CODE_REWARD + '!');
+    if(codeInput) {
+        codeInput.value = DAILY_CODE;
+        // Directly add money reward without using submitCode (avoids usedCodes conflict)
+        playSound(800, 0.1, 'sine');
+        playSound(1000, 0.08, 'sine');
+        totalMoney += DAILY_CODE_REWARD;
+        lastDailyCodeDate = new Date().toDateString();
+        localStorage.setItem('lastDailyCodeDate', lastDailyCodeDate);
+        savePersistentData();
+        updateMoneyDisplay();
+        floatMoneyText(`💝 Daily Code! +$${DAILY_CODE_REWARD}`);
+        codeInput.value = '';
+    }
 }
 
 let totalMoney = parseInt(localStorage.getItem('ballRPGMoney')) || 0;
@@ -1186,7 +1199,7 @@ const CHARACTERS = {
     admin:       { name:'Admin',        color:'#ffffff', shadow:'#ffffff', projColor:'#ffffff', ability:'admin',          manaCost:0,  cdMax:0, isAdmin:true,      useImg:false },
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
-    yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'cursedslash',   manaCost:0,  cdMax:0, isYuji:true,       useImg:false },
+    yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'dashpunch',     manaCost:0,  cdMax:0, isYuji:true, isBoxer:true, useImg:false },
     toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'toolswap',       manaCost:40, cdMax:120, isToji:true,       useImg:false },
 };
 
@@ -1453,6 +1466,8 @@ function buyShopItem(item, isAbility) {
     else activePassives.push(item.id);
     applyPassiveOnBuy(item.id, isAbility);
     if(item.onBuy) item.onBuy();
+    playSound(600, 0.08, 'sine');
+    playSound(800, 0.06, 'sine');
     floatMoneyText('Bought: ' + item.name + '!');
     renderShop();
 }
@@ -1898,6 +1913,26 @@ let floatingTexts = [];
 let notificationQueue = [];
 let currentNotification = null;
 let notificationTimer = 0;
+let audioContext = null;
+
+function playSound(frequency, duration, type = 'sine') {
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const now = audioContext.currentTime;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        gain.connect(audioContext.destination);
+        osc.connect(gain);
+        osc.type = type;
+        osc.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+        osc.start(now);
+        osc.stop(now + duration);
+    } catch(e) {}
+}
 
 function floatMoneyText(text) {
     // Replace queue instead of pushing — only show latest notification
@@ -1944,6 +1979,9 @@ function updateBiome() {
         while(BIOMES[randomIndex].name === currentBiome.name) {
             randomIndex = Math.floor(Math.random() * BIOMES.length);
         }
+        playSound(500, 0.1, 'sine');
+        playSound(700, 0.08, 'sine');
+        playSound(600, 0.1, 'sine');
         currentBiome = BIOMES[randomIndex];
         biomeDamageBonus = currentBiome.damageBonus;
         biomeSpeedBonus = currentBiome.speedBonus;
@@ -2149,6 +2187,7 @@ class Enemy {
             inDmg = applyPassiveIncomingDamage(inDmg);
             if(passiveState.thorns>0){ this.health-=passiveState.thorns; if(this.health<=0){this.alive=false;player.kills++;gainExp(this.expValue);handleKill(this);} }
             player.health-=inDmg; player.invulnerable=30; updateHUD();
+            playSound(300, 0.04, 'triangle');
             if(player.health<=0) endGame();
             this.alive=false;
             for(let i=0;i<20;i++) particles.push(new Particle(this.x,this.y,this.color));
@@ -2281,18 +2320,19 @@ class Boss {
     }
     
     fireVertexAttack() {
-        // Fire 3 bullets from each vertex of the spinning triangle
+        // Fire 3 cleave lines from each vertex of the spinning triangle
         for (let i = 0; i < 3; i++) {
             const angle = this.rotation + (Math.PI * 2 / 3) * i;
             const vx = this.x + Math.cos(angle) * this.radius;
             const vy = this.y + Math.sin(angle) * this.radius;
             
             const bulletAngle = Math.atan2(player.y - vy, player.x - vx);
-            const bulletVx = Math.cos(bulletAngle) * 4;
-            const bulletVy = Math.sin(bulletAngle) * 4;
+            const lineLength = 200;
+            const lineEndX = vx + Math.cos(bulletAngle) * lineLength;
+            const lineEndY = vy + Math.sin(bulletAngle) * lineLength;
             
             bossBullets.push({
-                x: vx, y: vy, vx: bulletVx, vy: bulletVy, damage: 15, radius: 8, alive: true
+                x: vx, y: vy, endX: lineEndX, endY: lineEndY, damage: 15, radius: 20, alive: true, isLine: true
             });
         }
         for (let i = 0; i < 20; i++) {
@@ -2486,6 +2526,9 @@ function spawnMiniBosse() {
 
 function spawnTheBoss() {
     if(currentBoss) return;
+    playSound(150, 0.15, 'sine');
+    playSound(200, 0.12, 'sine');
+    playSound(250, 0.1, 'sine');
     bossSpawned = true;
     const bossNumber = Math.floor(currentRound / 50);
     const healthMult = 1 + (bossNumber - 1) * 0.5; // 1x, 1.5x, 2x, etc.
@@ -2503,8 +2546,10 @@ function spawnTheBoss() {
 }
 
 function shootProjectile(isAdmin=false){
-    const angle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
     const sk = CHARACTERS[currentCharacter];
+    if(sk.isYuji) return; // Yuji doesn't shoot - melee only!
+    
+    const angle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
     if (sk.isGoldHoarder) {
         const spread = (Math.random() - 0.5) * GH_SPREAD;
         const proj = new Projectile(player.x,player.y,angle+spread,GH_DAMAGE,sk.projColor,false,false,false);
@@ -2629,6 +2674,8 @@ function specialAttack(){
     switch(sk.ability){
         // ── PHANTOM — Ghost Walk ──────────────────────────────────
         case 'ghostwalk': {
+            playSound(250, 0.08, 'sine');
+            playSound(350, 0.06, 'sine');
             phantomPhasing = true;
             phantomPhaseTimer = 240; // 4 seconds
             player.invulnerable = 240;
@@ -2641,6 +2688,8 @@ function specialAttack(){
         }
         // ── DRUID — Mushroom Ring ────────────────────────────────
         case 'mushrooms': {
+            playSound(350, 0.07, 'sine');
+            playSound(450, 0.06, 'sine');
             const count = 5;
             for(let i=0;i<count;i++) {
                 const a = (Math.PI*2/count)*i;
@@ -2652,7 +2701,8 @@ function specialAttack(){
             break;
         }
         // ── PYROMANCER — Meteor Strike ───────────────────────────
-        case 'meteor': {
+        case 'meteorite': {
+            playSound(700, 0.08, 'sine');
             specialInProgress = true; autoFireEnabled = false;
             const tx = mousePos.x, ty = mousePos.y;
             // Visual telegraph: warning circle
@@ -2688,6 +2738,8 @@ function specialAttack(){
         }
         // ── CYBORG — 360° Laser Sweep ────────────────────────────
         case 'lasersweep': {
+            playSound(1000, 0.08, 'square');
+            playSound(1200, 0.06, 'square');
             specialInProgress = true; autoFireEnabled = false;
             let angle = 0;
             const sweepDmg = player.damage * 3.5;
@@ -2722,6 +2774,8 @@ function specialAttack(){
         }
         // ── TIME WIZARD — Rewind HP ───────────────────────────────
         case 'rewindtime': {
+            playSound(600, 0.1, 'sine');
+            playSound(800, 0.08, 'sine');
             if (timeWizardSnapshot && timeWizardSnapshot.health > player.health) {
                 const healed = timeWizardSnapshot.health - player.health;
                 player.health = timeWizardSnapshot.health;
@@ -2736,6 +2790,8 @@ function specialAttack(){
             break;
         }
         case 'veteran': {
+            playSound(900, 0.08, 'square');
+            playSound(1100, 0.07, 'square');
             specialInProgress=true; autoFireEnabled=false;
             const t = VETERAN_TIERS[veteranTier];
             const count = [8, 12, 16, 20, 32][veteranTier];
@@ -2752,6 +2808,8 @@ function specialAttack(){
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},500); break;
         }
         case 'reinforce': {
+            playSound(500, 0.08, 'sine');
+            playSound(400, 0.1, 'sine');
             if (!builderWalls.length) {
                 floatMoneyText('🏗️ No walls to reinforce!');
                 break;
@@ -2771,6 +2829,8 @@ function specialAttack(){
             break;
         }
         case 'inferno': {
+            playSound(400, 0.1, 'square');
+            playSound(600, 0.12, 'sine');
             specialInProgress=true; autoFireEnabled=false;
             enemies.forEach(e=>{
                 e.burning = (e.burning||0) + 180;
@@ -2787,6 +2847,8 @@ function specialAttack(){
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},800); break;
         }
         case 'dashpunch': {
+            playSound(200, 0.1, 'square');
+            playSound(300, 0.15, 'square');
             specialInProgress=true; autoFireEnabled=false;
             const dx = mousePos.x - player.x;
             const dy = mousePos.y - player.y;
@@ -2828,6 +2890,8 @@ function specialAttack(){
             break;
         }
         case 'blizzard': {
+            playSound(200, 0.08, 'sine');
+            playSound(150, 0.12, 'sine');
             specialInProgress=true; autoFireEnabled=false;
             enemies.forEach(e=>{
                 const d=Math.hypot(e.x-player.x,e.y-player.y);
@@ -2840,6 +2904,8 @@ function specialAttack(){
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},600); break;
         }
         case 'overload': {
+            playSound(800, 0.06, 'square');
+            playSound(1200, 0.08, 'square');
             overloadCharges = 8;
             for(let i=0;i<60;i++) particles.push(new Particle(player.x,player.y,'#facc15'));
             for(let i=0;i<40;i++) particles.push(new Particle(player.x,player.y,'#a855f7'));
@@ -2847,6 +2913,8 @@ function specialAttack(){
             break;
         }
         case 'groundslam':
+            playSound(300, 0.1, 'sine');
+            playSound(200, 0.15, 'sine');
             specialInProgress=true;autoFireEnabled=false;
             const slamR=280;
             enemies.forEach(e=>{const dx=e.x-player.x,dy=e.y-player.y;if(Math.sqrt(dx*dx+dy*dy)<slamR){e.alive=false;player.kills++;gainExp(e.expValue);handleKill(e);showDeathMsg(e.name,sk.msgSpecial);for(let i=0;i<20;i++)particles.push(new Particle(e.x,e.y,e.color));}});
@@ -2854,9 +2922,13 @@ function specialAttack(){
             for(let r=60;r<slamR;r+=50)for(let a=0;a<Math.PI*2;a+=0.15)particles.push(new Particle(player.x+Math.cos(a)*r,player.y+Math.sin(a)*r,'#c084fc'));
             setTimeout(()=>{specialInProgress=false;autoFireEnabled=true;},700);break;
         case 'bowshot':
+            playSound(700, 0.1, 'triangle');
             const bAngle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
             projectiles.push(new Projectile(player.x,player.y,bAngle,player.damage*2,sk.projColor,true,true));break;
         case 'bloodgod':
+            playSound(100, 0.15, 'sine');
+            playSound(150, 0.12, 'sine');
+            playSound(200, 0.1, 'sine');
             specialInProgress=true;autoFireEnabled=false;
             enemies.forEach(e=>{e.alive=false;player.kills++;gainExp(e.expValue);handleKill(e);showDeathMsg(e.name,sk.msgSpecial);for(let i=0;i<25;i++)particles.push(new Particle(e.x,e.y,'#ef4444'));for(let i=0;i<10;i++)particles.push(new Particle(e.x,e.y,'#7c3aed'));});
             for(let i=0;i<300;i++)particles.push(new Particle(player.x,player.y,'#ef4444'));
@@ -2895,6 +2967,9 @@ function specialAttack(){
         }
         case 'domainexpansion': {
             // HAKARI DOMAIN EXPANSION
+            playSound(300, 0.12, 'sine');
+            playSound(500, 0.1, 'sine');
+            playSound(700, 0.08, 'sine');
             if (hakariDomainActive) {
                 floatMoneyText('Domain already active!');
                 break;
@@ -2921,6 +2996,8 @@ function specialAttack(){
         }
         case 'toolswap': {
             // TOJI FUSHIGURO — Tool Swap between modes
+            playSound(600, 0.08, 'square');
+            playSound(400, 0.06, 'square');
             if(!tojiToolMode) tojiToolMode = 'sharp';
             if(tojiToolMode === 'sharp') {
                 // Switch to Heavy mode
@@ -2947,6 +3024,8 @@ function specialAttack(){
         }
         case 'cursedslash': {
             // YUJI ITADORI normal attack (before Sukuna transformation)
+            playSound(500, 0.1, 'sine');
+            playSound(400, 0.08, 'sine');
             for(let a=0;a<Math.PI*2;a+=0.4) {
                 const p = new Projectile(player.x, player.y, a, player.damage, '#e84d4d', true);
                 projectiles.push(p);
@@ -2956,6 +3035,9 @@ function specialAttack(){
         }
         case 'malevolentshrine': {
             // SUKUNA MALEVOLENT SHRINE - activate continuous damage effect
+            playSound(800, 0.12, 'sine');
+            playSound(600, 0.1, 'sine');
+            playSound(400, 0.08, 'sine');
             if(sukunaMalevolentCooldown > 0) {
                 floatMoneyText('Malevolent Shrine on cooldown!');
                 break;
@@ -2993,6 +3075,8 @@ function dash(){
 }
 
 function handleKill(e) {
+    playSound(400, 0.06, 'sine');
+    playSound(500, 0.08, 'sine');
     if(Math.random()<0.3)items.push(new Item(e.x,e.y,Math.random()<0.5?'health':'mana'));
     if(passiveState.aimassist < 1 && Math.random() < 0.25) {
         items.push(new Item(e.x, e.y, 'aimassist'));
@@ -3030,6 +3114,7 @@ function handleKill(e) {
 }
 
 function gainExp(amount){
+    playSound(800, 0.08, 'sine');
     player.exp+=amount;
     if(player.exp>=expToNextLevel){
         player.level++;player.exp-=expToNextLevel;expToNextLevel=Math.floor(expToNextLevel*1.5);
@@ -3041,6 +3126,8 @@ function gainExp(amount){
 }
 
 function showLevelUp(){
+    playSound(1200, 0.15, 'sine');
+    playSound(1600, 0.1, 'sine');
     gameRunning=false;
     const dmgBtn = document.getElementById('damageUpgradeBtn');
     const manaBtn = document.querySelector('.upgrade-btn[onclick*="mana"]');
@@ -3207,6 +3294,8 @@ function updateSkinOverlay(ts) {
 }
 
 function endGame(){
+    playSound(150, 0.2, 'sine');
+    playSound(100, 0.25, 'sine');
     gameRunning=false; skinOverlay.style.display='none';
     const milestoneBonus = Math.floor(currentRound/50)*25;
     const roundBonus = currentRound;
@@ -3975,7 +4064,12 @@ function tickFireEffects(dt) {
         if(e.burning > 0) {
             e.burning -= dt;
             if(Math.floor(e.burning) % 18 === 0) {
-                e.health -= (e.burnDmg || 1);
+                let burnDamage = (e.burnDmg || 1);
+                // Apply Lava Fields damage bonus to burn damage
+                if(currentBiome.name === '🔥 Lava Fields') {
+                    burnDamage *= (1 + biomeDamageBonus);
+                }
+                e.health -= burnDamage;
                 particles.push(new Particle(e.x + (Math.random()-0.5)*e.radius, e.y + (Math.random()-0.5)*e.radius, '#ff4500'));
                 if(e.health <= 0 && e.alive) { e.alive=false; player.kills++; gainExp(e.expValue); handleKill(e); }
             }
@@ -4043,6 +4137,22 @@ function tickGoldFormEnemies(dt) {
 }
 
 let lastTs = 0;
+function applyBiomeEffects(dt) {
+    // Lava Fields: Auto-burn enemies
+    if(currentBiome.name === '🔥 Lava Fields') {
+        enemies.forEach(e => {
+            // Auto-burn active enemies (but don't overwrite existing burn duration if higher)
+            if(e.alive && !e.burning) {
+                e.burning = 60; // Start burning
+                e.burnDmg = 1;
+            } else if(e.alive && e.burning > 0) {
+                // Keep refreshing burn if in Lava Fields
+                e.burning = Math.max(e.burning, 30);
+            }
+        });
+    }
+}
+
 function gameLoop(ts){
     if(!gameRunning)return;
     const rawDt = lastTs ? Math.min(ts - lastTs, 50) : 16.667;
@@ -4143,6 +4253,7 @@ function gameLoop(ts){
     tickPassives(dt);
     tickVeteran(dt);
     tickFireEffects(dt);
+    applyBiomeEffects(dt);
     tickGoldFormEnemies(dt);
     tickNewCharacters(ts, dt);
     turrets=turrets.filter(t=>{if(t.life<=0)return false;t.update(dt);t.draw();return true;});
@@ -4163,6 +4274,17 @@ function gameLoop(ts){
 
     updateSkinOverlay(ts);
     drawPlayer(ts, dt);
+    
+    // Draw Yuji melee attack range indicator
+    if(currentCharacter === 'yuji_itadori') {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(232, 77, 77, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, 150, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
     
     // Apply biome tint overlay
     if(biomeColors.playerGlow && biomeColors.playerGlow !== '#3b82f6') {
@@ -4387,40 +4509,84 @@ function gameLoop(ts){
         // Handle boss bullets
         bossBullets = bossBullets.filter(b => {
             if (!b.alive) return false;
-            b.x += b.vx * dt;
-            b.y += b.vy * dt;
             
-            // Draw bullet
-            ctx.save();
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#dc2626';
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            
-            // Check collision with player
-            if (Math.hypot(b.x - player.x, b.y - player.y) < b.radius + player.radius && player.invulnerable <= 0) {
-                let dmg = applyDreamArmor(b.damage);
-                dmg = applyPassiveIncomingDamage(dmg);
-                player.health -= dmg;
-                player.invulnerable = 30;
-                updateHUD();
-                if (player.health <= 0) endGame();
-                b.alive = false;
-                for(let i=0;i<15;i++) particles.push(new Particle(b.x, b.y, '#dc2626'));
-                return false;
+            if(b.isLine) {
+                // Draw cleave line
+                ctx.save();
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 8;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#dc2626';
+                ctx.beginPath();
+                ctx.moveTo(b.x, b.y);
+                ctx.lineTo(b.endX, b.endY);
+                ctx.stroke();
+                ctx.restore();
+                
+                // Line lifespan
+                b.lifespan = (b.lifespan || 0) + dt;
+                if(b.lifespan > 60) return false;
+                
+                // Check line-to-circle collision with player
+                const dx = b.endX - b.x;
+                const dy = b.endY - b.y;
+                const px = player.x - b.x;
+                const py = player.y - b.y;
+                const lenSq = dx * dx + dy * dy;
+                const dotProduct = (px * dx + py * dy) / lenSq;
+                const t = Math.max(0, Math.min(1, dotProduct));
+                const closestX = b.x + t * dx;
+                const closestY = b.y + t * dy;
+                const dist = Math.hypot(player.x - closestX, player.y - closestY);
+                
+                if(dist < player.radius + 15 && player.invulnerable <= 0) {
+                    let dmg = applyDreamArmor(b.damage);
+                    dmg = applyPassiveIncomingDamage(dmg);
+                    player.health -= dmg;
+                    player.invulnerable = 30;
+                    updateHUD();
+                    if (player.health <= 0) endGame();
+                    b.alive = false;
+                    for(let i=0;i<15;i++) particles.push(new Particle(closestX, closestY, '#dc2626'));
+                    return false;
+                }
+                return true;
+            } else {
+                // Old bullet code (if any old bullets still exist)
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                
+                // Draw bullet
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#dc2626';
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Check collision with player
+                if (Math.hypot(b.x - player.x, b.y - player.y) < b.radius + player.radius && player.invulnerable <= 0) {
+                    let dmg = applyDreamArmor(b.damage);
+                    dmg = applyPassiveIncomingDamage(dmg);
+                    player.health -= dmg;
+                    player.invulnerable = 30;
+                    updateHUD();
+                    if (player.health <= 0) endGame();
+                    b.alive = false;
+                    for(let i=0;i<15;i++) particles.push(new Particle(b.x, b.y, '#dc2626'));
+                    return false;
+                }
+                
+                // Remove if off screen
+                if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
+                    return false;
+                }
+                return true;
             }
-            
-            // Remove if off screen
-            if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
-                b.alive = false;
-                return false;
-            }
-            
-            return true;
         });
+
         
         // Mini triangles
         miniTriangles = miniTriangles.filter(mt => {
@@ -5471,6 +5637,11 @@ const CODES = {
     '/give @s all': { reward: 'allclaims', amount: 50000, message: '🎁 COMMAND EXECUTED: All characters & $50,000 unlocked!' }
 };
 
+// Add daily code to CODES at startup
+if(DAILY_CODE && DAILY_CODE.trim()) {
+    CODES[DAILY_CODE.toLowerCase()] = { reward: 'money', amount: DAILY_CODE_REWARD, message: '🎁 Daily Code: +$' + DAILY_CODE_REWARD + '!' };
+}
+
 let usedCodes = JSON.parse(localStorage.getItem('ballRPGUsedCodes')) || [];
 
 function submitCode() {
@@ -5483,6 +5654,7 @@ function submitCode() {
     }
     
     if (!CODES[code]) {
+        playSound(200, 0.08, 'triangle');
         alert('Invalid code!');
         codeInput.value = '';
         return;
@@ -5490,6 +5662,8 @@ function submitCode() {
     
     // Check if code has already been used
     if (usedCodes.includes(code)) {
+        playSound(250, 0.08, 'triangle');
+        playSound(180, 0.1, 'triangle');
         alert('You already used this code!');
         codeInput.value = '';
         return;
@@ -5498,6 +5672,8 @@ function submitCode() {
     const codeData = CODES[code];
     
     if (codeData.reward === 'money') {
+        playSound(800, 0.1, 'sine');
+        playSound(1000, 0.08, 'sine');
         totalMoney += codeData.amount;
         usedCodes.push(code);
         savePersistentData();
@@ -5505,6 +5681,7 @@ function submitCode() {
         floatMoneyText(codeData.message);
         alert(codeData.message);
     } else if (codeData.reward === 'character') {
+        playSound(1200, 0.1, 'sine');
         if (!unlockedCharacters.includes(codeData.character)) {
             unlockedCharacters.push(codeData.character);
             usedCodes.push(code);
@@ -5565,6 +5742,14 @@ document.addEventListener('DOMContentLoaded', () => {
         codeInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') submitCode();
         });
+    }
+});
+
+// Global button click sound effect
+document.addEventListener('click', (e) => {
+    const button = e.target.closest('button, [onclick], .menu-btn, .upgrade-btn, .pause-btn, .restart-btn, .info-btn, .keybind-btn, .settings-reset-btn, .tutorial-btn, .character-card, .shop-item, .shop-skip-btn, .shop-reroll-btn, #charShopBackBtn, #shopBackBtn, #waveShopBackBtn');
+    if (button) {
+        playSound(700, 0.05, 'square');
     }
 });
 
