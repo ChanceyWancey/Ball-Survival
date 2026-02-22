@@ -1858,6 +1858,19 @@ function tickPassives(dt) {
 
 function fireWithPassives(baseAngle) {
     const sk = CHARACTERS[currentCharacter];
+    
+    // Sukuna fires in a circular cleave pattern
+    if(yujiIsSukuna) {
+        const col = '#8b0000';
+        let dmg = applyPassiveDamageBoost(getProjectileDamage());
+        dmg *= (1 + biomeDamageBonus);
+        for(let a=0;a<Math.PI*2;a+=0.4) {
+            const p = new Projectile(player.x, player.y, a, dmg, col, true);
+            projectiles.push(p);
+        }
+        return;
+    }
+    
     const col = sk.isAdmin ? `hsl(${adminHue},100%,60%)` : sk.projColor;
     const angles = [baseAngle];
     const total = 1 + passiveState.multishot + passiveState.trishot;
@@ -3083,8 +3096,8 @@ function handleKill(e) {
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     
-    // YUJI ITADORI: 5% chance to drop Sukuna Finger
-    if(currentCharacter === 'yuji_itadori' && Math.random() < 0.05 && yujiSukunaFingers < 20) {
+    // YUJI ITADORI: 100% chance to drop Sukuna Finger
+    if(currentCharacter === 'yuji_itadori' && Math.random() < 1.0 && yujiSukunaFingers < 20) {
         yujiSukunaFingers++;
         floatMoneyText(`🩸 Sukuna Finger ${yujiSukunaFingers}/20`);
         for(let i=0;i<15;i++) particles.push(new Particle(e.x, e.y, '#8b0000'));
@@ -4836,9 +4849,9 @@ function gameLoop(ts){
         ctx.lineWidth = 3;
         ctx.strokeRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
-    } else if(sukunaMalevolentActive && sukunaMalevolentTimer <= 0) {
-        sukunaMalevolentActive = false;
     }
+    
+    // Keep damage active even after visual effect ends
     
     // Handle Malevolent Shrine cooldown
     if(sukunaMalevolentCooldown > 0) {
