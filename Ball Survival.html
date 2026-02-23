@@ -1241,7 +1241,7 @@ const CHARACTERS = {
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
     yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'dashpunch',     manaCost:0,  cdMax:0, isYuji:true, isBoxer:true, useImg:false },
-    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'toolswap',       manaCost:40, cdMax:120, isToji:true,       useImg:false },
+    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'cursedtechnique',       manaCost:0, cdMax:0, isToji:true,       useImg:false },
     character10b:  { name:'Character 10', color:'#00ff00', shadow:'#00aa00', projColor:'#00ff00', ability:'omnipotent',     manaCost:1, cdMax:0, isCharacter10b:true, useImg:false },
 };
 
@@ -1318,7 +1318,15 @@ function getProjectileDamage() {
         // Random damage between 10 and 150 — rolled EACH SHOT
         return Math.floor(10 + Math.random() * 140);
     }
-    return player.damage;
+    
+    let baseDmg = player.damage;
+    
+    // TOJI: Apply stack bonuses
+    if(currentCharacter === 'toji' && tojiCombatStacks > 0) {
+        baseDmg *= (1 + tojiCombatStacks * 0.05); // +5% per stack
+    }
+    
+    return baseDmg;
 }
 
 let expToNextLevel=100, projectiles=[], enemies=[], particles=[], items=[];
@@ -1400,6 +1408,42 @@ const BIOMES = [
     { name: '⚡ Storm', effect: 'electric', damageBonus: 0.2, speedBonus: 0.2, description: '+20% damage & speed', gridColor: 'rgba(250,204,21,0.12)', playerGlow: '#facc15', uiColor: '#a855f7', bgOverlay: 'rgba(255, 255, 0, 0.04)' },
     { name: '🌙 Twilight', effect: 'dark', damageBonus: 0, speedBonus: 0.3, description: '+30% attack speed', gridColor: 'rgba(168,85,247,0.08)', playerGlow: '#7c3aed', uiColor: '#d8b4fe', bgOverlay: 'rgba(100, 100, 150, 0.12)' },
     { name: '🌊 Flooded', effect: 'water', damageBonus: -0.15, speedBonus: -0.3, description: '-15% damage, -30% speed', gridColor: 'rgba(96,165,250,0.12)', playerGlow: '#0ea5e9', uiColor: '#0284c7', bgOverlay: 'rgba(100, 150, 200, 0.08)' },
+    { name: '💧 Mystical Spring', effect: 'mana_regen', damageBonus: 0, speedBonus: 0, description: '+100% mana regeneration', gridColor: 'rgba(34,197,94,0.1)', playerGlow: '#10b981', uiColor: '#059669', bgOverlay: 'rgba(16, 185, 129, 0.05)' },
+    { name: '❤️ Healing Grove', effect: 'healing', damageBonus: 0, speedBonus: 0, description: '+3 HP/sec passive healing', gridColor: 'rgba(236,72,153,0.1)', playerGlow: '#f43f5e', uiColor: '#e11d48', bgOverlay: 'rgba(244, 63, 94, 0.04)' },
+    { name: '🕷️ Spider Nest', effect: 'spiderweb', damageBonus: 0.15, speedBonus: -0.4, description: '+15% damage, -40% speed (webs)', gridColor: 'rgba(156,163,175,0.12)', playerGlow: '#6b7280', uiColor: '#4b5563', bgOverlay: 'rgba(100, 100, 100, 0.08)' },
+    { name: '✨ Starlight', effect: 'starlight', damageBonus: 0.25, speedBonus: 0.15, description: '+25% damage, +15% speed, -10% damage taken', gridColor: 'rgba(250,204,21,0.08)', playerGlow: '#fbbf24', uiColor: '#f59e0b', bgOverlay: 'rgba(255, 215, 0, 0.03)' },
+    { name: '🌑 Void', effect: 'void', damageBonus: -0.2, speedBonus: -0.25, description: '-20% damage, -25% speed, enemies deal 50% less', gridColor: 'rgba(67,56,202,0.12)', playerGlow: '#4f46e5', uiColor: '#4338ca', bgOverlay: 'rgba(50, 40, 150, 0.06)' },
+    { name: '🏔️ Mountain Peak', effect: 'mountain', damageBonus: 0.15, speedBonus: 0.15, description: '+15% damage, +15% speed, thin air', gridColor: 'rgba(156,163,175,0.1)', playerGlow: '#e5e7eb', uiColor: '#9ca3af', bgOverlay: 'rgba(200, 200, 210, 0.05)' },
+    { name: '🌋 Volcanic Crater', effect: 'volcanic', damageBonus: 0.4, speedBonus: -0.2, description: '+40% damage, -20% speed, extreme heat', gridColor: 'rgba(220,38,38,0.12)', playerGlow: '#dc2626', uiColor: '#991b1b', bgOverlay: 'rgba(220, 38, 38, 0.08)' },
+    { name: '💚 Nature\'s Embrace', effect: 'nature_embrace', damageBonus: 0.1, speedBonus: 0.1, description: '+1.5 HP/sec healing, +10% everything', gridColor: 'rgba(74,222,128,0.1)', playerGlow: '#22c55e', uiColor: '#16a34a', bgOverlay: 'rgba(34, 197, 94, 0.06)' },
+    { name: '🌀 Mana Vortex', effect: 'mana_vortex', damageBonus: 0.2, speedBonus: 0, description: '+75% mana regen, spells cost 50% less', gridColor: 'rgba(139,92,246,0.12)', playerGlow: '#8b5cf6', uiColor: '#7c3aed', bgOverlay: 'rgba(139, 92, 246, 0.05)' },
+    { name: '⚔️ Warrior\'s Arena', effect: 'warrior_arena', damageBonus: 0.35, speedBonus: 0, description: '+35% damage, enemies deal 20% less', gridColor: 'rgba(239,68,68,0.1)', playerGlow: '#ef4444', uiColor: '#dc2626', bgOverlay: 'rgba(239, 68, 68, 0.06)' },
+    { name: '🌬️ Windy Plateau', effect: 'windy', damageBonus: -0.1, speedBonus: 0.5, description: '-10% damage, +50% speed, strong winds', gridColor: 'rgba(148,163,184,0.12)', playerGlow: '#cbd5e1', uiColor: '#94a3b8', bgOverlay: 'rgba(148, 163, 184, 0.06)' },
+    { name: '💎 Crystal Cavern', effect: 'crystal', damageBonus: 0.2, speedBonus: 0.1, description: '+20% damage, +10% speed, projectiles pierce harder', gridColor: 'rgba(34,211,238,0.12)', playerGlow: '#06b6d4', uiColor: '#0891b2', bgOverlay: 'rgba(34, 211, 238, 0.06)' },
+    { name: '🌙 Moon\'s Glow', effect: 'moonlight', damageBonus: 0.05, speedBonus: 0.25, description: '+5% damage, +25% speed, +2 HP/sec healing', gridColor: 'rgba(226,232,240,0.1)', playerGlow: '#f1f5f9', uiColor: '#cbd5e1', bgOverlay: 'rgba(226, 232, 240, 0.08)' },
+    { name: '🔮 Arcane Nexus', effect: 'arcane', damageBonus: 0.25, speedBonus: 0, description: '+25% damage, +100% mana regen, spells free', gridColor: 'rgba(168,85,247,0.12)', playerGlow: '#a855f7', uiColor: '#9333ea', bgOverlay: 'rgba(168, 85, 247, 0.06)' },
+    { name: '💥 Chaos Realm', effect: 'chaos', damageBonus: 0.3, speedBonus: 0.3, description: '+30% damage, +30% speed, 50% enemy damage', gridColor: 'rgba(244,63,94,0.12)', playerGlow: '#f43f5e', uiColor: '#e11d48', bgOverlay: 'rgba(244, 63, 94, 0.07)' },
+    { name: '🏖️ Peaceful Shore', effect: 'peaceful', damageBonus: -0.05, speedBonus: 0, description: '+4 HP/sec healing, +50% mana regen, serene', gridColor: 'rgba(34,197,94,0.08)', playerGlow: '#10b981', uiColor: '#059669', bgOverlay: 'rgba(16, 185, 129, 0.08)' },
+    { name: '⭐ Starfall Night', effect: 'starfall', damageBonus: 0.4, speedBonus: 0.2, description: '+40% damage, +20% speed, meteors falling', gridColor: 'rgba(250,204,21,0.12)', playerGlow: '#fde047', uiColor: '#facc15', bgOverlay: 'rgba(253, 224, 71, 0.07)' },
+    { name: '🌺 Bloom Garden', effect: 'bloom', damageBonus: 0.05, speedBonus: 0.05, description: '+2 HP/sec & +50% mana regen, flowers grow', gridColor: 'rgba(236,72,153,0.08)', playerGlow: '#ec4899', uiColor: '#db2777', bgOverlay: 'rgba(236, 72, 153, 0.05)' },
+    { name: '⚙️ Clockwork Factory', effect: 'clockwork', damageBonus: 0.15, speedBonus: 0.15, description: '+15% everything, +25% mana regen, mechanical', gridColor: 'rgba(156,163,175,0.12)', playerGlow: '#9ca3af', uiColor: '#6b7280', bgOverlay: 'rgba(156, 163, 175, 0.06)' },
+    { name: '🎆 Festival Grounds', effect: 'festival', damageBonus: 0.2, speedBonus: 0.1, description: '+20% damage, +1.5 HP/sec, +30% mana regen', gridColor: 'rgba(236,72,153,0.1)', playerGlow: '#f472b6', uiColor: '#ec4899', bgOverlay: 'rgba(236, 72, 153, 0.06)' },
+    { name: '🧊 Ice Palace', effect: 'icepalace', damageBonus: 0.1, speedBonus: -0.15, description: '+10% damage, -15% speed, +4 HP/sec healing in palace', gridColor: 'rgba(96,165,250,0.12)', playerGlow: '#93c5fd', uiColor: '#3b82f6', bgOverlay: 'rgba(96, 165, 250, 0.08)' },
+    { name: '🌳 Ancient Forest', effect: 'ancientforest', damageBonus: 0.1, speedBonus: 0.15, description: '+10% damage, +15% speed, +2 HP/sec healing', gridColor: 'rgba(34,197,94,0.12)', playerGlow: '#4ade80', uiColor: '#22c55e', bgOverlay: 'rgba(34, 197, 94, 0.07)' },
+    { name: '💫 Celestial Realm', effect: 'celestial', damageBonus: 0.2, speedBonus: 0.2, description: '+20% damage & speed, +60% mana regen, heavenly', gridColor: 'rgba(250,204,21,0.13)', playerGlow: '#fde047', uiColor: '#fbbf24', bgOverlay: 'rgba(250, 204, 21, 0.05)' },
+    { name: '🌪️ Whirlwind Canyon', effect: 'whirlwind', damageBonus: 0.25, speedBonus: 0.35, description: '+25% damage, +35% speed, extreme winds', gridColor: 'rgba(148,163,184,0.13)', playerGlow: '#cbd5e1', uiColor: '#94a3b8', bgOverlay: 'rgba(148, 163, 184, 0.07)' },
+    { name: '🎋 Bamboo Grove', effect: 'bamboo', damageBonus: 0.08, speedBonus: 0.12, description: '+3 HP/sec healing, +40% mana regen, +8% everything', gridColor: 'rgba(132,204,22,0.1)', playerGlow: '#84cc16', uiColor: '#65a30d', bgOverlay: 'rgba(132, 204, 22, 0.06)' },
+    { name: '🪨 Rocky Badlands', effect: 'badlands', damageBonus: 0.22, speedBonus: -0.1, description: '+22% damage, -10% speed, +1 HP/sec healing', gridColor: 'rgba(217,119,6,0.12)', playerGlow: '#d97706', uiColor: '#b45309', bgOverlay: 'rgba(217, 119, 6, 0.07)' },
+    { name: '⚡ Lightning Field', effect: 'lightning_field', damageBonus: 0.28, speedBonus: 0.22, description: '+28% damage, +22% speed, +80% mana regen', gridColor: 'rgba(34,197,94,0.12)', playerGlow: '#fbbf24', uiColor: '#eab308', bgOverlay: 'rgba(251, 191, 36, 0.06)' },
+    { name: '🌀 Mist Valley', effect: 'mist', damageBonus: -0.05, speedBonus: 0.08, description: '-5% damage, +8% speed, +2.5 HP/sec healing', gridColor: 'rgba(209,213,219,0.1)', playerGlow: '#d1d5db', uiColor: '#9ca3af', bgOverlay: 'rgba(209, 213, 219, 0.08)' },
+    { name: '🏜️ Desert Oasis', effect: 'oasis', damageBonus: 0.12, speedBonus: 0.18, description: '+12% damage, +18% speed, +3.5 HP/sec healing, +60% mana regen', gridColor: 'rgba(217,119,6,0.1)', playerGlow: '#f59e0b', uiColor: '#d97706', bgOverlay: 'rgba(245, 158, 11, 0.05)' },
+    { name: '💠 Diamond Plains', effect: 'diamond', damageBonus: 0.32, speedBonus: 0.18, description: '+32% damage, +18% speed, enemies armor reduced 25%', gridColor: 'rgba(34,211,238,0.12)', playerGlow: '#22d3ee', uiColor: '#06b6d4', bgOverlay: 'rgba(34, 211, 238, 0.07)' },
+    { name: '🦇 Darkwood', effect: 'darkwood', damageBonus: 0.18, speedBonus: 0.08, description: '+18% damage, +8% speed, +4 HP/sec healing, -20% visibility', gridColor: 'rgba(78,35,11,0.12)', playerGlow: '#92400e', uiColor: '#78350f', bgOverlay: 'rgba(78, 35, 11, 0.08)' },
+    { name: '🔱 Aquatic Depths', effect: 'aquatic', damageBonus: 0.15, speedBonus: 0.22, description: '+15% damage, +22% speed, +1.8 HP/sec, +90% mana regen', gridColor: 'rgba(14,165,233,0.12)', playerGlow: '#0ea5e9', uiColor: '#0284c7', bgOverlay: 'rgba(14, 165, 233, 0.07)' },
+    { name: '🌸 Sakura Falls', effect: 'sakura', damageBonus: 0.1, speedBonus: 0.12, description: '+10% damage, +12% speed, +3.2 HP/sec, +55% mana regen', gridColor: 'rgba(236,72,153,0.1)', playerGlow: '#f472b6', uiColor: '#ec4899', bgOverlay: 'rgba(236, 72, 153, 0.06)' },
+    { name: '⚔️ Blood Arena', effect: 'blood_arena', damageBonus: 0.38, speedBonus: 0.08, description: '+38% damage, +8% speed, +2 HP/sec on kill', gridColor: 'rgba(239,68,68,0.12)', playerGlow: '#ef4444', uiColor: '#dc2626', bgOverlay: 'rgba(239, 68, 68, 0.08)' },
+    { name: '🌊 Tide Pools', effect: 'tide_pools', damageBonus: 0.12, speedBonus: 0.16, description: '+12% damage, +16% speed, +4.5 HP/sec, mana regen +70%', gridColor: 'rgba(6,182,212,0.12)', playerGlow: '#06b6d4', uiColor: '#0891b2', bgOverlay: 'rgba(6, 182, 212, 0.07)' },
+    { name: '✨ Enchanted Castle', effect: 'enchanted', damageBonus: 0.2, speedBonus: 0.14, description: '+20% damage, +14% speed, +2.8 HP/sec, +85% mana regen', gridColor: 'rgba(168,85,247,0.12)', playerGlow: '#d8b4fe', uiColor: '#a855f7', bgOverlay: 'rgba(168, 85, 247, 0.07)' },
 ];
 
 function getBiomeColors() {
@@ -1667,17 +1711,20 @@ let sukunaMalevolentTimer = 0;    // frames remaining in malevolent shrine effec
 let sukunaMalevolentCooldown = 0; // cooldown before shrine can be used again (300 frames = 5 seconds)
 
 // Toji Fushiguro variables
-let tojiToolMode = 'sharp';       // 'sharp' or 'heavy'
-let tojiSharpModeTimer = 0;       // frames remaining in sharp mode (+30% dmg)
-let tojiHeavyModeTimer = 0;       // frames remaining in heavy mode (+20% dmg, 50% slow)
+let tojiCombatStacks = 0;       // 0-10 stacks
+let tojiStackTimer = 0;         // frames until stack decay
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
 
     // ── TOJI ──────────────────────────────────
     if (skin === 'toji') {
-        if(tojiSharpModeTimer > 0) tojiSharpModeTimer -= dt;
-        if(tojiHeavyModeTimer > 0) tojiHeavyModeTimer -= dt;
+        // Decay stacks over time
+        if(tojiStackTimer > 0) {
+            tojiStackTimer -= dt;
+        } else if(tojiCombatStacks > 0) {
+            tojiCombatStacks = 0;
+        }
     }
 
     // ── PHANTOM ──────────────────────────────────
@@ -1868,6 +1915,13 @@ function applyPassiveDamageBoost(baseDmg) {
 function applyPassiveIncomingDamage(dmg) {
     if(passiveState.ghostly > 0 && Math.random() < passiveState.ghostly) { floatMoneyText('DODGED!'); return 0; }
     dmg = dmg * (1 - passiveState.armor);
+    
+    // Apply biome damage reduction
+    if(currentBiome.effect === 'starlight') dmg *= 0.9; // -10% damage taken
+    if(currentBiome.effect === 'void') dmg *= 0.5; // -50% damage taken (enemies deal 50% less)
+    if(currentBiome.effect === 'warrior_arena') dmg *= 0.8; // -20% damage taken
+    if(currentBiome.effect === 'diamond') dmg *= 0.75; // -25% damage taken (enemies armor reduced 25%)
+    
     return dmg;
 }
 
@@ -2484,13 +2538,27 @@ class Item {
 
 function getDifficulty(){return Math.floor(currentRound/50);}
 function getSpawnCount(){
-    if(currentRound>=500 && currentRound<600) return 50; // 50 enemies total in final waves
+    let baseCount = 0;
+    if(currentRound>=500 && currentRound<600) baseCount = 50; // 50 enemies total in final waves
     // Gradual difficulty from wave 50-499: scales from 1 to 8 enemies
-    if(currentRound>=50 && currentRound<500) {
+    else if(currentRound>=50 && currentRound<500) {
         const progress = (currentRound - 50) / 450; // 0 to 1 over waves 50-499
-        return Math.min(1 + Math.floor(progress * 7), 8); // 1 to 8
+        baseCount = Math.min(1 + Math.floor(progress * 7), 8); // 1 to 8
     }
-    return Math.min(1+getDifficulty(),8);
+    else baseCount = Math.min(1+getDifficulty(),8);
+    
+    // Biome modifiers: some biomes spawn more enemies
+    let biomeMultiplier = 1;
+    if(currentBiome.effect === 'chaos') biomeMultiplier = 1.5; // 50% more enemies
+    if(currentBiome.effect === 'void') biomeMultiplier = 1.3; // 30% more enemies
+    if(currentBiome.effect === 'warrior_arena') biomeMultiplier = 1.4; // 40% more enemies
+    if(currentBiome.effect === 'blood_arena') biomeMultiplier = 1.6; // 60% more enemies
+    if(currentBiome.effect === 'spiderweb') biomeMultiplier = 1.25; // 25% more enemies
+    if(currentBiome.effect === 'volcanic') biomeMultiplier = 1.35; // 35% more enemies
+    if(currentBiome.effect === 'starfall') biomeMultiplier = 1.2; // 20% more enemies
+    if(currentBiome.effect === 'electric') biomeMultiplier = 1.15; // 15% more enemies
+    
+    return Math.round(baseCount * biomeMultiplier);
 }
 function getSpawnInterval(){
     if(currentRound>=500 && currentRound<600) return Math.max(600-Math.floor((currentRound-500)/5),120); // spawn every 0.6-2s in final waves
@@ -3177,6 +3245,14 @@ function handleKill(e) {
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     
+    // TOJI ITADORI: Gain combat stack on kill
+    if(currentCharacter === 'toji' && tojiCombatStacks < 10) {
+        tojiCombatStacks++;
+        tojiStackTimer = 180; // 3 seconds (180 frames at 60fps)
+        floatMoneyText(`⚔️ Stack ${tojiCombatStacks}/10`);
+        for(let i=0;i<12;i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
+    }
+    
     // YUJI ITADORI: 100% chance to drop Sukuna Finger
     if(currentCharacter === 'yuji_itadori' && Math.random() < 1.0 && yujiSukunaFingers < 20) {
         yujiSukunaFingers++;
@@ -3343,6 +3419,11 @@ function updateHUD(){
         else if(player.mana<sk.manaCost){rEl.style.color='#6b7280';rEl.textContent='LOW';}
         else if(!timeWizardSnapshot){rEl.style.color='#9ca3af';rEl.textContent='⏳ WAIT...';}
         else{rEl.style.color='#d8b4fe';rEl.textContent='⏳ READY';}
+    } else if(sk.isToji){
+        if(rLabel)rLabel.textContent='STACKS'; const ab=document.getElementById('armorBar');if(ab)ab.style.display='block';
+        rEl.style.fontSize='7px';rEl.style.color='#f59e0b';rEl.textContent=`⚔️ ${tojiCombatStacks}/10`;
+        const af=document.getElementById('armorBarFill');
+        if(af){af.style.width=(tojiCombatStacks/10)*100+'%';af.style.background='#f59e0b';}
     } else if(sk.isElectric){
         if(rLabel)rLabel.textContent='OVERLOAD';const ab=document.getElementById('armorBar');if(ab)ab.style.display='none';
         if(overloadCharges>0){rEl.style.fontSize='7px';rEl.style.color='#facc15';rEl.textContent=`⚡x${overloadCharges}`;}
@@ -3780,7 +3861,7 @@ function resetGame(){
     } else {
         builderWalls=[];
     }
-    lastEnemySpawn=0;roundTimer=0;currentRound=0;killStreak=0;sessionMoney=0;
+    lastEnemySpawn=0;roundTimer=0;currentRound=currentCharacter==='character10b'?500:0;killStreak=0;sessionMoney=0;
     scheduleDailyCodeWave();
     autoFireEnabled=true;specialInProgress=false;
     dreamArmorAnnounce=null;lastDreamTierIdx=-1;bloodGodAnnounce=null;
@@ -3812,6 +3893,9 @@ function resetGame(){
     sukunaMalevolentActive = false;
     sukunaMalevolentTimer = 0;
     sukunaMalevolentCooldown = 0;
+    // Toji reset
+    tojiCombatStacks = 0;
+    tojiStackTimer = 0;
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -4246,6 +4330,28 @@ function applyBiomeEffects(dt) {
             }
         });
     }
+    
+    // Apply passive healing from biomes (per frame, not per second)
+    let healPerFrame = 0;
+    
+    if(currentBiome.effect === 'healing') healPerFrame += 3 / 60; // +3 HP/sec
+    if(currentBiome.effect === 'nature_embrace') healPerFrame += 1.5 / 60; // +1.5 HP/sec
+    if(currentBiome.effect === 'peaceful') healPerFrame += 4 / 60; // +4 HP/sec
+    if(currentBiome.effect === 'icepalace') healPerFrame += 4 / 60; // +4 HP/sec in palace
+    if(currentBiome.effect === 'ancientforest') healPerFrame += 2 / 60; // +2 HP/sec
+    if(currentBiome.effect === 'moonlight') healPerFrame += 2 / 60; // +2 HP/sec
+    if(currentBiome.effect === 'bloom') healPerFrame += 1 / 60; // +1 HP/sec (smaller, stacks with mana)
+    if(currentBiome.effect === 'oasis') healPerFrame += 3.5 / 60; // +3.5 HP/sec
+    if(currentBiome.effect === 'sakura') healPerFrame += 3.2 / 60; // +3.2 HP/sec
+    if(currentBiome.effect === 'badlands') healPerFrame += 1 / 60; // +1 HP/sec
+    if(currentBiome.effect === 'tide_pools') healPerFrame += 4.5 / 60; // +4.5 HP/sec
+    if(currentBiome.effect === 'enchanted') healPerFrame += 2.8 / 60; // +2.8 HP/sec
+    if(currentBiome.effect === 'festival') healPerFrame += 1.5 / 60; // +1.5 HP/sec
+    if(currentBiome.effect === 'mist') healPerFrame += 2.5 / 60; // +2.5 HP/sec
+    
+    if(healPerFrame > 0) {
+        player.health = Math.min(player.health + healPerFrame * dt, player.maxHealth);
+    }
 }
 
 function gameLoop(ts){
@@ -4348,7 +4454,7 @@ function gameLoop(ts){
     let mx=0,my=0;
     if(keys[binds.moveUp]||keys['arrowup'])my-=1;if(keys[binds.moveDown]||keys['arrowdown'])my+=1;
     if(keys[binds.moveLeft]||keys['arrowleft'])mx-=1;if(keys[binds.moveRight]||keys['arrowright'])mx+=1;
-    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;const biomeSpd=1+biomeSpeedBonus;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;}
+    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;const biomeSpd=1+biomeSpeedBonus;const tojiSpd=currentCharacter==='toji'?(1+tojiCombatStacks*0.05):1;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd*biomeSpd*tojiSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd*biomeSpd*tojiSpd;}
     player.x=Math.max(player.radius,Math.min(canvas.width-player.radius,player.x));
     player.y=Math.max(player.radius,Math.min(canvas.height-player.radius,player.y));
     const pResolved = (currentCharacter==='phantom'&&phantomPhasing) ? {x:player.x,y:player.y} : resolveCircleWall(player.x, player.y, player.radius);
@@ -4356,7 +4462,26 @@ function gameLoop(ts){
     if(player.dashCooldown>0)player.dashCooldown-=dt;
     if(player.invulnerable>0)player.invulnerable-=dt;
     if(player.specialCooldown>0){player.specialCooldown-=dt;updateHUD();}
-    player.manaRegen+=dt;if(player.manaRegen>=60){player.mana=Math.min(player.mana+1+passiveState.manaflow/30,player.maxMana);player.manaRegen=0;updateHUD();}
+    // Mana Regen: Base 1/sec + passives + biome bonuses
+    player.manaRegen+=dt;
+    if(player.manaRegen>=60){
+        let manaPerSec = 1 + passiveState.manaflow/30; // each manaflow = +2/sec, divided by 30 frames/sec
+        // Biome mana regen bonuses
+        if(currentBiome.effect === 'mana_regen') manaPerSec *= 2; // +100% mana regen
+        if(currentBiome.effect === 'mana_vortex') manaPerSec *= 1.75; // +75% mana regen
+        if(currentBiome.effect === 'arcane') manaPerSec *= 2; // +100% mana regen
+        if(currentBiome.effect === 'celestial') manaPerSec *= 1.6; // +60% mana regen
+        if(currentBiome.effect === 'aquatic') manaPerSec *= 1.9; // +90% mana regen
+        if(currentBiome.effect === 'sakura') manaPerSec *= 1.55; // +55% mana regen
+        if(currentBiome.effect === 'tide_pools') manaPerSec *= 1.7; // +70% mana regen
+        if(currentBiome.effect === 'enchanted') manaPerSec *= 1.85; // +85% mana regen
+        if(currentBiome.effect === 'festival') manaPerSec *= 1.3; // +30% mana regen
+        if(currentBiome.effect === 'oasis') manaPerSec *= 1.6; // +60% mana regen
+        if(currentBiome.effect === 'lightning_field') manaPerSec *= 1.8; // +80% mana regen
+        player.mana=Math.min(player.mana+manaPerSec,player.maxMana);
+        player.manaRegen=0;
+        updateHUD();
+    }
     tickPassives(dt);
     tickVeteran(dt);
     tickFireEffects(dt);
@@ -4390,6 +4515,26 @@ function gameLoop(ts){
         ctx.beginPath();
         ctx.arc(player.x, player.y, 150, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
+    }
+    
+    // Draw Toji combat stacks visual ring
+    if(currentCharacter === 'toji' && tojiCombatStacks > 0) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(245, 158, 11, ${0.3 + tojiCombatStacks/10 * 0.7})`;
+        ctx.lineWidth = 2 + tojiCombatStacks / 5;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius + 8 + tojiCombatStacks * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        // Draw stack counter above player
+        ctx.save();
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f59e0b';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#f59e0b';
+        ctx.fillText(`⚔️ ${tojiCombatStacks}/10`, player.x, player.y - player.radius - 20);
         ctx.restore();
     }
     
@@ -4472,6 +4617,12 @@ function gameLoop(ts){
         ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle='rgba(250,204,21,0.8)';ctx.textAlign='left';
         ctx.shadowBlur=6;ctx.shadowColor='#a855f7';
         ctx.fillText(`⚡ TESLA — shots auto-chain | R: Overload${overloadCharges>0?' ACTIVE x'+overloadCharges:''}`,12,22);ctx.restore();
+    }
+    if(currentCharacter==='toji'){
+        ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle='rgba(245,158,11,0.8)';ctx.textAlign='left';
+        ctx.shadowBlur=6;ctx.shadowColor='#f59e0b';
+        const stackBonus = (tojiCombatStacks * 5);
+        ctx.fillText(`⚔️ TOJI — Kill streak stacker | ${tojiCombatStacks}/10 stacks (+${stackBonus}% damage & speed)`,12,22);ctx.restore();
     }
     if(currentCharacter==='admin'){
         ctx.save();ctx.font='bold 11px "Press Start 2P",monospace';
@@ -4988,6 +5139,9 @@ function gameLoop(ts){
         }
     }
 
+    // Apply darkwood vision effect if in that biome
+    applyDarkwoodVisionEffect();
+
     if(currentCharacter==='admin')updateAdminKeys();
 
     requestAnimationFrame(gameLoop);
@@ -5172,6 +5326,8 @@ function drawNavDebug() {
 
 function drawBiomeBackground() {
     ctx.save();
+    const time = Date.now() * 0.001; // Oscillating time value
+    
     switch(currentBiome.effect) {
         case 'freeze':
             ctx.fillStyle = 'rgba(135, 206, 250, 0.08)';
@@ -5223,12 +5379,235 @@ function drawBiomeBackground() {
                 const y = (canvas.height / 3) * (i + 1);
                 ctx.beginPath();
                 for(let x = 0; x < canvas.width; x += 30) {
-                    ctx.lineTo(x, y + Math.sin(x * 0.01) * 10);
+                    ctx.lineTo(x, y + Math.sin(x * 0.01 + time) * 10);
                 }
                 ctx.stroke();
             }
             break;
+        case 'mana_regen':
+            // Magical floating orbs
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 4; i++) {
+                const x = canvas.width * 0.25 * (i + 1);
+                const y = canvas.height / 2 + Math.sin(time + i) * 50;
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(74, 222, 128, ${0.15 + 0.1 * Math.sin(time * 2 + i)})`;
+                ctx.fill();
+            }
+            break;
+        case 'healing':
+            // Pulsing healing aura
+            ctx.fillStyle = `rgba(244, 63, 94, ${0.02 + 0.02 * Math.sin(time)})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const pulseSize = 100 + Math.sin(time * 2) * 40;
+            const centerGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, pulseSize);
+            centerGrad.addColorStop(0, `rgba(244, 63, 94, ${0.1 + 0.05 * Math.sin(time)})`);
+            centerGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+            ctx.fillStyle = centerGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            break;
+        case 'spiderweb':
+            // Web patterns
+            ctx.fillStyle = 'rgba(100, 100, 100, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(156, 163, 175, 0.15)';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < 5; i++) {
+                const x = canvas.width * (i + 1) / 6;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for(let i = 0; i < 4; i++) {
+                const y = canvas.height * (i + 1) / 5;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            break;
+        case 'starlight':
+            // Twinkling stars
+            ctx.fillStyle = 'rgba(250, 204, 21, 0.02)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 20; i++) {
+                const x = Math.sin(i * 0.7) * canvas.width / 2 + canvas.width / 2;
+                const y = Math.cos(i * 0.5) * canvas.height / 2 + canvas.height / 2;
+                const brightness = 0.4 + 0.6 * Math.sin(time * 2 + i);
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(250, 204, 21, ${brightness * 0.3})`;
+                ctx.fill();
+            }
+            break;
+        case 'void':
+            // Dark void with subtle particles
+            ctx.fillStyle = 'rgba(67, 56, 202, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 10; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const drift = Math.sin(time * 0.5 + i) * 30;
+                ctx.beginPath();
+                ctx.arc(x + drift, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(79, 70, 229, ${0.1 + 0.05 * Math.sin(time + i)})`;
+                ctx.fill();
+            }
+            break;
+        case 'mountain':
+            // Peak clouds
+            ctx.fillStyle = 'rgba(156, 163, 175, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 3; i++) {
+                const cloudY = canvas.height * 0.3 + i * 100;
+                const cloudX = (time * 20 + i * 200) % canvas.width;
+                ctx.beginPath();
+                ctx.arc(cloudX, cloudY, 50, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(200, 200, 210, ${0.08 + 0.03 * Math.sin(time + i)})`;
+                ctx.fill();
+            }
+            break;
+        case 'volcanic':
+            // Lava flows
+            ctx.fillStyle = 'rgba(220, 38, 38, 0.06)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 3; i++) {
+                const y = canvas.height * (i / 3) + Math.sin(time * 0.8 + i) * 30;
+                ctx.fillStyle = `rgba(220, 38, 38, ${0.05 + 0.03 * Math.sin(time * 1.2 + i)})`;
+                ctx.fillRect(0, y, canvas.width, 40);
+            }
+            break;
+        case 'nature_embrace':
+            // Glowing plants
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.03)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 6; i++) {
+                const x = canvas.width * (i / 6);
+                const y = canvas.height * 0.7;
+                const glow = 0.3 + 0.2 * Math.sin(time * 2 + i);
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(74, 222, 128, ${glow * 0.15})`;
+                ctx.fill();
+            }
+            break;
+        case 'mana_vortex':
+            // Spiraling vortex
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(time * 0.3);
+            ctx.strokeStyle = `rgba(139, 92, 246, ${0.1 + 0.05 * Math.sin(time)})`;
+            ctx.lineWidth = 2;
+            for(let r = 20; r < 300; r += 40) {
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+            break;
+        case 'warrior_arena':
+            // Battle aura with energy waves
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const waveRadius = 150 + Math.sin(time * 1.5) * 80;
+            const waveGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, waveRadius - 20, canvas.width/2, canvas.height/2, waveRadius + 20);
+            waveGrad.addColorStop(0, 'rgba(239, 68, 68, 0.1)');
+            waveGrad.addColorStop(0.5, 'rgba(239, 68, 68, 0.05)');
+            waveGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+            ctx.fillStyle = waveGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            break;
+        case 'windy':
+            // Wind streams
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.03)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 5; i++) {
+                const y = canvas.height * (i / 5);
+                const offset = Math.sin(time + i) * 100;
+                ctx.beginPath();
+                ctx.moveTo(0 + offset, y);
+                ctx.lineTo(canvas.width + offset, y);
+                ctx.stroke();
+            }
+            break;
+        case 'crystal':
+            // Shimmering crystals
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 15; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const shimmer = Math.sin(time * 2 + i * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(x, y - 20);
+                ctx.lineTo(x + 15, y);
+                ctx.lineTo(x, y + 20);
+                ctx.lineTo(x - 15, y);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(34, 211, 238, ${(shimmer + 1) * 0.08})`;
+                ctx.fill();
+            }
+            break;
+        case 'moonlight':
+            // Gentle lunar glow
+            ctx.fillStyle = 'rgba(226, 232, 240, 0.03)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const moonGrad = ctx.createRadialGradient(canvas.width * 0.2, canvas.height * 0.2, 50, canvas.width * 0.2, canvas.height * 0.2, 200);
+            moonGrad.addColorStop(0, `rgba(226, 232, 240, ${0.1 + 0.05 * Math.sin(time)})`);
+            moonGrad.addColorStop(1, 'rgba(226, 232, 240, 0)');
+            ctx.fillStyle = moonGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            break;
+        case 'arcane':
+            // Floating runes
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.03)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 8; i++) {
+                const x = canvas.width * (i / 8);
+                const y = canvas.height / 2 + Math.sin(time * 1.5 + i) * 100;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(168, 85, 247, ${0.12 + 0.08 * Math.sin(time * 2 + i)})`;
+                ctx.fill();
+            }
+            break;
+        case 'chaos':
+            // Chaotic distortion
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i = 0; i < 20; i++) {
+                const x = Math.sin(time + i * 0.3) * canvas.width / 2 + canvas.width / 2;
+                const y = Math.cos(time * 1.5 + i * 0.2) * canvas.height / 2 + canvas.height / 2;
+                const size = 20 + Math.sin(time * 2 + i) * 10;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(244, 63, 94, ${0.08 + 0.04 * Math.sin(time + i)})`;
+                ctx.fill();
+            }
+            break;
     }
+    ctx.restore();
+}
+
+function applyDarkwoodVisionEffect() {
+    if(currentBiome.effect !== 'darkwood') return;
+    
+    // Create a radial darkness vignette around the player
+    const visionRadius = 200; // How far the player can see
+    const fadeDistance = 80; // How quickly it fades to darkness
+    
+    const grad = ctx.createRadialGradient(player.x, player.y, visionRadius - fadeDistance, player.x, player.y, visionRadius + fadeDistance);
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+    
+    ctx.save();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
 }
 
@@ -5623,12 +6002,12 @@ const CHAR_INFO = {
         tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 15% health damage scales with enemy toughness, making it devastatingly effective against bosses.',
     },
     toji: {
-        name: 'Toji Fushiguro', tag: 'LIMITED · Tool Master', icon: '🪵',
+        name: 'Toji Fushiguro', tag: 'LIMITED · Cursed Killer', icon: '⚔️',
         iconBg: 'linear-gradient(135deg,#6b4423,#3d2817)', iconGlow: '#f59e0b',
-        stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Tool Swap Cooldown', value: '2 seconds' },{ label: 'Damage Bonus', value: '+30% while active' },{ label: 'Speed Bonus', value: '+20% while active' },{ label: 'Price', value: 'LIMITED ($20,000)' }],
-        abilities: `<b>Passive — Cursed Tool Mastery:</b> No cursed energy = pure combat skill. Gain +10% damage and +5% attack speed permanently.<br><br><b>R — Tool Swap (40 mana, 2s CD):</b> Swap between Sharp (maximum damage) and Heavy (stun) weapon modes. Sharp mode: +30% damage for 3 seconds. Heavy mode: +20% damage + slow enemies by 50% for 2 seconds. Choose your strategy mid-fight.`,
-        playstyle: 'Adaptable warrior. Switch between aggressive damage bursts and defensive slow modes depending on the situation. High mobility and raw combat prowess with no reliance on cursed techniques.',
-        tip: '💡 Tip: Use Sharp mode for high-priority targets. Use Heavy mode when surrounded to create breathing room. The tool swap cooldown is short (2 seconds) allowing frequent strategy switches during combat.',
+        stats: [{ label: 'Base Damage', value: '20 (standard)' },{ label: 'Combat Stack', value: '0-10 per fight' },{ label: 'Stack Bonus', value: '+5% DMG & Speed per stack' },{ label: 'Stack Duration', value: '3 seconds (refreshed on kill)' },{ label: 'Max Stacks', value: '10 (50% bonus at max)' },{ label: 'Price', value: 'LIMITED ($20,000)' }],
+        abilities: `<b>Passive — Cursed Tool Mastery:</b> Gain +1 Combat Stack on every kill. Each stack grants +5% damage and +5% movement speed (stackable). Stacks last 3 seconds and refresh on each kill. At 10 stacks: 50% damage + 50% speed boost.<br><br><b>No R ability</b> — Toji relies on pure skill and stack management. The higher your kill streak, the more powerful you become. Maintain stacks by chaining kills together.`,
+        playstyle: 'Snowball character. Every kill stacks you stronger, but stacks decay quickly if you stop killing. Your goal: maintain a kill chain to keep max stacks active. Early game is slow, but once you get rolling, you become a killing machine.',
+        tip: '💡 Tip: Use the HUD indicator to track your Combat Stacks. Chain kills together to keep momentum. If stacks drop, focus on weaker enemies to rebuild. Grab Speed and Damage upgrades to complement your passive scaling.',
     },
     character10b: {
         name: 'Character', tag: 'LIMITED · Omnipotent', icon: '∞',
