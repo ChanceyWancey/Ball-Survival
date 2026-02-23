@@ -1895,6 +1895,7 @@ function fireWithPassives(baseAngle) {
         const col = '#8b0000';
         let dmg = applyPassiveDamageBoost(getProjectileDamage());
         dmg *= (1 + biomeDamageBonus);
+        if(hakariJackpotActive) dmg *= 50; // Hakari jackpot multiplier
         for(let a=0;a<Math.PI*2;a+=0.4) {
             const p = new Projectile(player.x, player.y, a, dmg, col, true);
             projectiles.push(p);
@@ -1924,6 +1925,8 @@ function fireWithPassives(baseAngle) {
         let dmg = applyPassiveDamageBoost(getProjectileDamage());
         // Apply biome damage bonus
         dmg *= (1 + biomeDamageBonus);
+        // Apply Hakari jackpot immortality multiplier
+        if(hakariJackpotActive) dmg *= 50;
         // Apply Toji mode bonuses
         if(sk.isToji) {
             if(tojiSharpModeTimer > 0) dmg *= 1.30; // +30% damage in sharp mode
@@ -4462,6 +4465,7 @@ function gameLoop(ts){
         for(let e of enemies){if(!e.alive)continue;const dx=e.x-proj.x,dy=e.y-proj.y;
             if(Math.sqrt(dx*dx+dy*dy)<e.radius+proj.radius){
                 let pdmg = proj.damage;
+                if(hakariJackpotActive) pdmg *= 50;
                 if(passiveState.crit>0&&Math.random()<passiveState.crit){pdmg*=3;}
 
                 if(currentCharacter==='ice'||proj.isIce){
@@ -4801,17 +4805,18 @@ function gameLoop(ts){
         ctx.translate(player.x, player.y);
         const auraRotation = Date.now() * 0.0005;
         ctx.rotate(auraRotation);
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+        ctx.lineWidth = 5;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.arc(0, 0, player.radius + 30, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
         
-        // Draw jackpot countdown
-        const minLeft = Math.floor(hakariJackpotTimer / 3600);
-        const secLeft = Math.floor((hakariJackpotTimer % 3600) / 60);
+        // Draw jackpot countdown (4:11 format)
+        const secondsLeft = Math.max(0, Math.ceil(hakariJackpotTimer / 60));
+        const minLeft = Math.floor(secondsLeft / 60);
+        const secLeft = secondsLeft % 60;
         ctx.save();
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
@@ -4821,26 +4826,21 @@ function gameLoop(ts){
         ctx.fillText(`🎰 IMMORTAL ${minLeft}:${secLeft.toString().padStart(2, '0')} 🎰`, player.x, player.y - 40);
         ctx.restore();
         
-        // Make all shots one-shot
-        projectiles.forEach(p => {
-            if (p.damage < player.damage * 50) {
-                p.damage = player.damage * 50; // one-shot damage
-            }
-        });
-        
-        // Invulnerability effect
-        player.invulnerable = Math.max(player.invulnerable, 1);
+        // Maintain invulnerability (prevent all damage) and set damage multiplier
+        // Make sure player cannot take damage and deals 50x damage
+        player.invulnerable = Math.max(player.invulnerable, 60); // Refresh invulnerability every frame
         
         // Time expired
         if (hakariJackpotTimer <= 0) {
             hakariJackpotActive = false;
+            player.invulnerable = 0;
             floatMoneyText('⏰ Jackpot immortality ended!');
         }
-        
-        // Handle jackpot cooldown
-        if (hakariJackpotCooldown > 0) {
-            hakariJackpotCooldown -= dt;
-        }
+    }
+    
+    // Handle jackpot cooldown (separate from active jackpot)
+    if (hakariJackpotCooldown > 0) {
+        hakariJackpotCooldown -= dt;
     }
     
     // ═══════════════════════════════════════════════════════════════════
