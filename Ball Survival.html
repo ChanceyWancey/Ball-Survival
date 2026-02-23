@@ -174,7 +174,6 @@
             box-shadow: 0 0 20px rgba(0,0,139,0.6), inset 0 0 15px rgba(0,0,139,0.2);
             animation: limitedGlow 2s ease-in-out infinite;
             position: relative;
-            opacity: 0.5;
         }
         .character-card.limited-card.expired {
             border: 3px solid #7f1d1d;
@@ -4874,9 +4873,9 @@ function gameLoop(ts){
     
     // Malevolent Shrine continuous damage effect
     if(sukunaMalevolentActive) {
-        // Apply 5% of enemy maxHealth as damage per frame
+        // Apply 15% of enemy maxHealth as damage per frame
         enemies.forEach(e => {
-            const damagePerFrame = e.maxHealth * 0.05 * (dt / 60); // 5% per second
+            const damagePerFrame = e.maxHealth * 0.15 * (dt / 60); // 15% per second
             e.health -= damagePerFrame;
             // Visual damage indicator
             particles.push(new Particle(e.x + (Math.random()-0.5)*30, e.y + (Math.random()-0.5)*30, '#8b0000'));
@@ -5573,7 +5572,7 @@ const CHAR_INFO = {
         stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Sukuna Fingers', value: 'Collect from enemies (5% drop)' },{ label: 'Transformation', value: 'At 20 fingers → Becomes Sukuna' },{ label: 'Shrine Cooldown', value: '5 seconds' },{ label: 'Price', value: 'LIMITED ($28,000)' }],
         abilities: `<b>Passive — Sukuna Finger Collection:</b> Enemies have a 5% chance to drop Sukuna Fingers when killed. Collect 20 fingers to transform into Sukuna permanently.<br><br><b>R — Cursed Slash (Yuji Form, 0 mana):</b> Fires an 8-shot projectile ring of cursed slashes.<br><br><b>R — Malevolent Shrine (Sukuna Form, 0 mana, 5s CD):</b> Activate a continuous damage aura that deals 5% of each enemy's max health per second for 3 seconds. Can only be activated once every 5 seconds.`,
         playstyle: 'Scaling character with a transformation mechanic. Early game: focus on collecting fingers while surviving. At 20 fingers: transform into Sukuna and gain a sustained damage ability with strategic cooldown management.',
-        tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 5% health damage scales with enemy toughness, making it effective against bosses.',
+        tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 15% health damage scales with enemy toughness, making it devastatingly effective against bosses.',
     },
     toji: {
         name: 'Toji Fushiguro', tag: 'LIMITED · Tool Master', icon: '🪵',
@@ -5624,9 +5623,63 @@ function backToMainMenu(){document.getElementById('gameOver').style.display='non
 function updateMoneyDisplay(){document.getElementById('totalMoney').textContent=totalMoney;document.getElementById('shopMoney').textContent=totalMoney;}
 function updateShopDisplay(){
     updateMoneyDisplay();
-    document.querySelectorAll('.character-card').forEach(c=>c.classList.remove('selected'));
-    const idx=CHARACTER_ORDER.indexOf(currentCharacter);if(idx>=0)document.querySelectorAll('.character-card')[idx].classList.add('selected');
-    ['phantom','druid','pyromancer','cyborg','timewizard','fire','ice','electric','boxer','wemmbu','eggchan','dream','technoblade','admin','dice','hakari_v2','yuji_itadori','toji'].forEach(s=>{const el=document.getElementById(s+'Character');if(el){if(!unlockedCharacters.includes(s))el.classList.add('locked');else el.classList.remove('locked');}});
+    
+    // Update all character cards by ID mapping
+    const characterIds = {
+        'default': 'defaultCharacter',
+        'goldhoarder': 'goldhoarderCharacter',
+        'vampire': 'vampireCharacter',
+        'builder': 'builderCharacter',
+        'phantom': 'phantomCharacter',
+        'boxer': 'boxerCharacter',
+        'fire': 'fireCharacter',
+        'druid': 'druidCharacter',
+        'ice': 'iceCharacter',
+        'pyromancer': 'pyromancerCharacter',
+        'electric': 'electricCharacter',
+        'cyborg': 'cyborgCharacter',
+        'timewizard': 'timewizardCharacter',
+        'wemmbu': 'wemmbuCharacter',
+        'eggchan': 'eggchanCharacter',
+        'dream': 'dreamCharacter',
+        'technoblade': 'technobladeCharacter',
+        'admin': 'adminCharacter',
+        'dice': 'diceCharacter',
+        'hakari_v2': 'hakariCharacter',
+        'yuji_itadori': 'yujiCharacter',
+        'toji': 'tojiCharacter'
+    };
+    
+    // First, remove all selected/locked classes from ALL cards
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.classList.remove('selected', 'locked');
+        card.style.opacity = ''; // reset inline opacity
+    });
+    
+    // Then apply correct classes based on unlock/selection status
+    Object.entries(characterIds).forEach(([skinName, cardId]) => {
+        const cardEl = document.getElementById(cardId);
+        if (!cardEl) return;
+        
+        const isUnlocked = unlockedCharacters.includes(skinName);
+        const isSelected = (skinName === currentCharacter);
+        const isLimited = LIMITED_CHARACTERS.includes(skinName);
+        
+        // Apply locked class ONLY if NOT unlocked AND has a price (not free)
+        if(!isUnlocked && PRICES[skinName] > 0) {
+            cardEl.classList.add('locked');
+        }
+        
+        // For limited cards: full opacity if unlocked, dimmed if locked
+        if(isLimited) {
+            cardEl.style.opacity = isUnlocked ? '1' : '0.5';
+        }
+        
+        // Apply selected class if this is the current character
+        if(isSelected) {
+            cardEl.classList.add('selected');
+        }
+    });
 }
 function updateMcSkinClass(){
     if(['wemmbu','eggchan','dream','technoblade'].includes(currentCharacter))document.body.classList.add('mc-skin');
