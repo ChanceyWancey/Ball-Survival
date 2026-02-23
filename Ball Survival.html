@@ -170,8 +170,8 @@
         .character-card.selected { border-color: #22c55e; box-shadow: 0 0 20px rgba(34,197,94,0.4); }
         .character-card.locked { opacity: 0.5; cursor: not-allowed; }
         .character-card.limited-card {
-            border: 3px solid #00008b;
-            box-shadow: 0 0 20px rgba(0,0,139,0.6), inset 0 0 15px rgba(0,0,139,0.2);
+            border: 3px solid #0284c7;
+            box-shadow: 0 0 20px rgba(2,132,199,0.6), inset 0 0 15px rgba(2,132,199,0.2);
             animation: limitedGlow 2s ease-in-out infinite;
             position: relative;
         }
@@ -183,8 +183,8 @@
             cursor: not-allowed !important;
         }
         @keyframes limitedGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(0,0,139,0.6), inset 0 0 15px rgba(0,0,139,0.2); }
-            50% { box-shadow: 0 0 30px rgba(0,0,139,0.8), inset 0 0 20px rgba(0,0,139,0.3); }
+            0%, 100% { box-shadow: 0 0 20px rgba(2,132,199,0.6), inset 0 0 15px rgba(2,132,199,0.2); }
+            50% { box-shadow: 0 0 30px rgba(2,132,199,0.8), inset 0 0 20px rgba(2,132,199,0.3); }
         }
         @keyframes expiredGlow {
             0%, 100% { box-shadow: 0 0 20px rgba(127,29,29,0.6), inset 0 0 15px rgba(127,29,29,0.2); }
@@ -209,13 +209,13 @@
             position: absolute;
             top: 30px;
             left: 8px;
-            background: rgba(0,0,139,0.85);
+            background: rgba(2,132,199,0.85);
             color: #fbbf24;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 8px;
             font-weight: bold;
-            border: 1px solid #00008b;
+            border: 1px solid #0284c7;
             box-shadow: 0 0 8px rgba(251,191,36,0.5);
             white-space: nowrap;
             text-align: center;
@@ -844,6 +844,14 @@
             <div class="limited-timer" id="tojiTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('toji')">INFO</button>
         </div>
+        <div class="character-card limited-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
+            <div class="character-preview" style="background:linear-gradient(135deg,#00ff00,#00aa00);box-shadow:0 0 20px rgba(0,255,0,.9);"></div>
+            <div class="character-name">Character</div>
+            <div class="character-ability">R: Omnipotent — Heal all HP<br>& kill everything on map<br>1 mana • Unlimited uses</div>
+            <div class="character-price">$50000</div>
+            <div class="limited-timer" id="character10bTimer"></div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('character10b')">INFO</button>
+        </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
         <button id="charShopBackBtn" onclick="backToMenu()">← Back</button>
@@ -1146,18 +1154,20 @@ if (unlockedCharacters.includes('hakari')) {
 }
 
 // Limited character timer (Feb 27 2026 12 PM CST)
-const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori', 'toji'];
+const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori', 'toji', 'character10b'];
 const LIMITED_CARD_IDS = {
     'dice': 'diceCharacter',
     'hakari_v2': 'hakariCharacter',
     'yuji_itadori': 'yujiCharacter',
-    'toji': 'tojiCharacter'
+    'toji': 'tojiCharacter',
+    'character10b': 'character10bCharacter'
 };
 const LIMITED_EXPIRY = {
     'dice': new Date(2026, 1, 27, 12, 0, 0),
     'hakari_v2': new Date(2026, 1, 27, 12, 0, 0),
     'yuji_itadori': new Date(2026, 1, 27, 12, 0, 0),
-    'toji': new Date(2026, 1, 28, 12, 0, 0)
+    'toji': new Date(2026, 1, 28, 12, 0, 0),
+    'character10b': new Date(2026, 1, 24, 0, 0, 0)
 };
 
 function updateLimitedTimers() {
@@ -1232,6 +1242,7 @@ const CHARACTERS = {
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
     yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'dashpunch',     manaCost:0,  cdMax:0, isYuji:true, isBoxer:true, useImg:false },
     toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'toolswap',       manaCost:40, cdMax:120, isToji:true,       useImg:false },
+    character10b:  { name:'Character 10', color:'#00ff00', shadow:'#00aa00', projColor:'#00ff00', ability:'omnipotent',     manaCost:1, cdMax:0, isCharacter10b:true, useImg:false },
 };
 
 const SKIN_URLS = {
@@ -1247,7 +1258,7 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000, toji:20000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000, toji:20000, character10b:50000
 };
 
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
@@ -3069,6 +3080,42 @@ function specialAttack(){
             }
             break;
         }
+        case 'omnipotent': {
+            // CHARACTER 10B — Omnipotent ability
+            playSound(100, 0.2, 'sine');
+            playSound(200, 0.15, 'sine');
+            playSound(300, 0.12, 'sine');
+            
+            // Heal to full HP
+            player.health = player.maxHealth;
+            updateHUD();
+            
+            // Kill ALL enemies
+            enemies.forEach(e => {
+                if(e.alive) {
+                    e.alive = false;
+                    player.kills++;
+                    gainExp(e.expValue);
+                    handleKill(e);
+                    for(let i=0;i<30;i++) particles.push(new Particle(e.x + (Math.random()-0.5)*50, e.y + (Math.random()-0.5)*50, '#00ff00'));
+                }
+            });
+            
+            // Kill boss if exists
+            if(currentBoss && currentBoss.alive) {
+                currentBoss.alive = false;
+                player.kills += 10;
+                gainExp(500);
+                for(let i=0;i<150;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#00ff00'));
+                currentBoss = null;
+                bossBullets = [];
+            }
+            
+            // Massive particle explosion
+            for(let i=0;i<500;i++) particles.push(new Particle(Math.random()*canvas.width, Math.random()*canvas.height, '#00ff00'));
+            floatMoneyText('∞ OMNIPOTENT! MAP CLEARED! ∞');
+            break;
+        }
         case 'cursedslash': {
             // YUJI ITADORI normal attack (before Sukuna transformation)
             playSound(500, 0.1, 'sine');
@@ -3714,6 +3761,7 @@ function resetGame(){
     player=resetPlayerObj();
     if(currentCharacter==='technoblade'){player.maxMana=200;player.mana=200;}
     if(currentCharacter==='admin'){player.maxHealth=500;player.health=500;player.maxMana=9999;player.mana=9999;player.damage=100;player.speed=7;}
+    if(currentCharacter==='character10b'){player.maxHealth=11;player.health=11;player.maxMana=1000;player.mana=1000;player.damage=10000000000;player.speed=5;}
     if(currentCharacter==='dice'){
         player.speed=3+Math.random()*5; // 3-8 speed
         player.maxHealth=Math.round(80+Math.random()*95); // 80-175 health
@@ -5581,6 +5629,14 @@ const CHAR_INFO = {
         abilities: `<b>Passive — Cursed Tool Mastery:</b> No cursed energy = pure combat skill. Gain +10% damage and +5% attack speed permanently.<br><br><b>R — Tool Swap (40 mana, 2s CD):</b> Swap between Sharp (maximum damage) and Heavy (stun) weapon modes. Sharp mode: +30% damage for 3 seconds. Heavy mode: +20% damage + slow enemies by 50% for 2 seconds. Choose your strategy mid-fight.`,
         playstyle: 'Adaptable warrior. Switch between aggressive damage bursts and defensive slow modes depending on the situation. High mobility and raw combat prowess with no reliance on cursed techniques.',
         tip: '💡 Tip: Use Sharp mode for high-priority targets. Use Heavy mode when surrounded to create breathing room. The tool swap cooldown is short (2 seconds) allowing frequent strategy switches during combat.',
+    },
+    character10b: {
+        name: 'Character', tag: 'LIMITED · Omnipotent', icon: '∞',
+        iconBg: 'linear-gradient(135deg,#0284c7,#00aa00)', iconGlow: '#00ff00',
+        stats: [{ label: 'Max HP', value: '11 (ultra-fragile!)' },{ label: 'Damage', value: '10 billion (10,000,000,000!)' },{ label: 'Mana Cost', value: '1 mana' },{ label: 'Cooldown', value: 'None' },{ label: 'Price', value: 'LIMITED ($50,000)' }],
+        abilities: `<b>Passive — Godlike Power:</b> Deal 10 billion damage per projectile. One shot, one kill on any enemy in existence. You are a literal god of destruction.<br><br><b>R — Omnipotent (1 mana, No CD):</b> Instantly heal to full HP (11 HP) and kill EVERY SINGLE ENEMY on the entire map. No exceptions. Works on bosses, mini-bosses, triangles, everything.`,
+        playstyle: 'gg ez no re',
+        tip: 'ptttfff do i really need a tip on how to play me?? just run in and say "ggs no heal"',
     },
 };
 
