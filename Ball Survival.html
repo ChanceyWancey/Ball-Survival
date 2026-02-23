@@ -844,7 +844,7 @@
             <div class="limited-timer" id="tojiTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('toji')">INFO</button>
         </div>
-        <div class="character-card limited-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
+        <div class="character-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#00ff00,#00aa00);box-shadow:0 0 20px rgba(0,255,0,.9);"></div>
             <div class="character-name">Character</div>
             <div class="character-ability">R: Omnipotent — Heal all HP<br>& kill everything on map<br>1 mana • Unlimited uses</div>
@@ -1234,7 +1234,7 @@ const CHARACTERS = {
     electric:    { name:'Tesla',        color:'#facc15', shadow:'#a855f7', projColor:'#facc15', ability:'overload',       manaCost:35, cdMax:0, isElectric:true,   useImg:false },
     boxer:       { name:'Boxer',        color:'#fca5a5', shadow:'#dc2626', projColor:'#fca5a5', ability:'dashpunch',      manaCost:25, cdMax:0, useImg:false },
     wemmbu:      { name:'Wemmbu',       color:'#a855f7', shadow:'#6d28d9', projColor:'#c084fc', ability:'groundslam',     manaCost:35, cdMax:0, useImg:true, msgNormal:'was slammed', msgSpecial:'was obliterated by a slam' },
-    eggchan:     { name:'Eggchan',      color:'#ec4899', shadow:'#db2777', projColor:'#f472b6', ability:'bowshot',        manaCost:1,  cdMax:0, isMachineGun:true, useImg:true, msgNormal:'was shot down', msgSpecial:'was riddled with arrows' },
+    eggchan:     { name:'Eggchan',      color:'#ec4899', shadow:'#db2777', projColor:'#f472b6', ability:'bowshot',        manaCost:1,  cdMax:0, useImg:true, msgNormal:'was shot down', msgSpecial:'was riddled with arrows' },
     dream:       { name:'Dream',        color:'#22c55e', shadow:'#15803d', projColor:'#4ade80', ability:null,             manaCost:0,  cdMax:0, useImg:true, msgNormal:'was eliminated', msgSpecial:'had a fall' },
     technoblade: { name:'Technoblade',  color:'#7c3aed', shadow:'#5b21b6', projColor:'#a78bfa', ability:'bloodgod',       manaCost:150, cdMax:0, useImg:true, msgNormal:'was destroyed', msgSpecial:'got destroyed by Blood God' },
     admin:       { name:'Admin',        color:'#ffffff', shadow:'#ffffff', projColor:'#ffffff', ability:'admin',          manaCost:0,  cdMax:0, isAdmin:true,      useImg:false },
@@ -1312,20 +1312,23 @@ function resetPlayerObj() {
 
 function getProjectileDamage() {
     if (CHARACTERS[currentCharacter].isMachineGun) return 1;
+    if (currentCharacter === 'eggchan') return 20;
     if (CHARACTERS[currentCharacter].isGoldHoarder) return GH_DAMAGE;
     if (CHARACTERS[currentCharacter].isBoxer) return player.damage * 2;
+    if (currentCharacter === 'toji') {
+        let baseDmg = player.damage;
+        // TOJI: Apply stack bonuses
+        if(tojiCombatStacks > 0) {
+            baseDmg *= (1 + tojiCombatStacks * 0.05); // +5% per stack
+        }
+        return baseDmg;
+    }
     if (CHARACTERS[currentCharacter].isDice) {
         // Random damage between 10 and 150 — rolled EACH SHOT
         return Math.floor(10 + Math.random() * 140);
     }
     
     let baseDmg = player.damage;
-    
-    // TOJI: Apply stack bonuses
-    if(currentCharacter === 'toji' && tojiCombatStacks > 0) {
-        baseDmg *= (1 + tojiCombatStacks * 0.05); // +5% per stack
-    }
-    
     return baseDmg;
 }
 
@@ -1713,6 +1716,9 @@ let sukunaMalevolentCooldown = 0; // cooldown before shrine can be used again (3
 // Toji Fushiguro variables
 let tojiCombatStacks = 0;       // 0-10 stacks
 let tojiStackTimer = 0;         // frames until stack decay
+let tojiToolMode = 'sharp';     // 'sharp' or 'heavy'
+let tojiSharpModeTimer = 0;     // frames remaining in sharp mode
+let tojiHeavyModeTimer = 0;     // frames remaining in heavy mode
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
@@ -2921,7 +2927,10 @@ function specialAttack(){
             specialInProgress=true; autoFireEnabled=false;
             const t = VETERAN_TIERS[veteranTier];
             const count = [8, 12, 16, 20, 32][veteranTier];
-            const dmg = player.damage * t.dmgMult;
+            let dmg = player.damage * t.dmgMult;
+            dmg = applyPassiveDamageBoost(dmg);
+            dmg *= (1 + biomeDamageBonus);
+            if(hakariJackpotActive) dmg *= 50;
             for(let i=0;i<count;i++) {
                 const p = new Projectile(player.x,player.y,(Math.PI*2/count)*i,dmg,t.projColor,true);
                 projectiles.push(p);
@@ -3050,7 +3059,7 @@ function specialAttack(){
         case 'bowshot':
             playSound(700, 0.1, 'triangle');
             const bAngle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
-            projectiles.push(new Projectile(player.x,player.y,bAngle,player.damage*2,sk.projColor,true,true));break;
+            projectiles.push(new Projectile(player.x,player.y,bAngle,20,sk.projColor,true,true));break;
         case 'bloodgod':
             playSound(100, 0.15, 'sine');
             playSound(150, 0.12, 'sine');
@@ -3245,11 +3254,11 @@ function handleKill(e) {
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     
-    // TOJI ITADORI: Gain combat stack on kill
-    if(currentCharacter === 'toji' && tojiCombatStacks < 10) {
+    // TOJI ITADORI: Gain combat stack on kill (unlimited stacks)
+    if(currentCharacter === 'toji') {
         tojiCombatStacks++;
         tojiStackTimer = 180; // 3 seconds (180 frames at 60fps)
-        floatMoneyText(`⚔️ Stack ${tojiCombatStacks}/10`);
+        floatMoneyText(`⚔️ Stack ${tojiCombatStacks}`);
         for(let i=0;i<12;i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
     }
     
