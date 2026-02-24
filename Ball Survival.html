@@ -116,12 +116,6 @@
             animation: slideInFromRight 0.3s ease-out;
             width: 100px;
             text-align: center;
-            background: #3b82f6; border: none; border-bottom: 4px solid #1d4ed8;
-            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
-            font-family: 'Arial', sans-serif; font-weight: bold;
-            transition: transform 0.1s;
-            position: fixed; bottom: 20px; right: 20px; z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         #charShopBackBtn:hover { transform: translateY(-2px); background: #2563eb; }
         #charShopBackBtn:active { transform: translateY(2px); border-bottom-width: 1px; }
@@ -181,6 +175,34 @@
             animation: expiredGlow 2s ease-in-out infinite;
             opacity: 0.5;
             cursor: not-allowed !important;
+        }
+        .character-card.limited-card.expired::before {
+            content: '❌ EXPIRED';
+            background: linear-gradient(135deg, rgba(127,29,29,0.9), rgba(185,28,28,0.9));
+            border-color: #7f1d1d;
+            box-shadow: 0 0 10px rgba(127,29,29,0.6);
+        }
+        .character-card.limited-card.owned-limited {
+            border: 3px solid #22c55e;
+            box-shadow: 0 0 20px rgba(34,197,94,0.6), inset 0 0 15px rgba(34,197,94,0.2);
+            animation: ownedLimitedGlow 2s ease-in-out infinite;
+            opacity: 1 !important;
+            cursor: pointer;
+        }
+        .character-card.limited-card.owned-limited::before {
+            content: '⭐ LIMITED';
+            background: linear-gradient(135deg, rgba(21,128,61,0.9), rgba(22,163,74,0.9));
+            border-color: #16a34a;
+            box-shadow: 0 0 10px rgba(34,197,94,0.6);
+        }
+        .character-card.limited-card.owned-limited .limited-timer {
+            background: rgba(34,197,94,0.85);
+            border-color: #22c55e;
+            color: #fff;
+        }
+        @keyframes ownedLimitedGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34,197,94,0.6), inset 0 0 15px rgba(34,197,94,0.2); }
+            50% { box-shadow: 0 0 30px rgba(34,197,94,0.9), inset 0 0 20px rgba(34,197,94,0.3); }
         }
         @keyframes limitedGlow {
             0%, 100% { box-shadow: 0 0 20px rgba(2,132,199,0.6), inset 0 0 15px rgba(2,132,199,0.2); }
@@ -823,7 +845,7 @@
         <div class="character-card limited-card" onclick="selectCharacter('hakari_v2')" id="hakariCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#ec4899,#7c3aed);box-shadow:0 0 20px rgba(236,72,153,.9);"></div>
             <div class="character-name">Hakari</div>
-            <div class="character-ability">R: Domain Expansion<br>0 mana • Safe zone<br>Roll for JACKPOT → 4:11 immortality</div>
+            <div class="character-ability">R: Domain Expansion<br>0 mana • Safe zone<br>Roll for JACKPOT → 4:11 ultra regen</div>
             <div class="character-price">$35000</div>
             <div class="limited-timer" id="hakariTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('hakari_v2')">INFO</button>
@@ -844,7 +866,7 @@
             <div class="limited-timer" id="tojiTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('toji')">INFO</button>
         </div>
-        <div class="character-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
+        <div class="character-card limited-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#00ff00,#00aa00);box-shadow:0 0 20px rgba(0,255,0,.9);"></div>
             <div class="character-name">Character</div>
             <div class="character-ability">R: Omnipotent — Heal all HP<br>& kill everything on map<br>1 mana • Unlimited uses</div>
@@ -1163,10 +1185,10 @@ const LIMITED_CARD_IDS = {
     'character10b': 'character10bCharacter'
 };
 const LIMITED_EXPIRY = {
-    'dice': new Date(2026, 1, 27, 12, 0, 0),
-    'hakari_v2': new Date(2026, 1, 27, 12, 0, 0),
-    'yuji_itadori': new Date(2026, 1, 27, 12, 0, 0),
-    'toji': new Date(2026, 1, 28, 12, 0, 0),
+    'dice': new Date(2026, 1, 20, 12, 0, 0),
+    'hakari_v2': new Date(2026, 1, 20, 12, 0, 0),
+    'yuji_itadori': new Date(2026, 1, 20, 12, 0, 0),
+    'toji': new Date(2026, 2, 10, 12, 0, 0),
     'character10b': new Date(2026, 1, 24, 12, 0, 0)
 };
 
@@ -1182,12 +1204,23 @@ function updateLimitedTimers() {
         const timeLeft = limitDate - now;
         
         if (timeLeft <= 0) {
-            cardEl.classList.add('expired');
-            const timerEl = cardEl.querySelector('.limited-timer');
-            if (timerEl) timerEl.textContent = 'EXPIRED';
-            // Remove onclick to prevent selection
-            cardEl.style.pointerEvents = 'none';
-            cardEl.onclick = null;
+            const isOwned = unlockedCharacters.includes(char);
+            if (isOwned) {
+                cardEl.classList.remove('expired');
+                cardEl.classList.add('owned-limited');
+                const timerEl = cardEl.querySelector('.limited-timer');
+                if (timerEl) timerEl.textContent = '✅ OWNED';
+                cardEl.style.pointerEvents = 'auto';
+                cardEl.style.opacity = '1';
+                cardEl.onclick = () => selectCharacter(char);
+            } else {
+                cardEl.classList.add('expired');
+                cardEl.classList.remove('owned-limited');
+                const timerEl = cardEl.querySelector('.limited-timer');
+                if (timerEl) timerEl.textContent = 'EXPIRED';
+                cardEl.style.pointerEvents = 'none';
+                cardEl.onclick = null;
+            }
         } else {
             cardEl.classList.remove('expired');
             cardEl.style.pointerEvents = 'auto';
@@ -1209,9 +1242,15 @@ setInterval(updateLimitedTimers, 60000);
 let gameRunning = false, keys = {}, mousePos = { x: 0, y: 0 };
 
 const ADMIN_ABILITIES = [
-    { key:'1', name:'BURST',      icon:'💥', fn:'admin_burst',    mana:0  },
-    // ... rest of ADMIN_ABILITIES ...
-    { key:'9', name:'TELEPORT',   icon:'🌀', fn:'admin_teleport',  mana:0  },
+    { key:'1', name:'BURST',      icon:'💥', fn:'admin_burst',     mana:0 },
+    { key:'2', name:'EXPLOSION',  icon:'💣', fn:'admin_explosion', mana:0 },
+    { key:'3', name:'FREEZE',     icon:'❄️', fn:'admin_freeze',    mana:0 },
+    { key:'4', name:'CHAIN',      icon:'⚡', fn:'admin_chain',     mana:0 },
+    { key:'5', name:'SLAM',       icon:'👊', fn:'admin_slam',      mana:0 },
+    { key:'6', name:'BOW',        icon:'🏹', fn:'admin_bow',       mana:0 },
+    { key:'7', name:'BLOOD GOD',  icon:'🩸', fn:'admin_bloodgod',  mana:0 },
+    { key:'8', name:'NUKE',       icon:'☢️', fn:'admin_nuke',      mana:0 },
+    { key:'9', name:'TELEPORT',   icon:'🌀', fn:'admin_teleport',  mana:0 },
 ];
 let adminCooldowns = [0,0,0,0,0,0,0,0,0];
 const ADMIN_CDS    = [60,90,120,100,180,20,300,600,45];
@@ -1241,7 +1280,7 @@ const CHARACTERS = {
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
     yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'dashpunch',     manaCost:0,  cdMax:0, isYuji:true, isBoxer:true, useImg:false },
-    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'cursedtechnique',       manaCost:0, cdMax:0, isToji:true,       useImg:false },
+    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'toolswap',       manaCost:0, cdMax:0, isToji:true,       useImg:false },
     character10b:  { name:'Character 10', color:'#00ff00', shadow:'#00aa00', projColor:'#00ff00', ability:'omnipotent',     manaCost:1, cdMax:0, isCharacter10b:true, useImg:false },
 };
 
@@ -1731,6 +1770,15 @@ function tickNewCharacters(ts, dt) {
             tojiStackTimer -= dt;
         } else if(tojiCombatStacks > 0) {
             tojiCombatStacks = 0;
+        }
+        // Countdown mode timers
+        if(tojiSharpModeTimer > 0) {
+            tojiSharpModeTimer -= dt;
+            if(tojiSharpModeTimer <= 0) { tojiSharpModeTimer = 0; floatMoneyText('⚔️ Sharp Mode ended'); }
+        }
+        if(tojiHeavyModeTimer > 0) {
+            tojiHeavyModeTimer -= dt;
+            if(tojiHeavyModeTimer <= 0) { tojiHeavyModeTimer = 0; tojiToolMode = 'sharp'; floatMoneyText('🪵 Heavy Mode ended'); }
         }
     }
 
@@ -3166,7 +3214,6 @@ function specialAttack(){
             if(tojiToolMode === 'sharp') {
                 // Switch to Heavy mode
                 tojiToolMode = 'heavy';
-                player.speedBoost = 0;
                 tojiHeavyModeTimer = 120; // 2 seconds
                 floatMoneyText('🪵 HEAVY MODE: +20% DMG, 50% SLOW');
                 for(let i=0;i<30;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*60, player.y + (Math.random()-0.5)*60, '#8b6914'));
@@ -3934,6 +3981,9 @@ function resetGame(){
     // Toji reset
     tojiCombatStacks = 0;
     tojiStackTimer = 0;
+    tojiToolMode = 'sharp';
+    tojiSharpModeTimer = 0;
+    tojiHeavyModeTimer = 0;
     document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
@@ -4413,7 +4463,8 @@ function gameLoop(ts){
         }
     }
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = 'rgba(15, 15, 30, 0.72)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw biome background effect
     drawBiomeBackground();
@@ -5013,7 +5064,7 @@ function gameLoop(ts){
                 hakariJackpotTimer = 15060; // 4m 11s = 251 seconds = 15060 frames at 60fps
                 hakariJackpotCooldown = 1200; // 20 second cooldown before domain can be popped again (1200 frames at 60fps)
                 hakariDomainActive = false; // exit domain
-                floatMoneyText('🎰 JACKPOT! IMMORTALITY UNLOCKED! 4:11 🎰');
+                floatMoneyText('🎰 JACKPOT! ULTRA REGEN + 50x DMG! 4:11 🎰');
                 for(let i=0;i<200;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#fbbf24'));
                 for(let i=0;i<200;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200, '#ec4899'));
             }
@@ -5050,6 +5101,12 @@ function gameLoop(ts){
         ctx.stroke();
         ctx.restore();
         
+        // Heal fast (1 HP every 0.2 seconds = 1 HP every 12 frames at 60fps)
+        if (hakariJackpotTimer % 12 < dt) {
+            player.health = Math.min(player.health + 1, player.maxHealth);
+            updateHUD();
+        }
+        
         // Draw jackpot countdown (4:11 format)
         const secondsLeft = Math.max(0, Math.ceil(hakariJackpotTimer / 60));
         const minLeft = Math.floor(secondsLeft / 60);
@@ -5060,18 +5117,13 @@ function gameLoop(ts){
         ctx.fillStyle = '#fbbf24';
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#fbbf24';
-        ctx.fillText(`🎰 IMMORTAL ${minLeft}:${secLeft.toString().padStart(2, '0')} 🎰`, player.x, player.y - 40);
+        ctx.fillText(`🎰 JACKPOT ${minLeft}:${secLeft.toString().padStart(2, '0')} 🎰`, player.x, player.y - 40);
         ctx.restore();
-        
-        // Maintain invulnerability (prevent all damage) and set damage multiplier
-        // Make sure player cannot take damage and deals 50x damage
-        player.invulnerable = Math.max(player.invulnerable, 60); // Refresh invulnerability every frame
         
         // Time expired
         if (hakariJackpotTimer <= 0) {
             hakariJackpotActive = false;
-            player.invulnerable = 0;
-            floatMoneyText('⏰ Jackpot immortality ended!');
+            floatMoneyText('⏰ Jackpot ended!');
         }
     }
     
@@ -5829,7 +5881,7 @@ function applyTutorialStep(){
         hintEl.textContent = 'Use TAB to monitor your progression and build effectiveness!';
     } else if (tutorialStep === 10){
         titleEl.textContent = 'Character Selection';
-        bodyEl.innerHTML = 'Visit the Character Shop to unlock 18 unique characters, each with different starting stats, special abilities, and playstyles. <b>Toji Fushiguro</b> is a limited-time character that expires on Feb 28, 2026 at 12 PM CST with a weapon-swap ability!';
+        bodyEl.innerHTML = 'Visit the Character Shop to unlock 18 unique characters, each with different starting stats, special abilities, and playstyles. <b>Toji Fushiguro</b> is a limited-time character that expires on Mar 10, 2026 at 12 PM with a weapon-swap ability!';
         hintEl.textContent = 'Different characters excel at different strategies!';
     } else if (tutorialStep === 11){
         titleEl.textContent = 'Game Pause & Settings';
@@ -6027,9 +6079,9 @@ const CHAR_INFO = {
         name: 'Hakari', tag: 'LIMITED · Domain Master', icon: '🎰',
         iconBg: 'linear-gradient(135deg,#ec4899,#7c3aed)', iconGlow: '#ec4899',
         stats: [{ label: 'Damage', value: '20 (standard)' },{ label: 'Domain Duration', value: '60 seconds' },{ label: 'Domain Size', value: '200px safe zone (enemies can\'t enter)' },{ label: 'Jackpot Immortality', value: '4 min 11 sec (one-shot everything)' },{ label: 'Jackpot Chance', value: '10% per roll (FIXED)' },{ label: 'Jackpot Cooldown', value: '20 seconds after jackpot' }],
-        abilities: `<b>R — Domain Expansion (0 mana, no cooldown):</b> Creates a sacred domain around you for 60 seconds. Within the domain, you are completely safe — no enemies can enter. Waves automatically pause while in the domain. Cannot be activated during jackpot immortality.<br><br><b>Automatic Rolling:</b> Once in the domain, you begin rolling every second. Each roll has a FIXED 10% chance of landing a JACKPOT (no pity system — pure luck every time).<br><br><b>Jackpot Effect:</b> Hit a jackpot within the 60-second window to unlock 4 minutes and 11 seconds of IMMORTALITY. During this time, all your projectiles deal 50x damage (one-shot everything) and you are invulnerable. After jackpot ends, Domain Expansion has a 20-second cooldown before you can pop it again.`,
+        abilities: `<b>R — Domain Expansion (0 mana, no cooldown):</b> Creates a sacred domain around you for 60 seconds. Within the domain, you are completely safe — no enemies can enter. Waves automatically pause while in the domain. Cannot be activated during jackpot.<br><br><b>Automatic Rolling:</b> Once in the domain, you begin rolling every second. Each roll has a FIXED 10% chance of landing a JACKPOT (no pity system — pure luck every time).<br><br><b>Jackpot Effect:</b> Hit a jackpot within the 60-second window to unlock 4 minutes and 11 seconds of ULTRA REGEN. During this time, you heal 1 HP every 0.2 seconds and all your projectiles deal 50x damage. After jackpot ends, Domain Expansion has a 20-second cooldown before you can pop it again.`,
         playstyle: 'High-risk gambling with no pity safety net. Use Domain Expansion strategically when surrounded or at low health. Each roll is a 10/100 lottery — some runs you hit immediately, others you never hit. If you don\'t hit jackpot within 60 seconds, you exit and must survive normally.',
-        tip: '🎰 Tip: The 10% roll makes it even more unpredictable than before. Pure luck means sometimes you hit on roll 1, sometimes never. Use domains when you can afford to lose time if you don\'t hit. After hitting jackpot, you\'ll have a 20-second vulnerability window before you can pop domain again.',
+        tip: '🎰 Tip: The ultra regen heals you steadily during the jackpot window — you\'re not invincible so stay aggressive but smart. After hitting jackpot, you\'ll have a 20-second vulnerability window before you can pop domain again.',
     },
     yuji_itadori: {
         name: 'Yuji Itadori', tag: 'LIMITED · Cursed Spirit Host', icon: '🩸',
@@ -6120,7 +6172,8 @@ function updateShopDisplay(){
         'dice': 'diceCharacter',
         'hakari_v2': 'hakariCharacter',
         'yuji_itadori': 'yujiCharacter',
-        'toji': 'tojiCharacter'
+        'toji': 'tojiCharacter',
+        'character10b': 'character10bCharacter'
     };
     
     // First, remove all selected/locked classes from ALL cards
@@ -6159,8 +6212,8 @@ function updateMcSkinClass(){
     else document.body.classList.remove('mc-skin');
 }
 function selectCharacter(name){
-    // Check if limited character is expired
-    if (LIMITED_CHARACTERS.includes(name)) {
+    // Check if limited character is expired — but allow if already owned
+    if (LIMITED_CHARACTERS.includes(name) && !unlockedCharacters.includes(name)) {
         const limitDate = LIMITED_EXPIRY[name];
         const now = new Date();
         if (now >= limitDate) {
