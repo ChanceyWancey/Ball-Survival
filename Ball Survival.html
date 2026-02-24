@@ -4469,7 +4469,7 @@ function applyBiomeEffects(dt) {
     if(currentBiome.effect === 'icepalace') healPerFrame += 4 / 60; // +4 HP/sec in palace
     if(currentBiome.effect === 'ancientforest') healPerFrame += 2 / 60; // +2 HP/sec
     if(currentBiome.effect === 'moonlight') healPerFrame += 2 / 60; // +2 HP/sec
-    if(currentBiome.effect === 'bloom') healPerFrame += 1 / 60; // +1 HP/sec (smaller, stacks with mana)
+    if(currentBiome.effect === 'bloom') healPerFrame += 1 / 60; // +1 HP/sec
     if(currentBiome.effect === 'oasis') healPerFrame += 3.5 / 60; // +3.5 HP/sec
     if(currentBiome.effect === 'sakura') healPerFrame += 3.2 / 60; // +3.2 HP/sec
     if(currentBiome.effect === 'badlands') healPerFrame += 1 / 60; // +1 HP/sec
@@ -4477,9 +4477,12 @@ function applyBiomeEffects(dt) {
     if(currentBiome.effect === 'enchanted') healPerFrame += 2.8 / 60; // +2.8 HP/sec
     if(currentBiome.effect === 'festival') healPerFrame += 1.5 / 60; // +1.5 HP/sec
     if(currentBiome.effect === 'mist') healPerFrame += 2.5 / 60; // +2.5 HP/sec
+    if(currentBiome.effect === 'aquatic') healPerFrame += 1.8 / 60; // +1.8 HP/sec
+    if(currentBiome.effect === 'darkwood') healPerFrame += 4 / 60; // +4 HP/sec
     
     if(healPerFrame > 0) {
         player.health = Math.min(player.health + healPerFrame * dt, player.maxHealth);
+        updateHUD();
     }
 }
 
@@ -4584,7 +4587,7 @@ function gameLoop(ts){
     let mx=0,my=0;
     if(keys[binds.moveUp]||keys['arrowup'])my-=1;if(keys[binds.moveDown]||keys['arrowdown'])my+=1;
     if(keys[binds.moveLeft]||keys['arrowleft'])mx-=1;if(keys[binds.moveRight]||keys['arrowright'])mx+=1;
-    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;const biomeSpd=1+biomeSpeedBonus;const tojiSpd=currentCharacter==='toji'?(1+tojiCombatStacks*0.05):1;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd*biomeSpd*tojiSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd*biomeSpd*tojiSpd;}
+    if(mx||my){const m=Math.sqrt(mx*mx+my*my);const bSpd=passiveState.berserkerActive?1.5:1;const ghSpd=CHARACTERS[currentCharacter].isGoldHoarder?GH_SPEED_MULT:1;const biomeSpd=1+biomeSpeedBonus;player.x+=(mx/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;player.y+=(my/m)*player.speed*dt*bSpd*ghSpd*biomeSpd;}
     player.x=Math.max(player.radius,Math.min(canvas.width-player.radius,player.x));
     player.y=Math.max(player.radius,Math.min(canvas.height-player.radius,player.y));
     const pResolved = (currentCharacter==='phantom'&&phantomPhasing) ? {x:player.x,y:player.y} : resolveCircleWall(player.x, player.y, player.radius);
@@ -4597,17 +4600,20 @@ function gameLoop(ts){
     if(player.manaRegen>=60){
         let manaPerSec = 1 + passiveState.manaflow/30; // each manaflow = +2/sec, divided by 30 frames/sec
         // Biome mana regen bonuses
-        if(currentBiome.effect === 'mana_regen') manaPerSec *= 2; // +100% mana regen
-        if(currentBiome.effect === 'mana_vortex') manaPerSec *= 1.75; // +75% mana regen
-        if(currentBiome.effect === 'arcane') manaPerSec *= 2; // +100% mana regen
-        if(currentBiome.effect === 'celestial') manaPerSec *= 1.6; // +60% mana regen
-        if(currentBiome.effect === 'aquatic') manaPerSec *= 1.9; // +90% mana regen
-        if(currentBiome.effect === 'sakura') manaPerSec *= 1.55; // +55% mana regen
-        if(currentBiome.effect === 'tide_pools') manaPerSec *= 1.7; // +70% mana regen
-        if(currentBiome.effect === 'enchanted') manaPerSec *= 1.85; // +85% mana regen
-        if(currentBiome.effect === 'festival') manaPerSec *= 1.3; // +30% mana regen
-        if(currentBiome.effect === 'oasis') manaPerSec *= 1.6; // +60% mana regen
-        if(currentBiome.effect === 'lightning_field') manaPerSec *= 1.8; // +80% mana regen
+        if(currentBiome.effect === 'mana_regen') manaPerSec *= 2;       // +100%
+        if(currentBiome.effect === 'mana_vortex') manaPerSec *= 1.75;   // +75%
+        if(currentBiome.effect === 'arcane') manaPerSec *= 2;            // +100%
+        if(currentBiome.effect === 'celestial') manaPerSec *= 1.6;       // +60%
+        if(currentBiome.effect === 'aquatic') manaPerSec *= 1.9;         // +90%
+        if(currentBiome.effect === 'sakura') manaPerSec *= 1.55;         // +55%
+        if(currentBiome.effect === 'tide_pools') manaPerSec *= 1.7;      // +70%
+        if(currentBiome.effect === 'enchanted') manaPerSec *= 1.85;      // +85%
+        if(currentBiome.effect === 'festival') manaPerSec *= 1.3;        // +30%
+        if(currentBiome.effect === 'oasis') manaPerSec *= 1.6;           // +60%
+        if(currentBiome.effect === 'lightning_field') manaPerSec *= 1.8; // +80%
+        if(currentBiome.effect === 'peaceful') manaPerSec *= 1.5;        // +50%
+        if(currentBiome.effect === 'bloom') manaPerSec *= 1.5;           // +50%
+        if(currentBiome.effect === 'starlight') manaPerSec *= 1.4;       // +40%
         player.mana=Math.min(player.mana+manaPerSec,player.maxMana);
         player.manaRegen=0;
         updateHUD();
@@ -5830,7 +5836,7 @@ canvas.addEventListener('mousedown',e=>{
         return;
     }
     if(currentCharacter==='pyromancer'&&gameRunning){pyroCharging=true;pyroChargeTimer=0;}
-    else if(currentCharacter!=='boxer'&&gameRunning) shootProjectile(currentCharacter==='admin');
+    else if(currentCharacter!=='boxer'&&currentCharacter!=='toji'&&gameRunning) shootProjectile(currentCharacter==='admin');
 });
 canvas.addEventListener('mouseup',e=>{
     builderSelectedWall = null;
