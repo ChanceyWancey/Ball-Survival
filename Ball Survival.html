@@ -543,6 +543,101 @@
             transition: all 0.15s; letter-spacing: 0.05em;
         }
         .info-btn:hover { background: rgba(59,130,246,0.25); color: white; border-color: #3b82f6; }
+        .mastery-btn {
+            display: block; width: calc(100% - 16px); margin: 0px 8px 8px;
+            background: rgba(251,191,36,0.10); color: rgba(251,191,36,0.85);
+            border: 1px solid rgba(251,191,36,0.35); border-radius: 5px;
+            padding: 5px 0; font-size: 10px; font-family: inherit; cursor: pointer;
+            transition: all 0.15s; letter-spacing: 0.05em;
+        }
+        .mastery-btn:hover { background: rgba(251,191,36,0.25); color: #fbbf24; border-color: #fbbf24; }
+        .mastery-btn.equipped {
+            background: rgba(251,191,36,0.22);
+            color: #fbbf24;
+            border-color: #fbbf24;
+            box-shadow: 0 0 8px rgba(251,191,36,0.4);
+        }
+        .mastery-equip-btn {
+            display: block; width: 100%; margin-top: 16px;
+            padding: 12px 0; border-radius: 6px; font-size: 13px;
+            font-family: inherit; font-weight: bold; cursor: pointer;
+            border: none; transition: all 0.15s; letter-spacing: 0.05em;
+        }
+        .mastery-equip-btn.equip {
+            background: rgba(251,191,36,0.15); color: #fbbf24;
+            border: 2px solid rgba(251,191,36,0.5);
+        }
+        .mastery-equip-btn.equip:hover { background: rgba(251,191,36,0.3); box-shadow: 0 0 12px rgba(251,191,36,0.3); }
+        .mastery-equip-btn.unequip {
+            background: rgba(239,68,68,0.12); color: #fca5a5;
+            border: 2px solid rgba(239,68,68,0.35);
+        }
+        .mastery-equip-btn.unequip:hover { background: rgba(239,68,68,0.25); }
+        #masteryModal {
+            display: none; position: fixed; inset: 0; z-index: 5000;
+            background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
+            justify-content: center; align-items: center;
+        }
+        #masteryModal.open { display: flex; animation: fadeInBlur 0.3s ease-out; }
+        #masteryBox {
+            animation: popBounce 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            background: rgba(10,12,28,0.98); border-radius: 12px;
+            padding: 36px 40px; max-width: 560px; width: 90%;
+            border: 2px solid rgba(251,191,36,0.35);
+            box-shadow: 0 0 60px rgba(251,191,36,0.15), 0 0 120px rgba(0,0,0,0.9);
+            position: relative; max-height: 85vh; overflow-y: auto;
+        }
+        #masteryBox::-webkit-scrollbar { width: 6px; }
+        #masteryBox::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 3px; }
+        #masteryBox .mastery-header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 22px;
+        }
+        #masteryBox .mastery-icon {
+            width: 54px; height: 54px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 28px;
+        }
+        #masteryBox h3 { font-size: 20px; font-weight: bold; margin-bottom: 2px; color: #fbbf24; }
+        #masteryBox .mastery-tag {
+            font-size: 10px; opacity: 0.5; letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        #masteryBox .mastery-section { margin-bottom: 16px; }
+        #masteryBox .mastery-section-title {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+            color: #fbbf24; opacity: 0.7; margin-bottom: 7px;
+            border-bottom: 1px solid rgba(251,191,36,0.2); padding-bottom: 4px;
+        }
+        #masteryBox .mastery-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; margin-bottom: 5px;
+        }
+        #masteryBox .mastery-row .label { opacity: 0.6; }
+        #masteryBox .mastery-row .value { font-weight: bold; color: #fbbf24; }
+        #masteryBox .mastery-desc { font-size: 12px; line-height: 1.75; opacity: 0.85; }
+        #masteryBox .mastery-tier {
+            margin: 8px 0; padding: 10px 14px; border-radius: 6px;
+            background: rgba(255,255,255,0.04); border-left: 3px solid #fbbf24;
+            font-size: 11px; line-height: 1.7;
+        }
+        #masteryBox .mastery-tip {
+            margin-top: 14px; font-size: 11px; padding: 10px 14px;
+            background: rgba(251,191,36,0.07); border-radius: 6px;
+            border-left: 3px solid #fbbf24; opacity: 0.85; line-height: 1.6;
+        }
+        #masteryBox .mastery-unlock {
+            margin-top: 8px; font-size: 11px; padding: 8px 14px;
+            background: rgba(34,197,94,0.08); border-radius: 6px;
+            border-left: 3px solid #22c55e; color: #86efac; line-height: 1.6;
+        }
+        #masteryBox .no-mastery-msg {
+            text-align: center; padding: 40px 20px; opacity: 0.55; font-size: 14px;
+            letter-spacing: 0.05em; line-height: 2;
+        }
+        .close-mastery {
+            position: absolute; top: 14px; right: 16px;
+            background: none; border: none; color: rgba(255,255,255,0.4);
+            font-size: 20px; cursor: pointer; line-height: 1;
+        }
+        .close-mastery:hover { color: white; }
         #infoModal {
             display: none; position: fixed; inset: 0; z-index: 5000;
             background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
@@ -681,7 +776,7 @@
 
 
 <div id="mainMenu">
-    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">Hopefully a Good Toji Rework</p>
+    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">The Masters Update</p>
     <h1>⚔️ BALL SURVIVAL ⚔️</h1>
     <div class="currency-display">💰 $<span id="totalMoney">0</span></div>
     <button class="menu-btn" onclick="showTutorial()">📖 Tutorial</button>
@@ -711,6 +806,7 @@
             <div class="character-ability">Evolves every 30s!<br>R: Adaptive Strike<br>changes with each tier</div>
             <div class="character-price">FREE</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('default')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('default')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('goldhoarder')" id="goldhoarderCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#ca8a04,#713f12);box-shadow:0 0 20px rgba(234,179,8,.9);"></div>
@@ -718,6 +814,7 @@
             <div class="character-ability">5x GOLD from everything!<br>R: Gold Rush — converts<br>enemies to coins<br>Terrible at combat</div>
             <div class="character-price">FREE</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('goldhoarder')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('goldhoarder')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('vampire')" id="vampireCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#7f1d1d,#450a0a);box-shadow:0 0 20px rgba(185,28,28,.8);"></div>
@@ -725,6 +822,7 @@
             <div class="character-ability">PASSIVE: Heal 8 HP<br>on every kill<br>No special ability</div>
             <div class="character-price">$100</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('vampire')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('vampire')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('builder')" id="builderCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#8b5a2b,#d2691e);box-shadow:0 0 20px rgba(160,82,45,.9);"></div>
@@ -732,6 +830,7 @@
             <div class="character-ability">E: Move nearby walls!<br>Shift+Click: Build new<br>walls for defense<br>R: Reinforce — strengthen walls</div>
             <div class="character-price">$100</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('builder')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('builder')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('phantom')" id="phantomCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#0ea5e9,#1e1b4b);box-shadow:0 0 22px rgba(125,211,252,.8);"></div>
@@ -739,6 +838,7 @@
             <div class="character-ability">PASSIVE: Ethereal shots<br>pierce through walls!<br>R: Ghost Walk — phase<br>through walls + speed</div>
             <div class="character-price">$250</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('phantom')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('phantom')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('boxer')" id="boxerCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#dc2626,#7f1d1d);box-shadow:0 0 20px rgba(220,38,38,.9);"></div>
@@ -746,6 +846,7 @@
             <div class="character-ability">High damage up close!<br>R: Power Dash — dash<br>into enemies with damage</div>
             <div class="character-price">$500</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('boxer')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('boxer')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('fire')" id="fireCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#ff4500,#7f1d1d);box-shadow:0 0 20px rgba(255,69,0,.9);"></div>
@@ -753,6 +854,7 @@
             <div class="character-ability">Shots leave BURNING<br>ground! R: Inferno —<br>ignites all enemies</div>
             <div class="character-price">$500</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('fire')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('fire')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('druid')" id="druidCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#15803d,#052e16);box-shadow:0 0 22px rgba(74,222,128,.8);"></div>
@@ -760,6 +862,7 @@
             <div class="character-ability">Shots ROOT enemies<br>in place for 1.5s!<br>R: Heal Mushrooms —<br>spawn HP recovery pods</div>
             <div class="character-price">$750</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('druid')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('druid')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('ice')" id="iceCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#e0f7ff,#06b6d4);box-shadow:0 0 20px rgba(103,232,249,.9);"></div>
@@ -767,6 +870,7 @@
             <div class="character-ability">Fast pierce shots!<br>SHATTER frozen enemies<br>R: Blizzard — freeze+slow</div>
             <div class="character-price">$1000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('ice')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('ice')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('pyromancer')" id="pyromancerCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#c2410c,#431407);box-shadow:0 0 22px rgba(251,146,60,.9);"></div>
@@ -774,6 +878,7 @@
             <div class="character-ability">Hold FIRE to charge<br>bigger shots! More<br>charge = more dmg!<br>R: Meteor Strike</div>
             <div class="character-price">$1500</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('pyromancer')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('pyromancer')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('electric')" id="electricCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#facc15,#7c3aed);box-shadow:0 0 20px rgba(168,85,247,.9);"></div>
@@ -781,6 +886,7 @@
             <div class="character-ability">Shots auto-chain to<br>nearby enemies!<br>R: Overload — next 8<br>shots hit EVERYTHING</div>
             <div class="character-price">$2500</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('electric')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('electric')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('cyborg')" id="cyborgCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#0ea5e9,#4c1d95);box-shadow:0 0 22px rgba(14,165,233,.9);"></div>
@@ -788,6 +894,7 @@
             <div class="character-ability">E: Toggle RAPID mode<br>(fast weak) vs HEAVY<br>(slow powerful)<br>R: 360° Laser Sweep</div>
             <div class="character-price">$3000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('cyborg')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('cyborg')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('timewizard')" id="timewizardCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#7c3aed,#1e1b4b);box-shadow:0 0 22px rgba(216,180,254,.9);"></div>
@@ -795,6 +902,7 @@
             <div class="character-ability">PASSIVE: Every shot<br>echoes — hits twice!<br>R: Rewind — restore HP<br>to 5s ago (5s CD)</div>
             <div class="character-price">$4500</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('timewizard')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('timewizard')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('wemmbu')" id="wemmbuCharacter">
             <div class="character-preview">
@@ -804,6 +912,7 @@
             <div class="character-ability">R: INSTANT Slam<br>35 mana • 3s CD</div>
             <div class="character-price">$5000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('wemmbu')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('wemmbu')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('eggchan')" id="eggchanCharacter">
             <div class="character-preview">
@@ -813,6 +922,7 @@
             <div class="character-ability">R: MC Bow Shot<br>1 mana • spammable</div>
             <div class="character-price">$5000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('eggchan')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('eggchan')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('dream')" id="dreamCharacter">
             <div class="character-preview">
@@ -822,6 +932,7 @@
             <div class="character-ability">PASSIVE: Kill to<br>earn better armor!<br>Leather→Netherite</div>
             <div class="character-price">$5000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('dream')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('dream')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('technoblade')" id="technobladeCharacter">
             <div class="character-preview">
@@ -831,6 +942,7 @@
             <div class="character-ability">R: BLOOD FOR THE<br>BLOOD GOD — kills ALL<br>150 mana + armor passive</div>
             <div class="character-price">$50000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('technoblade')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('technoblade')">🏅 MASTERY</button>
         </div>
         <div class="character-card" onclick="selectCharacter('admin')" id="adminCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#7c3aed,#1e1b4b);box-shadow:0 0 20px rgba(124,58,237,.8);"></div>
@@ -838,6 +950,7 @@
             <div class="character-ability">1-9: ALL abilities!<br>ALL passives active!<br>Rainbow power!</div>
             <div class="character-price">$1,000,000,000</div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('admin')">INFO</button>
+            <button class="mastery-btn" onclick="event.stopPropagation();showMastery('admin')">🏅 MASTERY</button>
         </div>
         <div class="character-card limited-card" onclick="selectCharacter('dice')" id="diceCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 0 20px rgba(249,115,22,.9);"></div>
@@ -863,14 +976,7 @@
             <div class="limited-timer" id="yujiTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('yuji_itadori')">INFO</button>
         </div>
-        <div class="character-card limited-card" onclick="selectCharacter('toji')" id="tojiCharacter">
-            <div class="character-preview" style="background:linear-gradient(135deg,#6b4423,#3d2817);box-shadow:0 0 20px rgba(107,68,35,.9);"></div>
-            <div class="character-name">Toji Fushiguro</div>
-            <div class="character-ability">60 HP • 60 DMG • Melee only<br>R: Curse Mark — 5x dmg on target<br>Kills restore 3 HP</div>
-            <div class="character-price">$20000</div>
-            <div class="limited-timer" id="tojiTimer"></div>
-            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('toji')">INFO</button>
-        </div>
+
         <div class="character-card limited-card" onclick="selectCharacter('character10b')" id="character10bCharacter">
             <div class="character-preview" style="background:linear-gradient(135deg,#00ff00,#00aa00);box-shadow:0 0 20px rgba(0,255,0,.9);"></div>
             <div class="character-name">Character</div>
@@ -878,6 +984,14 @@
             <div class="character-price">$50000</div>
             <div class="limited-timer" id="character10bTimer"></div>
             <button class="info-btn" onclick="event.stopPropagation();showCharInfo('character10b')">INFO</button>
+        </div>
+        <!-- War Veteran — hidden from character menu, only accessible via Veteran mastery -->
+        <div class="character-card" onclick="selectCharacter('war_veteran')" id="warVeteranCharacter" style="display:none;border-color:rgba(251,191,36,0.4);">
+            <div class="character-preview" style="background:linear-gradient(135deg,#1e3a8a,#60a5fa);box-shadow:0 0 22px rgba(96,165,250,.85);"></div>
+            <div class="character-name" style="color:#fbbf24;">War Veteran</div>
+            <div class="character-ability">20 DMG • Speed 6 • TP Dash<br>Promotes every 45s!<br>R: Ranked Bombardment<br>changes per rank</div>
+            <div class="character-price" style="color:#fbbf24;">🎖️ Veteran Mastery</div>
+            <button class="info-btn" onclick="event.stopPropagation();showCharInfo('war_veteran')">INFO</button>
         </div>
     </div>
     <div style="text-align: center; margin-top: 20px;">
@@ -909,6 +1023,20 @@
             <div class="info-desc" id="infoPlaystyle"></div>
         </div>
         <div class="info-tip" id="infoTip"></div>
+    </div>
+</div>
+
+<div id="masteryModal" onclick="if(event.target===this)closeMastery()">
+    <div id="masteryBox">
+        <button class="close-mastery" onclick="closeMastery()">✕</button>
+        <div class="mastery-header">
+            <div class="mastery-icon" id="masteryIcon"></div>
+            <div>
+                <h3 id="masteryName"></h3>
+                <div class="mastery-tag" id="masteryTag"></div>
+            </div>
+        </div>
+        <div id="masteryContent"></div>
     </div>
 </div>
 
@@ -1174,6 +1302,9 @@ function revealDailyCode() {
 let totalMoney = parseInt(localStorage.getItem('ballRPGMoney')) || 0;
 let unlockedCharacters = JSON.parse(localStorage.getItem('ballRPGCharacters')) || ['default', 'goldhoarder'];
 let currentCharacter = localStorage.getItem('ballRPGCurrentCharacter') || 'default';
+let unlockedMasteries = JSON.parse(localStorage.getItem('ballRPGMasteries')) || [];
+let equippedMasteries = JSON.parse(localStorage.getItem('ballRPGEquippedMasteries')) || [];
+let veteranWins = parseInt(localStorage.getItem('ballRPGVeteranWins')) || 0;
 
 // Remove beta tester free Hakari unlock
 if (unlockedCharacters.includes('hakari')) {
@@ -1181,19 +1312,17 @@ if (unlockedCharacters.includes('hakari')) {
 }
 
 // Limited character timer (Feb 27 2026 12 PM CST)
-const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori', 'toji', 'character10b'];
+const LIMITED_CHARACTERS = ['dice', 'hakari_v2', 'yuji_itadori', 'character10b'];
 const LIMITED_CARD_IDS = {
     'dice': 'diceCharacter',
     'hakari_v2': 'hakariCharacter',
     'yuji_itadori': 'yujiCharacter',
-    'toji': 'tojiCharacter',
     'character10b': 'character10bCharacter'
 };
 const LIMITED_EXPIRY = {
     'dice': new Date(2026, 1, 20, 12, 0, 0),
     'hakari_v2': new Date(2026, 1, 20, 12, 0, 0),
     'yuji_itadori': new Date(2026, 1, 20, 12, 0, 0),
-    'toji': new Date(2026, 2, 10, 12, 0, 0),
     'character10b': new Date(2026, 1, 24, 12, 0, 0)
 };
 
@@ -1285,8 +1414,8 @@ const CHARACTERS = {
     dice:        { name:'Dice',         color:'#f97316', shadow:'#ea580c', projColor:'#f97316', ability:'randomspecial',  manaCost:0,  cdMax:0, isDice:true,       useImg:false },
     hakari_v2:   { name:'Hakari',       color:'#ec4899', shadow:'#be185d', projColor:'#f472b6', ability:'domainexpansion', manaCost:60, cdMax:0, useImg:false },
     yuji_itadori: { name:'Yuji',        color:'#e84d4d', shadow:'#991b1b', projColor:'#e84d4d', ability:'dashpunch',     manaCost:0,  cdMax:0, isYuji:true, isBoxer:true, useImg:false },
-    toji:         { name:'Toji',        color:'#6b4423', shadow:'#3d2817', projColor:'#f59e0b', ability:'cursemark',      manaCost:0, cdMax:480, isToji:true,       useImg:false },
     character10b:  { name:'Character 10', color:'#00ff00', shadow:'#00aa00', projColor:'#00ff00', ability:'omnipotent',     manaCost:100, cdMax:600, isCharacter10b:true, useImg:false },
+    war_veteran:   { name:'War Veteran',   color:'#60a5fa', shadow:'#1e3a8a', projColor:'#60a5fa', ability:'veteran',        manaCost:20,  cdMax:0,  isVeteran:true, isWarVeteran:true, useImg:false },
 };
 
 const SKIN_URLS = {
@@ -1302,7 +1431,7 @@ const PRICES = {
     default:0, goldhoarder:0, vampire:100, builder:100,
     phantom:250, druid:750, pyromancer:1500, cyborg:3000, timewizard:4500,
     fire:500, ice:1000, electric:2500, boxer:500,
-    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000, toji:20000, character10b:50000
+    wemmbu:5000, eggchan:5000, dream:5000, technoblade:50000, admin:1000000000, dice:2345, hakari_v2:35000, yuji_itadori:28000, character10b:50000, war_veteran:0
 };
 
 const CHARACTER_ORDER = Object.keys(PRICES).sort((a, b) => PRICES[a] - PRICES[b]);
@@ -1384,6 +1513,19 @@ const VETERAN_TIERS = [
     { name:'Commander', color:'#a855f7', shadow:'#7c3aed', projColor:'#d8b4fe', dmgMult:2.8, speedBonus:1.5, label:'Shockwave' },
     { name:'Legend',    color:'#fbbf24', shadow:'#f59e0b', projColor:'#fef08a', dmgMult:4.0, speedBonus:2.5, label:'Annihilate' },
 ];
+
+// War Veteran mastery tiers (equipped mastery for The Veteran)
+let warVeteranTier = 0;
+let warVeteranTimer = 0;
+const WAR_VETERAN_TIERS = [
+    { name:'Lieutenant',     color:'#60a5fa', shadow:'#1e3a8a', dmgMult:1.5,  speedBonus:0,   bulletCount:12 },
+    { name:'Captain',        color:'#34d399', shadow:'#065f46', dmgMult:2.5,  speedBonus:0.5, bulletCount:18 },
+    { name:'Major',          color:'#fbbf24', shadow:'#92400e', dmgMult:999,  speedBonus:1.0, bulletCount:32 }, // instakill tier
+    { name:'Sergeant',       color:'#f97316', shadow:'#7c2d12', dmgMult:999,  speedBonus:1.5, bulletCount:50 }, // instakill + turret
+    { name:'True Commander', color:'#e879f9', shadow:'#701a75', dmgMult:999,  speedBonus:2.0, bulletCount:50 }, // homing + 4 turrets
+];
+
+// War Veteran is a standalone character (id: war_veteran)
 
 let firePatches = [];
 
@@ -1682,9 +1824,10 @@ function doBerserker() {
 }
 
 class Turret {
-    constructor(x,y){ this.x=x; this.y=y; this.life=15*60; this.shootTimer=0; this.radius=10; }
+    constructor(x,y){ this.x=x; this.y=y; this.life=15*60; this.shootTimer=0; this.radius=10; this.infinite=false; }
     update(dt){
-        this.life-=dt; this.shootTimer-=dt;
+        if(!this.infinite) this.life-=dt;
+        this.shootTimer-=dt;
         if(this.shootTimer<=0){
             this.shootTimer=45;
             let nearest=null, nDist=Infinity;
@@ -1698,22 +1841,36 @@ class Turret {
     }
     draw(){
         ctx.save();
-        ctx.fillStyle='#22c55e'; ctx.shadowBlur=12; ctx.shadowColor='#22c55e';
+        const col = this.infinite ? '#fbbf24' : '#22c55e';
+        ctx.fillStyle=col; ctx.shadowBlur=12; ctx.shadowColor=col;
         ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fill();
         ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='center';
-        ctx.fillText('⚙️',this.x,this.y+4);
-        const bw=24, bh=3, bx=this.x-12, by=this.y-this.radius-6;
-        ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(bx,by,bw,bh);
-        ctx.fillStyle='#22c55e'; ctx.fillRect(bx,by,bw*(this.life/(15*60)),bh);
+        ctx.fillText(this.infinite ? '🎖️' : '⚙️',this.x,this.y+4);
+        if(!this.infinite){
+            const bw=24, bh=3, bx=this.x-12, by=this.y-this.radius-6;
+            ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(bx,by,bw,bh);
+            ctx.fillStyle=col; ctx.fillRect(bx,by,bw*(this.life/(15*60)),bh);
+        } else {
+            ctx.fillStyle='rgba(251,191,36,0.5)'; ctx.font='7px Arial';
+            ctx.fillText('∞',this.x,this.y-this.radius-4);
+        }
         ctx.restore();
     }
 }
 
-function spawnTurret(){
-    const angle = Math.random()*Math.PI*2;
-    const tx = Math.max(20, Math.min(canvas.width-20, player.x+Math.cos(angle)*60));
-    const ty = Math.max(20, Math.min(canvas.height-20, player.y+Math.sin(angle)*60));
-    turrets.push(new Turret(tx,ty));
+function spawnTurret(forceX, forceY, infinite=false){
+    let tx, ty;
+    if (forceX !== undefined && forceY !== undefined) {
+        tx = Math.max(20, Math.min(canvas.width-20, forceX));
+        ty = Math.max(20, Math.min(canvas.height-20, forceY));
+    } else {
+        const angle = Math.random()*Math.PI*2;
+        tx = Math.max(20, Math.min(canvas.width-20, player.x+Math.cos(angle)*60));
+        ty = Math.max(20, Math.min(canvas.height-20, player.y+Math.sin(angle)*60));
+    }
+    const t = new Turret(tx, ty);
+    if (infinite) t.infinite = true;
+    turrets.push(t);
 }
 
 // ══════════════════════════════════════
@@ -1750,81 +1907,9 @@ let sukunaMalevolentActive = false; // malevolent shrine active (continuous dama
 let sukunaMalevolentTimer = 0;    // frames remaining in malevolent shrine effect display
 let sukunaMalevolentCooldown = 0; // cooldown before shrine can be used again (300 frames = 5 seconds)
 
-// Toji Fushiguro variables
-let tojiCombatStacks = 0;
-let tojiStackTimer = 0;
-let tojiCurseMarkedEnemy = null;  // the enemy currently curse-marked
-let tojiCurseMarkTimer = 0;       // frames remaining on the mark
-let tojiMeleeTimer = 0;           // melee swing cooldown
 
 function tickNewCharacters(ts, dt) {
     const skin = currentCharacter;
-
-    // ── TOJI ──────────────────────────────────
-    if (skin === 'toji') {
-        // Tick curse mark timer
-        if (tojiCurseMarkTimer > 0) {
-            tojiCurseMarkTimer -= dt;
-            if (tojiCurseMarkTimer <= 0) {
-                tojiCurseMarkedEnemy = null;
-                floatMoneyText('💀 Curse Mark faded');
-            }
-        }
-        // Clean up if marked enemy died
-        if (tojiCurseMarkedEnemy && !tojiCurseMarkedEnemy.alive) {
-            tojiCurseMarkedEnemy = null;
-            tojiCurseMarkTimer = 0;
-        }
-
-        // Draw curse mark on the marked enemy
-        if (tojiCurseMarkedEnemy && tojiCurseMarkedEnemy.alive) {
-            const e = tojiCurseMarkedEnemy;
-            const pulse = 0.7 + 0.3 * Math.sin(ts * 0.015);
-            ctx.save();
-            ctx.font = `bold ${14 + Math.round(pulse * 4)}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#7c0000';
-            ctx.fillText('💀', e.x, e.y - e.radius - 6);
-            ctx.strokeStyle = `rgba(180,0,0,${pulse * 0.8})`;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4, 3]);
-            ctx.beginPath();
-            ctx.arc(e.x, e.y, e.radius + 5, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        // Melee swing — damage all enemies in close range every 20 frames
-        tojiMeleeTimer -= dt;
-        if (tojiMeleeTimer <= 0) {
-            tojiMeleeTimer = 20;
-            const meleeRange = player.radius + 40;
-            enemies.forEach(e => {
-                if (!e.alive) return;
-                const d = Math.hypot(e.x - player.x, e.y - player.y);
-                if (d < meleeRange) {
-                    let dmg = player.damage * (1 + biomeDamageBonus);
-                    if (hakariJackpotActive) dmg *= 50;
-                    if (e === tojiCurseMarkedEnemy) dmg *= 5;
-                    e.health -= dmg;
-                    for (let i = 0; i < 8; i++) particles.push(new Particle(e.x + (Math.random()-0.5)*20, e.y + (Math.random()-0.5)*20, '#f59e0b'));
-                    if (e.health <= 0 && e.alive) {
-                        e.alive = false;
-                        player.kills++;
-                        gainExp(e.expValue);
-                        handleKill(e);
-                        // Lifesteal on kill
-                        player.health = Math.min(player.health + 3, player.maxHealth);
-                        updateHUD();
-                    }
-                }
-            });
-        }
-
-        // Tick cooldown for R
-        if (player.specialCooldown > 0) player.specialCooldown -= dt;
-    }
 
     // ── PHANTOM ──────────────────────────────────
     if (skin === 'phantom') {
@@ -2372,7 +2457,7 @@ class Enemy {
     update(dt=1) {
         if(this.frozen>0){this.frozen-=dt;return;}
         
-        // Apply Toji heavy mode slow
+        // Apply slow effect
         let effectiveSlowMult = 1;
         if(this.slowTimer !== undefined && this.slowTimer > 0) {
             this.slowTimer -= dt;
@@ -2719,14 +2804,26 @@ function getEnemyStats(type){
 }
 
 function spawnWave(){
-    // Spawn mini-bosses every 15 waves
+    // Spawn mini-bosses every 15 waves (not on boss waves)
     if(currentRound > 0 && currentRound % 15 === 0 && currentRound % 50 !== 0) {
         spawnMiniBosse();
         return;
     }
     
-    // Check if we should spawn the main triangle boss every 50 waves
-    if(currentRound > 0 && currentRound % 50 === 0) {
+    // Triangle boss: waves 50 and 100 (2 fights)
+    if(currentRound === 50 || currentRound === 100) {
+        spawnTheBoss();
+        return;
+    }
+    
+    // Rhomboid boss: waves 150 and 200 (2 fights)
+    if(currentRound === 150 || currentRound === 200) {
+        spawnRhomboid();
+        return;
+    }
+    
+    // Legacy: any other multiple of 50 beyond 200 — keep spawning Triangle
+    if(currentRound > 200 && currentRound % 50 === 0) {
         spawnTheBoss();
         return;
     }
@@ -2792,6 +2889,210 @@ function spawnTheBoss() {
     floatMoneyText(`👹 THE TRIANGLE #${bossNumber} APPEARS! (${Math.round(healthMult*100)}% HP)`);
     for(let i=0;i<100;i++) particles.push(new Particle(currentBoss.x + (Math.random()-0.5)*100, currentBoss.y + (Math.random()-0.5)*100, '#dc2626'));
 }
+
+// ========== RHOMBOID BOSS ==========
+class Rhomboid {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.health = 15000;
+        this.maxHealth = 15000;
+        this.radius = 38;
+        this.rotation = 0;
+        this.alive = true;
+        this.vertexTimer = 0;       // frames since last vertex shot
+        this.dashCooldown = 0;
+        this.dashInProgress = false;
+        this.dashTargetX = 0;
+        this.dashTargetY = 0;
+        this.vortexSpinRate = 0;    // 0 = slow base spin, ramps at <50% HP
+        this.killedEnemyQueue = []; // enemies to re-summon as mini-rhomboids
+    }
+
+    get hpPct() { return this.health / this.maxHealth; }
+
+    update(dt) {
+        if (!this.alive) return;
+
+        // Always spin counter-clockwise (faster below 50% HP)
+        const baseSpinSpeed = 0.025;
+        const rapidSpin = this.hpPct < 0.5 ? 0.08 : 0;
+        this.rotation -= (baseSpinSpeed + rapidSpin) * dt;
+
+        // Vertex attack every 2 seconds (120 frames at 60fps)
+        this.vertexTimer += dt;
+        if (this.vertexTimer >= 120) {
+            this.fireVertexAttack();
+            this.vertexTimer = 0;
+        }
+
+        // Dash towards player below 75% HP
+        if (this.hpPct < 0.75 && this.dashCooldown <= 0 && !this.dashInProgress) {
+            this.dashCooldown = 240; // 4s cooldown
+            this.dashInProgress = true;
+            this.dashTargetX = player.x;
+            this.dashTargetY = player.y;
+        }
+        if (this.dashCooldown > 0) this.dashCooldown -= dt;
+
+        if (this.dashInProgress) {
+            const dx = this.dashTargetX - this.x;
+            const dy = this.dashTargetY - this.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 15) {
+                this.dashInProgress = false;
+                if (Math.hypot(player.x - this.x, player.y - this.y) < 65 && player.invulnerable <= 0) {
+                    let dmg = applyDreamArmor(25);
+                    dmg = applyPassiveIncomingDamage(dmg);
+                    player.health -= dmg;
+                    player.invulnerable = 30;
+                    updateHUD();
+                    if (player.health <= 0) endGame();
+                }
+            } else {
+                const speed = 5.5 * dt;
+                this.x += (dx / dist) * speed;
+                this.y += (dy / dist) * speed;
+                for (let i = 0; i < 2; i++) particles.push(new Particle(this.x + (Math.random()-0.5)*40, this.y + (Math.random()-0.5)*40, '#00cc44'));
+            }
+        }
+
+        // Vortex below 50% HP — draw enemies toward boss and speed them up
+        if (this.hpPct < 0.5) {
+            const vortexStrength = 1.2 * dt;
+            enemies.forEach(e => {
+                if (!e.alive || e.isRhomboidMinion) return;
+                const dx = this.x - e.x, dy = this.y - e.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist > 20) {
+                    e.x += (dx / dist) * vortexStrength;
+                    e.y += (dy / dist) * vortexStrength;
+                }
+            });
+            // Pull player too
+            const pdx = this.x - player.x, pdy = this.y - player.y;
+            const pdist = Math.hypot(pdx, pdy);
+            if (pdist > 40) {
+                player.x += (pdx / pdist) * 0.5 * dt;
+                player.y += (pdy / pdist) * 0.5 * dt;
+            }
+        }
+
+        // Re-summon killed enemies as mini-rhomboids (process queue)
+        while (this.killedEnemyQueue.length > 0) {
+            const killed = this.killedEnemyQueue.shift();
+            const speedMult = this.hpPct < 0.25 ? 2 : 1; // double speed at <25% HP
+            rhomboidMinions.push({
+                x: this.x, y: this.y,
+                angle: Math.random() * Math.PI * 2,
+                speed: 0.6 * speedMult,   // very slow base
+                health: 80,
+                damage: 35,               // high damage
+                radius: 9,
+                rotation: 0,
+                alive: true,
+                isRhomboidMinion: true,
+            });
+        }
+    }
+
+    fireVertexAttack() {
+        // 4 vertices of a rhombus (diamond) — top, right, bottom, left
+        const verts = [
+            { angle: this.rotation + Math.PI * 0, dist: this.radius },       // top
+            { angle: this.rotation + Math.PI * 0.5, dist: this.radius },     // right
+            { angle: this.rotation + Math.PI, dist: this.radius },           // bottom
+            { angle: this.rotation + Math.PI * 1.5, dist: this.radius },     // left
+        ];
+        verts.forEach(v => {
+            const vx = this.x + Math.cos(v.angle) * v.dist;
+            const vy = this.y + Math.sin(v.angle) * v.dist;
+            // Each vertex shoots 1 bullet toward player
+            const ang = Math.atan2(player.y - vy, player.x - vx);
+            rhomboidBullets.push({ x: vx, y: vy, vx: Math.cos(ang) * 4, vy: Math.sin(ang) * 4, damage: 18, radius: 7, alive: true });
+        });
+        for (let i = 0; i < 15; i++) particles.push(new Particle(this.x + (Math.random()-0.5)*60, this.y + (Math.random()-0.5)*60, '#00cc44'));
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+
+        // Vortex visual swirl below 50%
+        if (this.hpPct < 0.5) {
+            for (let r = 1; r <= 3; r++) {
+                ctx.save();
+                ctx.rotate(this.rotation * r * 0.5);
+                ctx.strokeStyle = `rgba(0,255,100,${0.07 * r})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius + 20 * r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Rhombus (diamond) shape — green
+        const s = this.radius;
+        ctx.shadowBlur = 35;
+        ctx.shadowColor = '#00ff66';
+        ctx.fillStyle = '#00aa44';
+        ctx.beginPath();
+        ctx.moveTo(0, -s);    // top
+        ctx.lineTo(s, 0);     // right
+        ctx.lineTo(0, s);     // bottom
+        ctx.lineTo(-s, 0);    // left
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner highlight
+        ctx.fillStyle = '#00dd55';
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.55);
+        ctx.lineTo(s * 0.55, 0);
+        ctx.lineTo(0, s * 0.55);
+        ctx.lineTo(-s * 0.55, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+
+        // Health bar above boss
+        const barW = 80, barH = 7;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(this.x - barW/2, this.y - this.radius - 18, barW, barH);
+        ctx.fillStyle = this.hpPct > 0.5 ? '#00cc44' : this.hpPct > 0.25 ? '#fbbf24' : '#ef4444';
+        ctx.fillRect(this.x - barW/2, this.y - this.radius - 18, barW * this.hpPct, barH);
+        ctx.restore();
+    }
+
+    // Called by kill handler — queue the killed enemy for resummoning
+    onEnemyKilled(enemy) {
+        if (!enemy.isRhomboidMinion && !enemy.isBoss && !enemy.isMiniBoss) {
+            this.killedEnemyQueue.push(enemy);
+        }
+    }
+}
+
+function spawnRhomboid() {
+    if (currentRhomboid) return;
+    playSound(120, 0.18, 'sine');
+    playSound(180, 0.14, 'sine');
+    playSound(80, 0.1, 'sine');
+    bossSpawned = true;
+    const fightNum = currentRound === 150 ? 1 : 2;
+    const healthMult = fightNum === 2 ? 1.5 : 1;
+    currentRhomboid = new Rhomboid(canvas.width / 2, canvas.height / 2);
+    currentRhomboid.health = Math.round(15000 * healthMult);
+    currentRhomboid.maxHealth = currentRhomboid.health;
+    document.getElementById('bossHealthBar').querySelector('div').textContent = '💎 THE RHOMBOID';
+    floatMoneyText(`💎 THE RHOMBOID APPEARS! Fight ${fightNum}/2`);
+    for (let i = 0; i < 120; i++) particles.push(new Particle(canvas.width/2 + (Math.random()-0.5)*120, canvas.height/2 + (Math.random()-0.5)*120, '#00ff66'));
+}
+// ========== END RHOMBOID BOSS ==========
 
 function shootProjectile(isAdmin=false){
     const sk = CHARACTERS[currentCharacter];
@@ -3038,6 +3339,69 @@ function specialAttack(){
             break;
         }
         case 'veteran': {
+            // Route to War Veteran mastery if equipped
+            if (currentCharacter === 'war_veteran') {
+                playSound(800, 0.1, 'square');
+                playSound(1000, 0.08, 'square');
+                specialInProgress = true; autoFireEnabled = false;
+                const wt = WAR_VETERAN_TIERS[warVeteranTier];
+                const count = wt.bulletCount;
+                const baseDmg = player.damage + warVeteranTier * 7.5;
+
+                if (warVeteranTier === 0) {
+                    // Tier 1 Lieutenant: 12 bullets in a wave in FRONT, explode on impact
+                    const frontAngle = Math.atan2(mousePos.y - player.y, mousePos.x - player.x);
+                    for (let i = 0; i < count; i++) {
+                        const spread = (i / (count - 1) - 0.5) * Math.PI * 0.8;
+                        const p = new Projectile(player.x, player.y, frontAngle + spread, baseDmg * 1.5, wt.color, true);
+                        p.isExplosive = true;
+                        projectiles.push(p);
+                    }
+                } else if (warVeteranTier === 1) {
+                    // Tier 2 Captain: 18 bullets in full circle, 2.5x dmg
+                    for (let i = 0; i < count; i++) {
+                        const p = new Projectile(player.x, player.y, (Math.PI * 2 / count) * i, baseDmg * 2.5, wt.color, true);
+                        projectiles.push(p);
+                    }
+                } else if (warVeteranTier === 2) {
+                    // Tier 3 Major: 32 bullets circle, instakill (except bosses), slow all on screen 15s
+                    for (let i = 0; i < count; i++) {
+                        const p = new Projectile(player.x, player.y, (Math.PI * 2 / count) * i, 999999, wt.color, true);
+                        projectiles.push(p);
+                    }
+                    enemies.forEach(e => { if (!e.isBoss && !e.isRhomboidMinion) { e.slowTimer = 900; e.slowAmount = 0.8; } });
+                    floatMoneyText('⚔️ Major: All enemies slowed!');
+                } else if (warVeteranTier === 3) {
+                    // Tier 4 Sergeant: 50 bullets circle instakill, slow 15s, AoE explosion, spawn 1 turret
+                    for (let i = 0; i < count; i++) {
+                        const p = new Projectile(player.x, player.y, (Math.PI * 2 / count) * i, 999999, wt.color, true);
+                        p.isExplosive = true;
+                        projectiles.push(p);
+                    }
+                    enemies.forEach(e => { if (!e.isBoss) { e.slowTimer = 900; e.slowAmount = 0.8; } });
+                    // AoE instakill
+                    enemies.forEach(e => { const d = Math.hypot(e.x - player.x, e.y - player.y); if (d < 220 && !e.isBoss) { e.health = 0; e.alive = false; player.kills++; gainExp(e.expValue); handleKill(e); } });
+                    spawnTurret();
+                    floatMoneyText('🎖️ Sergeant: Bombardment + Turret!');
+                } else {
+                    // Tier 5 True Commander: 50 homing instakill bullets, 4 infinite turrets
+                    for (let i = 0; i < count; i++) {
+                        const p = new Projectile(player.x, player.y, (Math.PI * 2 / count) * i, 999999, wt.color, true);
+                        p.homing = true;
+                        projectiles.push(p);
+                    }
+                    // Spawn 4 turrets at cardinal points around player
+                    for (let i = 0; i < 4; i++) {
+                        const a = (Math.PI / 2) * i;
+                        spawnTurret(player.x + Math.cos(a) * 80, player.y + Math.sin(a) * 80, true);
+                    }
+                    floatMoneyText('👑 True Commander: Homing Annihilation!');
+                }
+                for (let i = 0; i < 40 + warVeteranTier * 20; i++) particles.push(new Particle(player.x, player.y, wt.color));
+                setTimeout(() => { specialInProgress = false; autoFireEnabled = true; }, 500);
+                break;
+            }
+            // Normal Veteran ability
             playSound(900, 0.08, 'square');
             playSound(1100, 0.07, 'square');
             specialInProgress=true; autoFireEnabled=false;
@@ -3245,24 +3609,6 @@ function specialAttack(){
             
             break;
         }
-        case 'cursemark': {
-            // Find nearest enemy and mark it
-            let nearest = null, nDist = Infinity;
-            enemies.forEach(e => {
-                if (!e.alive) return;
-                const d = Math.hypot(e.x - player.x, e.y - player.y);
-                if (d < nDist) { nDist = d; nearest = e; }
-            });
-            if (!nearest) { floatMoneyText('💀 No enemies to mark!'); break; }
-            tojiCurseMarkedEnemy = nearest;
-            tojiCurseMarkTimer = 240; // 4 seconds
-            player.specialCooldown = CHARACTERS[currentCharacter].cdMax;
-            playSound(150, 0.12, 'sine');
-            playSound(100, 0.1, 'sine');
-            for (let i = 0; i < 40; i++) particles.push(new Particle(nearest.x + (Math.random()-0.5)*50, nearest.y + (Math.random()-0.5)*50, '#7c0000'));
-            floatMoneyText('💀 CURSE MARK — 5x damage!');
-            break;
-        }
         case 'omnipotent': {
             // CHARACTER 10B — Omnipotent ability
             playSound(100, 0.2, 'sine');
@@ -3336,13 +3682,14 @@ function specialAttack(){
 function dash(){
     if(player.dashCooldown>0)return;
     const sk = CHARACTERS[currentCharacter];
-    if(sk.isVampire || sk.isAdmin || sk.isDice){
+    if(sk.isVampire || sk.isAdmin || sk.isDice || sk.isWarVeteran){
         const oldX=player.x, oldY=player.y;
         player.x=Math.max(player.radius,Math.min(canvas.width-player.radius,mousePos.x));
         player.y=Math.max(player.radius,Math.min(canvas.height-player.radius,mousePos.y));
+        const dashColor = currentCharacter === 'war_veteran' ? WAR_VETERAN_TIERS[warVeteranTier].color : (sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:(sk.isDice?'#f97316':'#7f1d1d'));
         player.dashCooldown=sk.isAdmin?30:60; player.invulnerable=15;
-        for(let i=0;i<25;i++)particles.push(new Particle(oldX,oldY,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:sk.isDice?'#f97316':'#7f1d1d'));
-        for(let i=0;i<25;i++)particles.push(new Particle(player.x,player.y,sk.isAdmin?`hsl(${Math.random()*360},100%,60%)`:sk.isDice?'#ea580c':'#ef4444'));
+        for(let i=0;i<25;i++)particles.push(new Particle(oldX,oldY,dashColor));
+        for(let i=0;i<25;i++)particles.push(new Particle(player.x,player.y,dashColor));
     } else {
         const angle=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
         player.x+=Math.cos(angle)*80;player.y+=Math.sin(angle)*80;
@@ -3357,6 +3704,10 @@ function handleKill(e) {
     if(Math.random()<0.3)items.push(new Item(e.x,e.y,Math.random()<0.5?'health':'mana'));
     if(passiveState.aimassist < 1 && Math.random() < 0.25) {
         items.push(new Item(e.x, e.y, 'aimassist'));
+    }
+    // Notify Rhomboid boss of kills for re-summon mechanic
+    if (currentRhomboid && currentRhomboid.alive) {
+        currentRhomboid.onEnemyKilled(e);
     }
     if(CHARACTERS[currentCharacter].isVampire){ player.health=Math.min(player.health+8,player.maxHealth); for(let i=0;i<8;i++)particles.push(new Particle(e.x,e.y,'#ef4444')); }
     
@@ -3472,10 +3823,21 @@ function updateHUD(){
     document.getElementById('expBar').style.width=(player.exp/expToNextLevel*100)+'%';
     
     // Boss health bar
-    if (currentBoss && currentBoss.alive) {
+    if (currentRhomboid && currentRhomboid.alive) {
         document.getElementById('bossHealthBar').style.display='block';
+        document.getElementById('bossHealthBar').querySelector('div').textContent = '💎 THE RHOMBOID';
+        document.getElementById('bossHealthBar').style.borderColor = '#00cc44';
+        const pct = (currentRhomboid.health / currentRhomboid.maxHealth) * 100;
+        document.getElementById('bossHealthFill').style.width = pct + '%';
+        document.getElementById('bossHealthFill').style.background = 'linear-gradient(90deg,#00aa44,#00ff66)';
+        document.getElementById('bossHealthText').textContent = Math.ceil(currentRhomboid.health) + '/' + currentRhomboid.maxHealth;
+    } else if (currentBoss && currentBoss.alive) {
+        document.getElementById('bossHealthBar').style.display='block';
+        document.getElementById('bossHealthBar').querySelector('div').textContent = '👹 THE FIRST TRIANGLE';
+        document.getElementById('bossHealthBar').style.borderColor = '#dc2626';
         const bossPercent = (currentBoss.health / currentBoss.maxHealth) * 100;
         document.getElementById('bossHealthFill').style.width = bossPercent + '%';
+        document.getElementById('bossHealthFill').style.background = 'linear-gradient(90deg,#ef4444,#dc2626)';
         document.getElementById('bossHealthText').textContent = Math.ceil(currentBoss.health) + '/' + currentBoss.maxHealth;
     } else {
         document.getElementById('bossHealthBar').style.display='none';
@@ -3490,12 +3852,22 @@ function updateHUD(){
         if(ab)ab.style.display='block';
         if(af){const pct=nextTier?Math.min(((player.kills-tier.kills)/(nextTier.kills-tier.kills))*100,100):100;af.style.width=pct+'%';af.style.background=tier.glow;}
     } else if(sk.isVeteran){
-        if(rLabel)rLabel.textContent='EVOLVE';const ab=document.getElementById('armorBar'),af=document.getElementById('armorBarFill');
-        const t=VETERAN_TIERS[veteranTier];
-        rEl.style.fontSize='7px';rEl.style.color=t.color;
-        rEl.textContent=player.mana<sk.manaCost?'LOW':t.name;
+        if(rLabel)rLabel.textContent = currentCharacter === 'war_veteran' ? 'RANK' : 'EVOLVE';
+        const ab=document.getElementById('armorBar'),af=document.getElementById('armorBarFill');
         if(ab)ab.style.display='block';
-        if(af){const pct=veteranTier>=VETERAN_TIERS.length-1?100:Math.min((veteranTimer/1800)*100,100);af.style.width=pct+'%';af.style.background=t.color;}
+        if (currentCharacter === 'war_veteran') {
+            const wt = WAR_VETERAN_TIERS[warVeteranTier];
+            rEl.style.fontSize='7px'; rEl.style.color = wt.color;
+            rEl.textContent = player.mana < sk.manaCost ? 'LOW' : wt.name;
+            if(ab)ab.style.display='block';
+            if(af){ const pct = warVeteranTier >= WAR_VETERAN_TIERS.length-1 ? 100 : Math.min((warVeteranTimer/2700)*100,100); af.style.width=pct+'%'; af.style.background=wt.color; }
+        } else {
+            const t=VETERAN_TIERS[veteranTier];
+            rEl.style.fontSize='7px';rEl.style.color=t.color;
+            rEl.textContent=player.mana<sk.manaCost?'LOW':t.name;
+            if(ab)ab.style.display='block';
+            if(af){const pct=veteranTier>=VETERAN_TIERS.length-1?100:Math.min((veteranTimer/1800)*100,100);af.style.width=pct+'%';af.style.background=t.color;}
+        }
     } else if(sk.isPhantom){
         if(rLabel)rLabel.textContent='GHOST'; const ab=document.getElementById('armorBar');if(ab)ab.style.display='none';
         rEl.style.fontSize='7px';
@@ -3526,11 +3898,7 @@ function updateHUD(){
         else if(player.mana<sk.manaCost){rEl.style.color='#6b7280';rEl.textContent='LOW';}
         else if(!timeWizardSnapshot){rEl.style.color='#9ca3af';rEl.textContent='⏳ WAIT...';}
         else{rEl.style.color='#d8b4fe';rEl.textContent='⏳ READY';}
-    } else if(sk.isToji){
-        if(rLabel)rLabel.textContent='CURSE MARK'; const ab=document.getElementById('armorBar');if(ab)ab.style.display='none';
-        if(player.specialCooldown > 0) { rEl.style.fontSize='7px';rEl.style.color='#ef4444';rEl.textContent=`${Math.ceil(player.specialCooldown/60)}s`; }
-        else if(tojiCurseMarkTimer > 0) { rEl.style.fontSize='7px';rEl.style.color='#7c0000';rEl.textContent=`💀 ${Math.ceil(tojiCurseMarkTimer/60)}s`; }
-        else { rEl.style.fontSize='7px';rEl.style.color='#f59e0b';rEl.textContent='READY 💀'; }
+
     } else if(sk.isElectric){
         if(rLabel)rLabel.textContent='OVERLOAD';const ab=document.getElementById('armorBar');if(ab)ab.style.display='none';
         if(overloadCharges>0){rEl.style.fontSize='7px';rEl.style.color='#facc15';rEl.textContent=`⚡x${overloadCharges}`;}
@@ -3950,7 +4318,6 @@ function resetGame(){
     if(currentCharacter==='technoblade'){player.maxMana=200;player.mana=200;}
     if(currentCharacter==='admin'){player.maxHealth=500;player.health=500;player.maxMana=9999;player.mana=9999;player.damage=100;player.speed=7;}
     if(currentCharacter==='character10b'){player.maxHealth=11;player.health=11;player.maxMana=1000;player.mana=1000;player.damage=10000000000;player.speed=5;}
-    if(currentCharacter==='toji'){player.maxHealth=60;player.health=60;player.damage=60;player.speed=6;}
     if(currentCharacter==='dice'){
         player.speed=3+Math.random()*5; // 3-8 speed
         player.maxHealth=Math.round(80+Math.random()*95); // 80-175 health
@@ -3977,6 +4344,12 @@ function resetGame(){
     runGold=0; activeAbilities=[]; activePassives=[]; lastShopWave=0; shopRerollCost=30;
     turrets=[]; pendingAirstrikes=[]; firePatches=[]; overloadCharges=0;
     veteranTier=0; veteranTimer=0;
+    warVeteranTier=0; warVeteranTimer=0;
+    // War Veteran starting stats
+    if (currentCharacter === 'war_veteran') {
+        player.damage = 20;
+        player.speed = 6;
+    }
     // new character state
     phantomPhasing=false; phantomPhaseTimer=0;
     druidShrooms=[]; druidRoots=[];
@@ -3986,6 +4359,7 @@ function resetGame(){
     lastNewCharShot=0;
     // Boss reset
     currentBoss=null; bossBullets=[]; miniTriangles=[]; bossSpawned=false; triangleEnemyUnlocked=false;
+    triangleBossDefeats=0; currentRhomboid=null; rhomboidBullets=[]; rhomboidMinions=[]; rhomboidVortexActive=false;
     passiveState={lifesteal:0,thorns:0,regen:0,manaflow:0,armor:0,magnet:0,explosive:0,crit:0,multishot:0,ghostly:0,goldmag:0,overclock:0,trishot:0,homingshot:0,novaleak:0,aimassist:0,novaHitCount:0,berserkerActive:false,berserkerTimer:0,timeslowActive:false,timeslowTimer:0,regenTimer:0,trishotTimer:0,homingTimer:0,blackholeActive:false,blackholeTimer:0};
     // Hakari reset
     hakariDomainActive = false;
@@ -4001,17 +4375,59 @@ function resetGame(){
     sukunaMalevolentActive = false;
     sukunaMalevolentTimer = 0;
     sukunaMalevolentCooldown = 0;
-    // Toji reset
-    tojiCombatStacks = 0;
-    tojiStackTimer = 0;
-    tojiCurseMarkedEnemy = null;
-    tojiCurseMarkTimer = 0;
-    tojiMeleeTimer = 0;    document.getElementById('deathFeed').innerHTML='';updateHUD();
+    document.getElementById('deathFeed').innerHTML='';updateHUD();
 }
 
 function drawPlayer(ts, dt=1){
     const sk=CHARACTERS[currentCharacter];
     adminHue = (adminHue + 2*dt) % 360;
+
+    if(currentCharacter === 'war_veteran') {
+        if (true) {
+            // War Veteran mastery draw — gold/military themed
+            const wt = WAR_VETERAN_TIERS[warVeteranTier];
+            ctx.save();
+            if(player.invulnerable>0&&Math.floor(ts/100)%2===0)ctx.globalAlpha=0.5;
+            ctx.shadowBlur = 25 + warVeteranTier * 8; ctx.shadowColor = wt.shadow;
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+            ctx.fillStyle = wt.color; ctx.fill();
+            // Eye dot toward mouse
+            const ang = Math.atan2(mousePos.y - player.y, mousePos.x - player.x);
+            ctx.fillStyle = 'white'; ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(player.x+Math.cos(ang)*8, player.y+Math.sin(ang)*8, 5, 0, Math.PI*2); ctx.fill();
+            // Rank ring
+            ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(ts * -0.003 * (1 + warVeteranTier * 0.3));
+            ctx.strokeStyle = wt.color; ctx.lineWidth = 2 + warVeteranTier;
+            ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.arc(0, 0, player.radius + 8 + warVeteranTier * 3, 0, Math.PI*2); ctx.stroke();
+            ctx.restore();
+            // Rank name above tier 0
+            ctx.font = `bold 9px Arial`; ctx.textAlign = 'center'; ctx.fillStyle = wt.color;
+            ctx.shadowBlur = 8; ctx.shadowColor = wt.shadow;
+            ctx.fillText(wt.name, player.x, player.y - player.radius - 6);
+            ctx.restore();
+            return;
+        }
+        const t = VETERAN_TIERS[veteranTier];
+        ctx.save();
+        if(player.invulnerable>0&&Math.floor(ts/100)%2===0)ctx.globalAlpha=0.5;
+        ctx.shadowBlur=20+veteranTier*8; ctx.shadowColor=t.shadow;
+        ctx.beginPath();ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);ctx.fillStyle=t.color;ctx.fill();
+        const ang=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
+        ctx.fillStyle='white';ctx.shadowBlur=0;
+        ctx.beginPath();ctx.arc(player.x+Math.cos(ang)*8,player.y+Math.sin(ang)*8,5,0,Math.PI*2);ctx.fill();
+        if(veteranTier>0){
+            ctx.save();ctx.translate(player.x,player.y);ctx.rotate(ts*0.002*(1+veteranTier*0.3));
+            ctx.strokeStyle=t.projColor;ctx.lineWidth=2+veteranTier;
+            ctx.setLineDash([6,4]);ctx.beginPath();ctx.arc(0,0,player.radius+6+veteranTier*2,0,Math.PI*2);ctx.stroke();
+            ctx.restore();
+        }
+        if(veteranTier>=2){
+            ctx.font=`bold 9px Arial`;ctx.textAlign='center';ctx.fillStyle=t.color;
+            ctx.fillText(t.name,player.x,player.y-player.radius-6);
+        }
+        ctx.restore();
+        return;
+    }
 
     if(currentCharacter === 'default') {
         const t = VETERAN_TIERS[veteranTier];
@@ -4230,25 +4646,6 @@ function drawPlayer(ts, dt=1){
         return;
     }
 
-    if(currentCharacter === 'toji') {
-        ctx.save();
-        if(player.invulnerable>0&&Math.floor(ts/100)%2===0)ctx.globalAlpha=0.5;
-        const grad=ctx.createRadialGradient(player.x-4,player.y-4,2,player.x,player.y,player.radius);
-        grad.addColorStop(0,'#a0714f'); grad.addColorStop(0.5,'#6b4423'); grad.addColorStop(1,'#3d2817');
-        ctx.shadowBlur = tojiCurseMarkTimer > 0 ? 30 : 18;
-        ctx.shadowColor = tojiCurseMarkTimer > 0 ? '#7c0000' : '#f59e0b';
-        ctx.beginPath();ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
-        // Fist bobbing toward mouse
-        const tojiAng=Math.atan2(mousePos.y-player.y,mousePos.x-player.x);
-        const fistBob=Math.sin(ts*0.02)*3;
-        const fx=player.x+Math.cos(tojiAng)*(player.radius+4), fy=player.y+Math.sin(tojiAng)*(player.radius+4)+fistBob;
-        ctx.fillStyle=tojiCurseMarkTimer>0?'#7c0000':'#f59e0b';
-        ctx.shadowBlur=15; ctx.shadowColor=ctx.fillStyle;
-        ctx.beginPath();ctx.arc(fx,fy,6,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-        return;
-    }
-
     if(currentCharacter === 'goldhoarder') {
         ctx.save();
         if(player.invulnerable>0&&Math.floor(ts/100)%2===0)ctx.globalAlpha=0.5;
@@ -4353,7 +4750,25 @@ function drawPlayer(ts, dt=1){
 }
 
 function tickVeteran(dt) {
-    if(currentCharacter !== 'default') return;
+    if(currentCharacter !== 'default' && currentCharacter !== 'war_veteran') return;
+
+    if (currentCharacter === 'war_veteran') {
+        // War Veteran mastery — evolves every 45 seconds (2700 frames)
+        if (warVeteranTier >= WAR_VETERAN_TIERS.length - 1) return;
+        warVeteranTimer += dt;
+        if (warVeteranTimer >= 2700) {
+            warVeteranTimer = 0;
+            warVeteranTier = Math.min(warVeteranTier + 1, WAR_VETERAN_TIERS.length - 1);
+            const wt = WAR_VETERAN_TIERS[warVeteranTier];
+            player.speed += wt.speedBonus;
+            player.damage += 7.5;
+            floatMoneyText(`🎖️ WAR VETERAN: ${wt.name}!`);
+            for(let i=0;i<120;i++) particles.push(new Particle(player.x + (Math.random()-0.5)*80, player.y + (Math.random()-0.5)*80, wt.color));
+        }
+        return;
+    }
+
+    // Normal Veteran evolution (every 30 seconds = 1800 frames)
     if(veteranTier >= VETERAN_TIERS.length - 1) return;
     veteranTimer += dt;
     if(veteranTimer >= 1800) {
@@ -4548,6 +4963,18 @@ function gameLoop(ts){
         }
         if(currentRound>=600) {
             floatMoneyText('🏆 WAVE 600 REACHED! YOU WIN!');
+            // Track veteran wins for War Veteran unlock
+            if (currentCharacter === 'default') {
+                veteranWins++;
+                if (veteranWins >= 5 && !unlockedMasteries.includes('default')) {
+                    unlockedMasteries.push('default');
+                    savePersistentData();
+                    floatMoneyText('🎖️ WAR VETERAN MASTERY UNLOCKED! Equip it in the character menu!');
+                } else {
+                    savePersistentData();
+                    floatMoneyText(`🎖️ Veteran wins: ${veteranWins}/5 to unlock War Veteran Mastery`);
+                }
+            }
             endGame();
             return;
         }
@@ -4573,7 +5000,7 @@ function gameLoop(ts){
     if (CHARACTERS[currentCharacter].isAdmin && gameRunning && !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (ts - mgLastShot > 80) { shootProjectile(true); mgLastShot = ts; }
     }
-    if (!CHARACTERS[currentCharacter].isMachineGun && !CHARACTERS[currentCharacter].isAdmin && !CHARACTERS[currentCharacter].isGoldHoarder && !CHARACTERS[currentCharacter].isBoxer && !CHARACTERS[currentCharacter].isToji && autoFireEnabled &&
+    if (!CHARACTERS[currentCharacter].isMachineGun && !CHARACTERS[currentCharacter].isAdmin && !CHARACTERS[currentCharacter].isGoldHoarder && !CHARACTERS[currentCharacter].isBoxer && autoFireEnabled &&
         !document.getElementById('levelUpNotice').classList.contains('show')) {
         if (!tickNewCharAutoFire(ts, dt)) {
             const overclockMult = 1 - Math.min(passiveState.overclock * 0.25, 0.75);
@@ -4624,7 +5051,7 @@ function gameLoop(ts){
     applyBiomeEffects(dt);
     tickGoldFormEnemies(dt);
     tickNewCharacters(ts, dt);
-    turrets=turrets.filter(t=>{if(t.life<=0)return false;t.update(dt);t.draw();return true;});
+    turrets=turrets.filter(t=>{if(!t.infinite && t.life<=0)return false;t.update(dt);t.draw();return true;});
     tickAirstrikes(dt);
     if(passiveState.blackholeActive){
         passiveState.blackholeTimer-=dt;
@@ -4654,8 +5081,7 @@ function gameLoop(ts){
         ctx.restore();
     }
     
-    // Draw Toji melee range indicator
-    if(currentCharacter === 'toji') {
+        if(false) {
         ctx.save();
         const meleeRange = player.radius + 40;
         const hasEnemyInRange = enemies.some(e => Math.hypot(e.x-player.x, e.y-player.y) < meleeRange);
@@ -4727,11 +5153,19 @@ function gameLoop(ts){
         ctx.fillText('🪙 GOLD HOARDER — 5x gold | slow & weak | R: Gold Rush',12,22);ctx.restore();
     }
     if(currentCharacter==='default'){
-        const vt=VETERAN_TIERS[veteranTier];
-        const secLeft=veteranTier<VETERAN_TIERS.length-1?Math.ceil((1800-veteranTimer)/60):'MAX';
-        ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle=vt.color;ctx.textAlign='left';
-        ctx.shadowBlur=8;ctx.shadowColor=vt.shadow;
-        ctx.fillText(`⭐ ${vt.name} — R: ${vt.label} | evolves in: ${secLeft}s`,12,22);ctx.restore();
+        if (currentCharacter === 'war_veteran') {
+            const wt = WAR_VETERAN_TIERS[warVeteranTier];
+            const secLeft = warVeteranTier < WAR_VETERAN_TIERS.length-1 ? Math.ceil((2700-warVeteranTimer)/60) : 'MAX';
+            ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle=wt.color;ctx.textAlign='left';
+            ctx.shadowBlur=8;ctx.shadowColor=wt.shadow;
+            ctx.fillText(`🎖️ ${wt.name} — R: Ranked Bombardment | promotes in: ${secLeft}s`,12,22);ctx.restore();
+        } else {
+            const vt=VETERAN_TIERS[veteranTier];
+            const secLeft=veteranTier<VETERAN_TIERS.length-1?Math.ceil((1800-veteranTimer)/60):'MAX';
+            ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle=vt.color;ctx.textAlign='left';
+            ctx.shadowBlur=8;ctx.shadowColor=vt.shadow;
+            ctx.fillText(`⭐ ${vt.name} — R: ${vt.label} | evolves in: ${secLeft}s`,12,22);ctx.restore();
+        }
     }
     if(currentCharacter==='fire'){
         ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle='rgba(255,100,0,0.8)';ctx.textAlign='left';
@@ -4748,13 +5182,7 @@ function gameLoop(ts){
         ctx.shadowBlur=6;ctx.shadowColor='#a855f7';
         ctx.fillText(`⚡ TESLA — shots auto-chain | R: Overload${overloadCharges>0?' ACTIVE x'+overloadCharges:''}`,12,22);ctx.restore();
     }
-    if(currentCharacter==='toji'){
-        ctx.save();ctx.font='bold 10px Arial';ctx.fillStyle='rgba(245,158,11,0.8)';ctx.textAlign='left';
-        ctx.shadowBlur=6;ctx.shadowColor='#f59e0b';
-        const markStr = tojiCurseMarkTimer > 0 ? `💀 CURSE ACTIVE ${Math.ceil(tojiCurseMarkTimer/60)}s` : (player.specialCooldown>0?`R: ${Math.ceil(player.specialCooldown/60)}s`:'R: CURSE MARK ready');
-        ctx.fillText(`⚔️ TOJI — Melee brawler • +3HP/kill • ${markStr}`,12,22);ctx.restore();
-    }
-    if(currentCharacter==='admin'){
+        if(currentCharacter==='admin'){
         ctx.save();ctx.font='bold 11px "Press Start 2P",monospace';
         ctx.fillStyle=`hsl(${adminHue},100%,70%)`;ctx.textAlign='left';
         ctx.shadowBlur=10;ctx.shadowColor=`hsl(${adminHue},100%,60%)`;
@@ -5031,8 +5459,127 @@ function gameLoop(ts){
             return true;
         });
     }
-    
-    items=items.filter(it=>{if(!it.alive)return false;it.update(dt);it.draw();return it.alive;});
+
+    // ========== RHOMBOID BOSS HANDLING ==========
+    if (currentRhomboid && currentRhomboid.alive) {
+        currentRhomboid.update(dt);
+        currentRhomboid.draw();
+
+        // Player projectiles hit Rhomboid
+        projectiles = projectiles.filter(proj => {
+            if (!proj.alive) return false;
+            if (!currentRhomboid) return true;
+            const d = Math.hypot(proj.x - currentRhomboid.x, proj.y - currentRhomboid.y);
+            if (d < currentRhomboid.radius + proj.radius) {
+                currentRhomboid.health -= proj.damage;
+                proj.alive = false;
+                for(let i=0;i<8;i++) particles.push(new Particle(proj.x, proj.y, '#00ff66'));
+                if (currentRhomboid.health <= 0) {
+                    currentRhomboid.alive = false;
+                    triangleEnemyUnlocked = true;
+                    player.kills += 15;
+                    gainExp(800);
+                    earnMoney(100, 'Rhomboid defeated!');
+                    floatMoneyText('💎 RHOMBOID DEFEATED! +$100');
+                    for(let i=0;i<200;i++) particles.push(new Particle(currentRhomboid.x+(Math.random()-0.5)*150, currentRhomboid.y+(Math.random()-0.5)*150, '#00ff66'));
+                    currentRhomboid = null;
+                    rhomboidBullets = [];
+                    rhomboidMinions = [];
+                    rhomboidVortexActive = false;
+                }
+                return false;
+            }
+            return true;
+        });
+
+        // Rhomboid bullets
+        if (currentRhomboid) {
+            rhomboidBullets = rhomboidBullets.filter(b => {
+                if (!b.alive) return false;
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                // Draw
+                ctx.save();
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = '#00ff66';
+                ctx.fillStyle = '#00cc44';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                // Hit player
+                if (Math.hypot(b.x - player.x, b.y - player.y) < b.radius + player.radius && player.invulnerable <= 0) {
+                    let dmg = applyDreamArmor(b.damage);
+                    dmg = applyPassiveIncomingDamage(dmg);
+                    player.health -= dmg;
+                    player.invulnerable = 30;
+                    updateHUD();
+                    if (player.health <= 0) endGame();
+                    b.alive = false;
+                    for(let i=0;i<10;i++) particles.push(new Particle(b.x, b.y, '#00ff66'));
+                    return false;
+                }
+                // Off screen
+                if (b.x < -60 || b.x > canvas.width+60 || b.y < -60 || b.y > canvas.height+60) return false;
+                return true;
+            });
+        }
+    }
+
+    // Rhomboid minions (persist even after boss dies)
+    rhomboidMinions = rhomboidMinions.filter(m => {
+        if (!m.alive) return false;
+        // Move slowly toward player
+        const speedMult = (currentRhomboid && currentRhomboid.hpPct < 0.25) ? 2 : 1;
+        const dx = player.x - m.x, dy = player.y - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 1) {
+            m.x += (dx / dist) * m.speed * speedMult * dt;
+            m.y += (dy / dist) * m.speed * speedMult * dt;
+        }
+        m.rotation += 0.06 * dt;
+
+        // Draw mini-rhombus (diamond)
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        ctx.rotate(m.rotation);
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00ff66';
+        ctx.fillStyle = '#00aa44';
+        const s = m.radius;
+        ctx.beginPath();
+        ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        // Hit player
+        if (Math.hypot(m.x - player.x, m.y - player.y) < m.radius + player.radius && player.invulnerable <= 0) {
+            let dmg = applyDreamArmor(m.damage);
+            dmg = applyPassiveIncomingDamage(dmg);
+            player.health -= dmg;
+            player.invulnerable = 30;
+            updateHUD();
+            if (player.health <= 0) endGame();
+            m.alive = false;
+            for(let i=0;i<12;i++) particles.push(new Particle(m.x, m.y, '#00ff66'));
+            return false;
+        }
+
+        // Hit by projectiles
+        projectiles = projectiles.filter(proj => {
+            if (proj.alive && Math.hypot(proj.x - m.x, proj.y - m.y) < m.radius + proj.radius) {
+                m.health -= proj.damage;
+                proj.alive = false;
+                for(let i=0;i<6;i++) particles.push(new Particle(m.x, m.y, '#00ff66'));
+                if (m.health <= 0) { m.alive = false; player.kills++; gainExp(5); }
+                return false;
+            }
+            return true;
+        });
+
+        return m.alive;
+    });
+    // ========== END RHOMBOID BOSS HANDLING ==========
     particles=particles.filter(p=>{if(p.life<=0)return false;p.update(dt);p.draw();return true;});
     
     // ═══════════════════════════════════════════════════════════════════
@@ -5836,7 +6383,7 @@ canvas.addEventListener('mousedown',e=>{
         return;
     }
     if(currentCharacter==='pyromancer'&&gameRunning){pyroCharging=true;pyroChargeTimer=0;}
-    else if(currentCharacter!=='boxer'&&currentCharacter!=='toji'&&gameRunning) shootProjectile(currentCharacter==='admin');
+    else if(currentCharacter!=='boxer'&&gameRunning) shootProjectile(currentCharacter==='admin');
 });
 canvas.addEventListener('mouseup',e=>{
     builderSelectedWall = null;
@@ -5869,6 +6416,11 @@ let bossBullets = [];
 let miniTriangles = [];
 let bossSpawned = false;
 let triangleEnemyUnlocked = false;
+let triangleBossDefeats = 0;  // counts how many Triangle fights done
+let currentRhomboid = null;   // the Rhomboid boss instance
+let rhomboidBullets = [];     // bullets from Rhomboid vertices
+let rhomboidMinions = [];     // re-summoned mini-rhomboids
+let rhomboidVortexActive = false;
 
 let tutorialActive = false;
 let tutorialStep = 0;
@@ -5942,7 +6494,7 @@ function applyTutorialStep(){
         hintEl.textContent = 'Use TAB to monitor your progression and build effectiveness!';
     } else if (tutorialStep === 10){
         titleEl.textContent = 'Character Selection';
-        bodyEl.innerHTML = 'Visit the Character Shop to unlock 18 unique characters, each with different starting stats, special abilities, and playstyles. <b>Toji Fushiguro</b> is a limited-time character that expires on Mar 10, 2026 at 12 PM with a weapon-swap ability!';
+        bodyEl.innerHTML = 'Visit the Character Shop to unlock 18 unique characters, each with different starting stats, special abilities, and playstyles.';
         hintEl.textContent = 'Different characters excel at different strategies!';
     } else if (tutorialStep === 11){
         titleEl.textContent = 'Game Pause & Settings';
@@ -6152,14 +6704,6 @@ const CHAR_INFO = {
         playstyle: 'Scaling character with a transformation mechanic. Early game: focus on collecting fingers while surviving. At 20 fingers: transform into Sukuna and gain a sustained damage ability with strategic cooldown management.',
         tip: 'Tip: With only a 5% drop rate, expect to farm for ~400 kills to collect 20 fingers. Once you transform, use Malevolent Shrine strategically on high-health enemy groups. The 15% health damage scales with enemy toughness, making it devastatingly effective against bosses.',
     },
-    toji: {
-        name: 'Toji Fushiguro', tag: 'LIMITED · Glass Cannon Brawler', icon: '⚔️',
-        iconBg: 'linear-gradient(135deg,#6b4423,#3d2817)', iconGlow: '#f59e0b',
-        stats: [{ label: 'HP', value: '60 (fragile!)' },{ label: 'Damage', value: '60 (3x normal)' },{ label: 'Speed', value: '6 (fast)' },{ label: 'Attack', value: 'Melee only — no projectiles' },{ label: 'Lifesteal', value: '+3 HP per kill' },{ label: 'Price', value: 'LIMITED ($20,000)' }],
-        abilities: `<b>Passive — Brawler:</b> Toji deals melee damage to all enemies within his strike range automatically. No projectiles — you have to get in their face. Every kill restores 3 HP, rewarding aggression.<br><br><b>R — Curse Mark (8s CD):</b> Instantly marks the nearest enemy with a death curse. The marked enemy takes 5x damage from all your melee hits for 4 seconds. Use it on bosses or high-HP enemies to delete them.`,
-        playstyle: 'Run straight into enemies and never stop moving. You die fast if you stand still — but with 60 damage per swing and Curse Mark doubling down on targets, nothing survives long. Chain kills to keep your HP topped up.',
-        tip: '💡 Tip: Curse Mark a boss or big enemy then dive in — 5x melee damage melts them almost instantly. Keep moving or you\'ll get shredded.',
-    },
     character10b: {
         name: 'Character', tag: 'LIMITED · Omnipotent', icon: '∞',
         iconBg: 'linear-gradient(135deg,#0284c7,#00aa00)', iconGlow: '#00ff00',
@@ -6167,6 +6711,26 @@ const CHAR_INFO = {
         abilities: `<b>Passive — Godlike Power:</b> Deal 10 billion damage per projectile. One shot, one kill on any enemy in existence. You are a literal god of destruction.<br><br><b>R — Omnipotent (1 mana, No CD):</b> Instantly heal to full HP (11 HP) and kill EVERY SINGLE ENEMY on the entire map. No exceptions. Works on bosses, mini-bosses, triangles, everything.`,
         playstyle: 'gg ez no re',
         tip: 'ptttfff do i really need a tip on how to play me?? just run in and say "ggs no heal"',
+    },
+    war_veteran: {
+        name: 'War Veteran', tag: 'Mastery · Evolving All-Rounder', icon: '🎖️',
+        iconBg: 'linear-gradient(135deg,#1e3a8a,#3b82f6)', iconGlow: '#60a5fa',
+        stats: [
+            { label: 'Starting Damage', value: '20 (+7.5 per promotion)' },
+            { label: 'Starting Speed', value: '6 (+0.5 per promotion)' },
+            { label: 'Dash', value: 'Teleport (instant TP to cursor)' },
+            { label: 'Passive', value: 'Promotes every 45 seconds' },
+            { label: 'Unlock', value: 'Win 5 games as The Veteran' },
+        ],
+        abilities: `<b>Passive — Ranked Promotions:</b> Every 45 seconds you automatically advance to the next rank, gaining +7.5 damage and +0.5 speed. Five ranks total.<br><br>
+<b>R — Ranked Bombardment (changes per rank):</b><br>
+🔵 <b>Lieutenant (Rank 1):</b> Fires 12 explosive bullets in a wide wave in front of you. Each deals 1.5× your current damage and explodes on impact.<br>
+🟢 <b>Captain (Rank 2):</b> Fires 18 bullets in a full circle at 2.5× damage.<br>
+🟡 <b>Major (Rank 3):</b> Fires 32 bullets in a full circle — instakills all non-boss enemies. Slows every enemy on screen for 15 seconds.<br>
+🟠 <b>Sergeant (Rank 4):</b> Fires 50 explosive bullets in a circle — instakills, area explosions, slows all enemies 15s, and deploys a turret.<br>
+🟣 <b>True Commander (Rank 5):</b> Fires 50 homing instakill bullets and deploys 4 turrets around you with infinite lifespan.`,
+        playstyle: 'A powerful all-rounder that gradually snowballs throughout the run. Strong from the start and terrifying at Rank 5. Manages well in both early waves and late-game chaos.',
+        tip: 'Focus on Damage and Mana upgrades in the wave shop. Save your R for waves with many enemies — at Rank 3+ it clears entire screens. The TP dash is your best escape tool.',
     },
 };
 
@@ -6193,7 +6757,11 @@ function showCharInfo(skin) {
     modal.classList.add('open');
 }
 
-function showCharacterShop(){document.getElementById('mainMenu').style.display='none';document.getElementById('characterShop').style.display='block';updateShopDisplay();}
+function showCharacterShop(){document.getElementById('mainMenu').style.display='none';document.getElementById('gameContainer').style.display='none';document.getElementById('characterShop').style.display='block';updateShopDisplay();updateMasteryCardButtons();
+    // Show War Veteran card only if Veteran mastery is unlocked AND equipped
+    const wvCard = document.getElementById('warVeteranCharacter');
+    if (wvCard) wvCard.style.display = (unlockedMasteries.includes('default') && equippedMasteries.includes('default')) ? '' : 'none';
+}
 function backToMenu(){document.getElementById('tutorial').style.display='none';document.getElementById('characterShop').style.display='none';document.getElementById('moneyPopup').classList.remove('show');document.getElementById('mainMenu').style.display='block';updateMoneyDisplay();}
 function startGame(){
     document.getElementById('mainMenu').style.display='none';
@@ -6233,11 +6801,23 @@ function updateShopDisplay(){
         'dice': 'diceCharacter',
         'hakari_v2': 'hakariCharacter',
         'yuji_itadori': 'yujiCharacter',
-        'toji': 'tojiCharacter',
-        'character10b': 'character10bCharacter'
+            'character10b': 'character10bCharacter',
+        'war_veteran': 'warVeteranCharacter'
     };
     
-    // First, remove all selected/locked classes from ALL cards
+    // Show War Veteran unlock progress on card
+    const wvCard = document.getElementById('warVeteranCharacter');
+    if (wvCard) {
+        const masteryUnlocked = unlockedMasteries.includes('default');
+        const masteryEquipped = equippedMasteries.includes('default');
+        const isSelected = currentCharacter === 'war_veteran';
+        // Only show card if mastery is equipped
+        wvCard.style.display = (masteryUnlocked && masteryEquipped) ? '' : 'none';
+        wvCard.classList.remove('selected', 'locked');
+        if (isSelected) wvCard.classList.add('selected');
+        const priceEl = wvCard.querySelector('.character-price');
+        if (priceEl) priceEl.textContent = masteryEquipped ? '🎖️ Veteran Mastery' : `🎖️ ${veteranWins}/5 Veteran wins`;
+    }
     document.querySelectorAll('.character-card').forEach(card => {
         card.classList.remove('selected', 'locked');
         card.style.opacity = ''; // reset inline opacity
@@ -6273,6 +6853,17 @@ function updateMcSkinClass(){
     else document.body.classList.remove('mc-skin');
 }
 function selectCharacter(name){
+    // War Veteran requires Veteran mastery to be unlocked AND equipped
+    if (name === 'war_veteran') {
+        if (!unlockedMasteries.includes('default')) {
+            alert(`\uD83C\uDF96\uFE0F War Veteran is locked!\n\nWin 5 games as The Veteran to unlock the War Veteran Mastery.\nYour progress: ${veteranWins}/5 wins`);
+            return;
+        }
+        if (!equippedMasteries.includes('default')) {
+            alert(`\uD83C\uDF96\uFE0F War Veteran requires the Veteran Mastery to be equipped!\n\nGo to the Veteran's \uD83C\uDFC5 MASTERY button and equip it first.`);
+            return;
+        }
+    }
     // Check if limited character is expired — but allow if already owned
     if (LIMITED_CHARACTERS.includes(name) && !unlockedCharacters.includes(name)) {
         const limitDate = LIMITED_EXPIRY[name];
@@ -6312,6 +6903,9 @@ function savePersistentData(){
     localStorage.setItem('ballRPGCharacters',JSON.stringify(unlockedCharacters));
     localStorage.setItem('ballRPGCurrentCharacter',currentCharacter);
     localStorage.setItem('ballRPGUsedCodes',JSON.stringify(usedCodes));
+    localStorage.setItem('ballRPGMasteries',JSON.stringify(unlockedMasteries));
+    localStorage.setItem('ballRPGEquippedMasteries',JSON.stringify(equippedMasteries));
+    localStorage.setItem('ballRPGVeteranWins', veteranWins);
 }
 
 // ── SAVE CHECKSUM ─────────────────────────────────────────────
@@ -6543,6 +7137,14 @@ function submitCode() {
                 newCharsAdded++;
             }
         });
+        // Unlock War Veteran too (via mastery)
+        if (!unlockedMasteries.includes('default')) unlockedMasteries.push('default');
+        if (!equippedMasteries.includes('default')) equippedMasteries.push('default');
+        veteranWins = Math.max(veteranWins, 5);
+        // Unlock all masteries
+        Object.keys(MASTERY_DATA).forEach(m => {
+            if (!unlockedMasteries.includes(m)) unlockedMasteries.push(m);
+        });
         usedCodes.push(code);
         savePersistentData();
         updateMoneyDisplay();
@@ -6563,9 +7165,165 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Global button click sound effect
+// ========== MASTERY SYSTEM ==========
+const MASTERY_DATA = {
+    default: {
+        name: 'War Veteran',
+        tag: 'Win 5 games as The Veteran',
+        icon: '🎖️',
+        iconBg: 'linear-gradient(135deg,#b45309,#1e3a8a)',
+        iconGlow: '#fbbf24',
+        stats: [
+            { label: 'Name', value: 'War Veteran' },
+            { label: 'Damage Output', value: '20 (+7.5 per evolution)' },
+            { label: 'Speed', value: '6 (+0.5 per evolution)' },
+            { label: 'Unlock', value: 'Win 5 games as The Veteran' },
+            { label: 'Equip Effect', value: 'Unlocks War Veteran in character menu' },
+            { label: 'Dash', value: 'Teleport (TP)' },
+        ],
+        passive: 'Every 45 seconds you upgrade to the next tier, becoming more powerful than you were previously.',
+        tiers: [
+            { label: 'Tier 1 — Lieutenant', color: '#60a5fa', desc: 'Shoots 12 bullets in a wave in front of the player that explode on impact. Deals 1.5× damage of a normal shot.' },
+            { label: 'Tier 2 — Captain', color: '#34d399', desc: 'Shoots 18 bullets that deal 2.5× damage of a normal shot in a circle area.' },
+            { label: 'Tier 3 — Major', color: '#fbbf24', desc: 'Shoots 32 bullets in a circle around the player that instakill (except bosses) and slow enemies on screen for 15s.' },
+            { label: 'Tier 4 — Sergeant', color: '#f97316', desc: 'Shoots 50 bullets in a circle that deal 25% of each enemy\'s max HP, slow enemies on screen for 15s, explode in an area, and spawn a singular turret where the player is.' },
+            { label: 'Tier 5 — True Commander', color: '#e879f9', desc: 'Shoots 50 bullets that deal 50% of each enemy\'s max HP and home in on enemies. Spawns 4 turrets around the player with an infinite lifespan.' },
+        ],
+        tip: '💡 Tip: This character is an All-Rounder but it is highly recommended to focus on Damage and Mana upgrades.',
+    },
+};
+
+const LIMITED_IDS = ['dice','hakari_v2','yuji_itadori','character10b'];
+
+let _currentMasterySkin = null; // track which skin's mastery modal is open
+
+function showMastery(skin) {
+    _currentMasterySkin = skin;
+    const modal = document.getElementById('masteryModal');
+    const data = MASTERY_DATA[skin];
+    const iconEl = document.getElementById('masteryIcon');
+    const nameEl = document.getElementById('masteryName');
+    const tagEl = document.getElementById('masteryTag');
+    const contentEl = document.getElementById('masteryContent');
+
+    const isUnlocked = unlockedMasteries.includes(skin);
+    const isEquipped = equippedMasteries.includes(skin);
+
+    if (data && isUnlocked) {
+        iconEl.textContent = data.icon;
+        iconEl.style.background = data.iconBg;
+        iconEl.style.boxShadow = `0 0 20px ${data.iconGlow}`;
+        nameEl.textContent = data.name;
+        nameEl.style.color = data.iconGlow;
+        tagEl.textContent = isEquipped ? '✅ Equipped' : data.tag;
+        document.getElementById('masteryBox').style.borderColor = isEquipped ? '#22c55e88' : data.iconGlow + '55';
+        document.getElementById('masteryBox').style.boxShadow = isEquipped
+            ? `0 0 60px rgba(34,197,94,0.2), 0 0 120px rgba(0,0,0,0.9)`
+            : `0 0 60px ${data.iconGlow}22, 0 0 120px rgba(0,0,0,0.9)`;
+
+        let html = '';
+        // Stats
+        html += `<div class="mastery-section"><div class="mastery-section-title">Stats</div>`;
+        html += data.stats.map(s => `<div class="mastery-row"><span class="label">${s.label}</span><span class="value">${s.value}</span></div>`).join('');
+        html += `</div>`;
+        // Passive
+        html += `<div class="mastery-section"><div class="mastery-section-title">Passive</div>`;
+        html += `<div class="mastery-desc">${data.passive}</div>`;
+        html += `</div>`;
+        // R tiers
+        if (data.tiers) {
+            html += `<div class="mastery-section"><div class="mastery-section-title">R — Ranked Bombardment (changes per tier)</div>`;
+            data.tiers.forEach(t => {
+                html += `<div class="mastery-tier"><span style="color:${t.color};font-weight:bold;">${t.label}:</span> ${t.desc}</div>`;
+            });
+            html += `</div>`;
+        }
+        // Unlock requirement
+        html += `<div class="mastery-unlock">🔓 <b>Unlock Requirement:</b> Win 5 games as The Veteran.</div>`;
+        // Tip
+        html += `<div class="mastery-tip">${data.tip}</div>`;
+        // Equip / Unequip button
+        if (isEquipped) {
+            html += `<button class="mastery-equip-btn unequip" onclick="toggleMasteryEquip('${skin}')">⬇️ Unequip Mastery</button>`;
+        } else {
+            html += `<button class="mastery-equip-btn equip" onclick="toggleMasteryEquip('${skin}')">⬆️ Equip Mastery</button>`;
+        }
+
+        contentEl.innerHTML = html;
+    } else {
+        const charInfo = CHAR_INFO[skin];
+        iconEl.textContent = charInfo ? charInfo.icon : '🏅';
+        iconEl.style.background = charInfo ? charInfo.iconBg : 'rgba(255,255,255,0.05)';
+        iconEl.style.boxShadow = charInfo ? `0 0 20px ${charInfo.iconGlow}` : 'none';
+        nameEl.textContent = charInfo ? charInfo.name : skin;
+        nameEl.style.color = '#fbbf24';
+        tagEl.textContent = 'Mastery';
+        document.getElementById('masteryBox').style.borderColor = 'rgba(251,191,36,0.25)';
+        document.getElementById('masteryBox').style.boxShadow = '0 0 60px rgba(251,191,36,0.05), 0 0 120px rgba(0,0,0,0.9)';
+        if (data && !isUnlocked) {
+            contentEl.innerHTML = `<div class="no-mastery-msg">🔒<br><br>Mastery Locked<br><span style="font-size:11px;opacity:0.6;">${data.tag}</span></div>`;
+        } else {
+            contentEl.innerHTML = `<div class="no-mastery-msg">🏅<br><br>No Mastery Yet<br>Come Back Soon</div>`;
+        }
+    }
+
+    modal.classList.add('open');
+    updateMasteryCardButtons();
+}
+
+function toggleMasteryEquip(skin) {
+    const isEquipped = equippedMasteries.includes(skin);
+    if (isEquipped) {
+        equippedMasteries = equippedMasteries.filter(m => m !== skin);
+        // If unequipping Veteran mastery and currently on War Veteran, switch back to Veteran
+        if (skin === 'default' && currentCharacter === 'war_veteran') {
+            currentCharacter = 'default';
+        }
+    } else {
+        equippedMasteries.push(skin);
+        // If equipping Veteran mastery, automatically switch to War Veteran
+        if (skin === 'default') {
+            currentCharacter = 'war_veteran';
+        }
+    }
+    savePersistentData();
+    // Show/hide War Veteran card based on Veteran mastery equip state
+    if (skin === 'default') {
+        const wvCard = document.getElementById('warVeteranCharacter');
+        if (wvCard) wvCard.style.display = equippedMasteries.includes('default') ? '' : 'none';
+        updateShopDisplay();
+    }
+    // Refresh modal
+    showMastery(skin);
+}
+
+function updateMasteryCardButtons() {
+    // Update all mastery buttons on character cards to show equipped state
+    document.querySelectorAll('.mastery-btn').forEach(btn => {
+        const onclick = btn.getAttribute('onclick') || '';
+        const match = onclick.match(/showMastery\('([^']+)'\)/);
+        if (match) {
+            const skin = match[1];
+            if (equippedMasteries.includes(skin)) {
+                btn.classList.add('equipped');
+                btn.textContent = '✅ MASTERY';
+            } else {
+                btn.classList.remove('equipped');
+                btn.textContent = '🏅 MASTERY';
+            }
+        }
+    });
+}
+
+function closeMastery() {
+    document.getElementById('masteryModal').classList.remove('open');
+    _currentMasterySkin = null;
+}
+// ========== END MASTERY SYSTEM ==========
+
+
 document.addEventListener('click', (e) => {
-    const button = e.target.closest('button, [onclick], .menu-btn, .upgrade-btn, .pause-btn, .restart-btn, .info-btn, .keybind-btn, .settings-reset-btn, .tutorial-btn, .character-card, .shop-item, .shop-skip-btn, .shop-reroll-btn, #charShopBackBtn, #shopBackBtn, #waveShopBackBtn');
+    const button = e.target.closest('button, [onclick], .menu-btn, .upgrade-btn, .pause-btn, .restart-btn, .info-btn, .mastery-btn, .keybind-btn, .settings-reset-btn, .tutorial-btn, .character-card, .shop-item, .shop-skip-btn, .shop-reroll-btn, #charShopBackBtn, #shopBackBtn, #waveShopBackBtn');
     if (button) {
         playSound(700, 0.05, 'square');
     }
