@@ -776,7 +776,7 @@
 
 
 <div id="mainMenu">
-    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">The Masters Update</p>
+    <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fbbf24; margin: 0 0 15px 0; opacity: 0.7;">JACKPOTTTTTTT https://chanceywancey.github.io/Ball-Survival/Solts.html</p>
     <h1>⚔️ BALL SURVIVAL ⚔️</h1>
     <div class="currency-display">💰 $<span id="totalMoney">0</span></div>
     <button class="menu-btn" onclick="showTutorial()">📖 Tutorial</button>
@@ -787,7 +787,7 @@
         <button class="menu-btn" onclick="exportSave()" style="background:#16a34a;border-bottom-color:#14532d;min-width:120px;padding:10px 16px;font-size:12px;">💾 Export Save</button>
         <button class="menu-btn" onclick="importSave()" style="background:#0369a1;border-bottom-color:#1e3a8a;min-width:120px;padding:10px 16px;font-size:12px;">📂 Import Save</button>
     </div>
-    <input type="file" id="importFileInput" accept=".bsave" style="display:none;" onchange="handleImportFile(event)">
+    <input type="file" id="importFileInput" accept=".bsave,.jackpot" style="display:none;" onchange="handleImportFile(event)">
     <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
         <input type="text" id="codeInput" placeholder="Enter code..." style="padding: 8px 12px; border: 2px solid #fbbf24; background: #1a1a1a; color: #fbbf24; font-family: monospace; border-radius: 4px; width: 150px;">
         <button class="menu-btn" onclick="submitCode()" style="padding: 8px 16px; font-size: 14px; border-bottom: 3px solid #ca8a04; margin: 0;">Submit</button>
@@ -1218,7 +1218,7 @@
 <script>
 // ========== EASY EDIT: DAILY CODE (Change this to your code) ==========
 const DAILY_CODE = 'Hakari';  // <-- EDIT THIS! Change to whatever daily code you want
-const DAILY_CODE_REWARD = 10000; // Gold reward when code is claimed (default: $10,000)
+const DAILY_CODE_REWARD = 5000; // Gold reward when code is claimed (default: $10,000)
 // =========================================================================
 
 const canvas = document.getElementById('gameCanvas');
@@ -1307,6 +1307,9 @@ let unlockedMasteries = JSON.parse(localStorage.getItem('ballRPGMasteries')) || 
 let equippedMasteries = JSON.parse(localStorage.getItem('ballRPGEquippedMasteries')) || [];
 let veteranWins = parseInt(localStorage.getItem('ballRPGVeteranWins')) || 0;
 let ghBestRun = parseInt(localStorage.getItem('ballRPGGhBestRun')) || 0; // best single-run gold earned as GoldHoarder
+let unlockedAchievements = JSON.parse(localStorage.getItem('ballRPGAchievements')) || [];
+let achievementDates = JSON.parse(localStorage.getItem('ballRPGAchievDates')) || {};
+let usedCodes = JSON.parse(localStorage.getItem('ballRPGUsedCodes')) || [];
 
 // Remove beta tester free Hakari unlock
 if (unlockedCharacters.includes('hakari')) {
@@ -7198,6 +7201,15 @@ function savePersistentData(){
     localStorage.setItem('ballRPGVeteranWins', veteranWins);
     localStorage.setItem('ballRPGBuilderWallsBuilt', builderWallsBuilt);
     localStorage.setItem('ballRPGGhBestRun', ghBestRun);
+    localStorage.setItem('ballRPGAchievements', JSON.stringify(unlockedAchievements));
+    localStorage.setItem('ballRPGAchievDates', JSON.stringify(achievementDates));
+}
+
+function unlockAchievement(id) {
+    if (unlockedAchievements.includes(id)) return;
+    unlockedAchievements.push(id);
+    achievementDates[id] = Date.now();
+    savePersistentData();
 }
 
 // ── SAVE CHECKSUM ─────────────────────────────────────────────
@@ -7251,6 +7263,27 @@ function handleImportFile(event) {
                 data = JSON.parse(raw);
             } catch(parseErr) {
                 nukeSave('💥 Save file is corrupted or edited — save wiped.');
+                return;
+            }
+
+            // ── JACKPOT REWARD FILE ──────────────────────────────────
+            if (data.type === 'jackpot_reward' && data.id === 'JACKPOTTTTT') {
+                const expectedSig = (data.hits * 7777 + 31337).toString(16);
+                if (data.codeUsed === true) {
+                    alert('❌ This reward file is invalid — codes were used on that save.\n\nPlay the slot machine without using codes to earn a legitimate reward.');
+                } else if (data.sig === expectedSig && data.hits >= 3) {
+                    unlockAchievement('JACKPOTTTTT');
+                    if (!unlockedCharacters.includes('hakari_v2')) {
+                        unlockedCharacters.push('hakari_v2');
+                    }
+                    savePersistentData();
+                    updateMoneyDisplay();
+                    updateShopDisplay();
+                    floatMoneyText('🌟 Secret Achievement Unlocked: JACKPOTTTTT!');
+                    alert('🌟 SECRET ACHIEVEMENT UNLOCKED!\n\n✨ JACKPOTTTTT!\n\nYou hit 777 three times and claimed your reward.\nThe gods of fortune smile upon you.\n\n🎲 Hakari has been unlocked!');
+                } else {
+                    alert('❌ Invalid jackpot file. Keep playing!');
+                }
                 return;
             }
 
@@ -7346,7 +7379,7 @@ if(DAILY_CODE && DAILY_CODE.trim()) {
     CODES[DAILY_CODE.toLowerCase()] = { reward: 'money', amount: DAILY_CODE_REWARD, message: '🎁 Daily Code: +$' + DAILY_CODE_REWARD + '!' };
 }
 
-let usedCodes = JSON.parse(localStorage.getItem('ballRPGUsedCodes')) || [];
+// usedCodes declared at top with other persistent vars
 
 function submitCode() {
     const codeInput = document.getElementById('codeInput');
