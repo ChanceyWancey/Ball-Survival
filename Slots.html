@@ -688,6 +688,7 @@ let jackpotCount = 0;
 let upgradePurchaseCounts = { clicker:0, jackpot:0, multiplier:0, speed:0, starting:0, twoMatch:0 };
 
 let jackpot777Count = 0; // count of 777 hits
+let codeUsed = false; // if any code was entered, jackpot file reward is blocked
 
 const SLOT_SYMBOLS = ["🍒","🍋","🔔","⭐","💎","7️⃣"];
 
@@ -823,19 +824,28 @@ function update777Section() {
   document.getElementById('j777Counter').textContent=`${jackpot777Count} / 3`;
   document.getElementById('j777Bar').style.width=Math.min(100,(jackpot777Count/3)*100)+'%';
   if(jackpot777Count>=3) {
-    document.getElementById('downloadJackpotBtn').style.display='inline-block';
-    document.getElementById('j777Hint').textContent='Download your reward file and import it below to unlock a secret achievement!';
+    if(codeUsed){
+      document.getElementById('downloadJackpotBtn').style.display='none';
+      document.getElementById('j777Hint').textContent='⚠️ Reward unavailable — codes were used on this save. Start a fresh save to earn the reward legitimately.';
+    } else {
+      document.getElementById('downloadJackpotBtn').style.display='inline-block';
+      document.getElementById('j777Hint').textContent='Download your reward file and import it in Ball Survival to unlock Hakari!';
+    }
     unlockAchievement('triple_777');
   }
 }
 function downloadJackpotFile() {
-  const payload={type:'jackpot_reward',id:'JACKPOTTTTT',earned:Date.now(),hits:jackpot777Count,sig:(jackpot777Count*7777+31337).toString(16)};
+  if(codeUsed){
+    showToast('❌ Reward unavailable — codes were used on this save.');
+    return;
+  }
+  const payload={type:'jackpot_reward',id:'JACKPOTTTTT',earned:Date.now(),hits:jackpot777Count,codeUsed:false,sig:(jackpot777Count*7777+31337).toString(16)};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url; a.download='jackpot_reward.jackpot'; a.click();
   URL.revokeObjectURL(url);
-  showToast('🎰 Jackpot reward downloaded! Import it to unlock a secret achievement!');
+  showToast('🎰 Jackpot reward downloaded! Import it in Ball Survival to unlock Hakari!');
 }
 
 // ── INVESTMENTS ───────────────────────────────────────────────
@@ -1175,17 +1185,23 @@ function applyCode() {
   const raw=document.getElementById('codeInput').value.trim().toUpperCase();
   if(raw==='ADMIN'){
     isAdmin=true; domainActive=true;
+    codeUsed=true;
     document.getElementById('adminPanel').style.display='block';
     document.getElementById('adminHidden').style.display='none';
     document.getElementById('domainToggleWrap').style.display='block';
     document.getElementById('maxUpgBtn').style.display='block';
+    persistToLocal();
     showToast('✅ ADMIN mode activated!');
   } else if(raw==='DOMAIN'){
+    codeUsed=true;
     disableShop();
     document.getElementById('domainToggleWrap').style.display='block';
+    persistToLocal();
     showToast('🌀 Domain Expansion unlocked! Shop disabled.');
   } else if(raw==='MHASKETT'){
+    codeUsed=true;
     ragaActive=true; disableShop();
+    persistToLocal();
     showToast('⚔️ MHASKETT activated! 75% triple match chance.');
   } else {
     showToast('❌ Invalid code.');
@@ -1235,6 +1251,7 @@ function persistToLocal() {
     localStorage.setItem('sm_777count',jackpot777Count);
     localStorage.setItem('sm_ragaActive',ragaActive);
     localStorage.setItem('sm_mhaskett',mhaskettUnlocked);
+    localStorage.setItem('sm_codeUsed',codeUsed);
   } catch(e){}
 }
 function loadFromLocal() {
@@ -1256,6 +1273,7 @@ function loadFromLocal() {
     jackpot777Count=parseInt(localStorage.getItem('sm_777count'))||0;
     ragaActive=localStorage.getItem('sm_ragaActive')==='true';
     mhaskettUnlocked=localStorage.getItem('sm_mhaskett')==='true';
+    codeUsed=localStorage.getItem('sm_codeUsed')==='true';
   } catch(e){}
 }
 function saveGame() {
