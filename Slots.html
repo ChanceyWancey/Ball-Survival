@@ -1,0 +1,1371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🎰 Slot Machine</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #f0c040;
+    --gold2: #e8a020;
+    --crimson: #c0102a;
+    --deep: #0a0608;
+    --panel: #130e10;
+    --border: #2a1f22;
+    --green: #22c55e;
+    --text: #e8ddd0;
+    --muted: #7a6868;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px 60px;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(192,16,42,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(240,192,64,0.08) 0%, transparent 55%);
+  }
+
+  /* ── HEADER ─────────────────────────────────────────────── */
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 72px);
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(240,192,64,0.5), 0 2px 0 var(--gold2);
+    line-height: 1;
+  }
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── CARD WRAPPER ────────────────────────────────────────── */
+  .machine-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow:
+      0 0 0 1px rgba(240,192,64,0.08),
+      0 24px 64px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+  }
+
+  /* gold top bar accent */
+  .machine-wrap::before {
+    content:'';
+    position:absolute; top:0; left:10%; right:10%; height:2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    border-radius: 999px;
+  }
+
+  /* ── BALANCE ─────────────────────────────────────────────── */
+  .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .balance-chip {
+    background: rgba(240,192,64,0.07);
+    border: 1px solid rgba(240,192,64,0.25);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    min-width: 100px;
+    text-align: center;
+  }
+  .balance-chip .label { color: var(--muted); font-size: 9px; letter-spacing: 2px; display:block; margin-bottom:3px; }
+  .balance-chip .value { color: var(--gold); font-weight:700; font-size:15px; }
+  .balance-chip.net-pos .value { color: var(--green); }
+  .balance-chip.net-neg .value { color: #f87171; }
+
+  /* ── REELS ───────────────────────────────────────────────── */
+  .reels {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 10px 0 18px;
+  }
+  .reel {
+    font-size: 3rem;
+    width: 88px;
+    height: 88px;
+    background: #0d090b;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03);
+    transition: border-color .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .reel.spinning {
+    border-color: var(--gold);
+    box-shadow: inset 0 4px 16px rgba(0,0,0,0.8), 0 0 12px rgba(240,192,64,0.35);
+    animation: reelPulse .15s ease-in-out infinite alternate;
+  }
+  .reel.win-flash {
+    border-color: var(--green);
+    box-shadow: inset 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(34,197,94,0.5);
+    animation: winFlash .4s ease-in-out 3;
+  }
+  .reel.jackpot-flash {
+    border-color: var(--gold);
+    box-shadow: inset 0 4px 16px rgba(0,0,0,0.6), 0 0 30px rgba(240,192,64,0.7);
+    animation: jackFlash .3s ease-in-out 6;
+  }
+  @keyframes reelPulse { from{transform:scale(1)} to{transform:scale(1.03)} }
+  @keyframes winFlash { 0%,100%{border-color:var(--green)} 50%{border-color:#86efac} }
+  @keyframes jackFlash { 0%,100%{border-color:var(--gold);box-shadow:inset 0 4px 16px rgba(0,0,0,0.6),0 0 30px rgba(240,192,64,0.7)} 50%{border-color:#fff;box-shadow:inset 0 4px 16px rgba(0,0,0,0.6),0 0 50px rgba(255,255,255,0.9)} }
+
+  /* ── RESULT MESSAGE ──────────────────────────────────────── */
+  #result {
+    text-align: center;
+    min-height: 32px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(240,192,64,0.4);
+    transition: opacity .2s;
+  }
+
+  /* ── BET ROW ─────────────────────────────────────────────── */
+  .bet-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .bet-row label { font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .bet-row input {
+    width: 90px;
+    background: #0d090b;
+    border: 1px solid var(--border);
+    color: var(--gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    text-align: center;
+    padding: 7px 10px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .bet-row input:focus { border-color: rgba(240,192,64,0.5); }
+  .bet-btn {
+    background: rgba(240,192,64,0.08);
+    border: 1px solid rgba(240,192,64,0.2);
+    color: var(--gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .bet-btn:hover { background: rgba(240,192,64,0.15); }
+
+  /* ── SPIN BUTTON ─────────────────────────────────────────── */
+  #spinBtn {
+    width: 100%;
+    padding: 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 4px;
+    background: var(--crimson);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #7a0016, 0 8px 20px rgba(192,16,42,0.35);
+    transition: transform .1s, box-shadow .1s, background .15s;
+    margin-bottom: 10px;
+  }
+  #spinBtn:hover:not(:disabled) { background: #d9142e; transform: translateY(-1px); box-shadow: 0 5px 0 #7a0016, 0 10px 24px rgba(192,16,42,0.4); }
+  #spinBtn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #7a0016; }
+  #spinBtn:disabled { background: #3a2226; color: #6a4850; cursor: not-allowed; box-shadow: none; }
+
+  /* ── COOLDOWN BAR ────────────────────────────────────────── */
+  #cooldownBar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  #cooldownFill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold2), var(--gold));
+    border-radius: 99px;
+    transition: width .1s linear;
+  }
+
+  /* ── DIVIDER ─────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 18px 0;
+  }
+
+  /* ── TABS ────────────────────────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    text-transform: uppercase;
+  }
+  .tab-btn.active {
+    background: rgba(240,192,64,0.08);
+    border-color: rgba(240,192,64,0.35);
+    color: var(--gold);
+  }
+  .tab-btn:hover:not(.active) { border-color: rgba(255,255,255,0.1); color: var(--text); }
+
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ── UPGRADES ────────────────────────────────────────────── */
+  .upgrade-list { display:flex; flex-direction:column; gap:8px; }
+  .upg-row {
+    display:flex; justify-content:space-between; align-items:center;
+    background:#0d090b; border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+  }
+  .upg-info { flex:1; }
+  .upg-name { font-size:12px; font-weight:700; color:var(--green); }
+  .upg-desc { font-size:10px; color:var(--muted); margin-top:2px; }
+  .upg-level { font-size:10px; color:var(--gold); margin-top:2px; }
+  .upg-buy {
+    background:#1a3a1a; border:1px solid #2a5a2a; color:#fff;
+    font-family:'Space Mono',monospace; font-size:11px;
+    padding:6px 12px; border-radius:5px; cursor:pointer; min-width:70px; text-align:center;
+    transition: background .15s;
+  }
+  .upg-buy:hover:not(:disabled) { background:#2a5a2a; }
+  .upg-buy:disabled { background:#1a1a1a; border-color:#333; color:#555; cursor:not-allowed; }
+  #maxUpgBtn {
+    width:100%; margin-top:10px; padding:9px;
+    background:linear-gradient(135deg,#7c2d12,#f97316);
+    border:none; border-radius:7px; color:#fff;
+    font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:3px;
+    cursor:pointer; transition:opacity .15s;
+  }
+  #maxUpgBtn:hover:not(:disabled) { opacity:.85; }
+  #maxUpgBtn:disabled { opacity:.35; cursor:not-allowed; }
+  .shop-disabled-msg {
+    text-align:center; color:#f87171; font-size:11px; padding:12px;
+    background:rgba(192,16,42,0.08); border:1px solid rgba(192,16,42,0.2); border-radius:8px;
+  }
+
+  /* ── INVESTMENTS ─────────────────────────────────────────── */
+  .portfolio-summary {
+    background:#0d090b; border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; margin-bottom:12px; font-size:11px;
+  }
+  .portfolio-summary h4 { color:var(--green); font-size:12px; margin-bottom:6px; }
+  .portfolio-summary p { color:var(--muted); margin:2px 0; }
+  .portfolio-summary span { color:var(--text); }
+
+  .inv-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .inv-row {
+    background:#0d090b; border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+  }
+  .inv-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .inv-name { font-size:12px; font-weight:700; color:var(--green); }
+  .inv-desc { font-size:9px; color:var(--muted); margin-top:2px; }
+  .inv-stats { font-size:10px; color:var(--gold); margin-top:2px; }
+  .inv-actions { display:flex; gap:6px; margin-top:8px; align-items:center; }
+  .inv-input {
+    width:70px; background:#0a0608; border:1px solid var(--border);
+    color:var(--text); font-family:'Space Mono',monospace; font-size:11px;
+    text-align:center; padding:5px 6px; border-radius:4px; outline:none;
+  }
+  .inv-buy, .inv-sell {
+    padding:5px 10px; border-radius:4px; cursor:pointer;
+    font-family:'Space Mono',monospace; font-size:10px; border:none;
+    transition:opacity .15s;
+  }
+  .inv-buy { background:#1a3a1a; color:#fff; }
+  .inv-buy:hover:not(:disabled) { background:#2a5a2a; }
+  .inv-sell { background:#5a0a10; color:#fff; }
+  .inv-sell:hover:not(:disabled) { background:#7a1020; }
+  .inv-buy:disabled, .inv-sell:disabled { opacity:.35; cursor:not-allowed; }
+  .inv-action-row { display:flex; gap:6px; }
+  .inv-action-btn {
+    flex:1; padding:8px; border:none; border-radius:6px; cursor:pointer;
+    font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:1px;
+    transition:opacity .15s;
+  }
+  .inv-action-btn:hover:not(:disabled) { opacity:.8; }
+  .inv-action-btn:disabled { opacity:.35; cursor:not-allowed; }
+  .collect-btn { background:linear-gradient(135deg,#14532d,#22c55e); color:#fff; }
+  .liquidate-btn { background:linear-gradient(135deg,#7f1d1d,#ef4444); color:#fff; }
+
+  /* ── ADMIN PANEL ─────────────────────────────────────────── */
+  .admin-panel {
+    background:#0d090b; border:1px solid rgba(192,16,42,0.3); border-radius:8px; padding:14px;
+  }
+  .admin-panel h4 { color:var(--crimson); font-size:12px; letter-spacing:2px; margin-bottom:12px; }
+  .admin-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+  .admin-row label { font-size:10px; color:var(--muted); flex-shrink:0; }
+  .admin-input {
+    background:#0a0608; border:1px solid var(--border); color:var(--text);
+    font-family:'Space Mono',monospace; font-size:12px; text-align:center;
+    padding:5px 8px; border-radius:4px; outline:none; width:60px;
+  }
+  .admin-input.wide { width:100px; }
+  .admin-select {
+    background:#0a0608; border:1px solid var(--border); color:var(--text);
+    font-family:'Space Mono',monospace; font-size:11px; padding:5px 8px; border-radius:4px;
+  }
+  .admin-btn {
+    background:rgba(192,16,42,0.15); border:1px solid rgba(192,16,42,0.3); color:#f87171;
+    font-family:'Space Mono',monospace; font-size:10px; padding:6px 10px;
+    border-radius:4px; cursor:pointer; transition:background .15s;
+  }
+  .admin-btn:hover { background:rgba(192,16,42,0.3); }
+  #adminMultipliers { font-size:10px; color:var(--muted); padding:8px; background:#0a0608; border-radius:4px; }
+  #adminDebuff { font-size:10px; color:#f87171; margin-top:4px; }
+
+  /* ── DOMAIN TOGGLE ───────────────────────────────────────── */
+  .domain-toggle-row {
+    display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  }
+  .domain-toggle-row label { font-size:11px; color:var(--muted); cursor:pointer; }
+  .domain-toggle-row input { accent-color: var(--gold); cursor:pointer; width:14px; height:14px; }
+  .tooltip-wrap { position:relative; display:inline-flex; align-items:center; }
+  .tooltip-tip {
+    position:absolute; bottom:130%; left:50%; transform:translateX(-50%);
+    background:#222; color:#ccc; font-size:10px; padding:6px 10px;
+    border-radius:6px; white-space:nowrap; pointer-events:none;
+    opacity:0; transition:opacity .2s; border:1px solid #333; z-index:10;
+  }
+  .tooltip-wrap:hover .tooltip-tip { opacity:1; }
+
+  /* ── JACKPOT 777 SECTION ─────────────────────────────────── */
+  #jackpot777Section {
+    display:none;
+    background: linear-gradient(135deg, rgba(240,192,64,0.06), rgba(249,115,22,0.06));
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 14px;
+    text-align: center;
+  }
+  .j777-counter {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:28px; letter-spacing:3px;
+    background: linear-gradient(135deg, var(--gold), #f97316);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:4px;
+  }
+  .j777-label { font-size:10px; color:var(--muted); letter-spacing:2px; margin-bottom:10px; }
+  .j777-fill { height:4px; background:var(--border); border-radius:99px; margin-bottom:12px; overflow:hidden; }
+  .j777-fill-bar { height:100%; background:linear-gradient(90deg,var(--gold2),var(--gold)); border-radius:99px; transition:width .5s ease; }
+  #downloadJackpotBtn {
+    display:none;
+    background:linear-gradient(135deg,#f97316,var(--gold));
+    color:#000; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:3px;
+    border:none; border-radius:8px; padding:12px 28px; cursor:pointer;
+    box-shadow:0 4px 20px rgba(240,192,64,0.35);
+    transition:opacity .15s;
+  }
+  #downloadJackpotBtn:hover { opacity:.85; }
+  .j777-hint { font-size:10px; color:var(--muted); margin-top:8px; line-height:1.5; }
+
+  /* ── ACHIEVEMENTS ────────────────────────────────────────── */
+  .achiev-grid-sm { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
+  .achiev-sm {
+    background:#0d090b; border:1px solid var(--border); border-radius:8px;
+    padding:10px 8px; text-align:center;
+  }
+  .achiev-sm.unlocked { border-color:rgba(240,192,64,0.35); background:rgba(240,192,64,0.04); }
+  .achiev-sm.secret { opacity:.5; }
+  .achiev-icon-sm { font-size:22px; margin-bottom:4px; }
+  .achiev-name-sm { font-size:9px; font-weight:700; color:var(--gold); line-height:1.3; }
+  .achiev-sm.secret .achiev-name-sm { color:var(--muted); }
+  .achiev-desc-sm { font-size:8px; color:var(--muted); margin-top:3px; line-height:1.3; }
+  .achiev-unlocked-sm { font-size:8px; color:var(--green); margin-top:3px; }
+
+  /* ── CODE INPUT ──────────────────────────────────────────── */
+  .code-row {
+    display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .code-input {
+    flex:1; min-width:120px; background:#0d090b; border:1px solid var(--border);
+    color:var(--gold); font-family:'Space Mono',monospace; font-size:12px;
+    padding:8px 12px; border-radius:6px; outline:none;
+  }
+  .code-input::placeholder { color:var(--muted); }
+  .code-submit {
+    background:rgba(240,192,64,0.1); border:1px solid rgba(240,192,64,0.25);
+    color:var(--gold); font-family:'Space Mono',monospace; font-size:11px;
+    padding:8px 14px; border-radius:6px; cursor:pointer; transition:background .15s;
+  }
+  .code-submit:hover { background:rgba(240,192,64,0.2); }
+
+  /* ── SAVE ROW ────────────────────────────────────────────── */
+  .save-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .save-btn {
+    flex:1; min-width:100px; padding:8px; border-radius:6px;
+    font-family:'Space Mono',monospace; font-size:10px; cursor:pointer; border:none;
+    transition:opacity .15s; text-align:center;
+  }
+  .save-btn:hover { opacity:.8; }
+  .save-btn.export { background:#14532d; color:#fff; }
+  .save-btn.import { background:#1e3a8a; color:#fff; }
+
+  /* ── CLICKER ─────────────────────────────────────────────── */
+  #clickerSection {
+    display:none; text-align:center; padding:14px;
+    background:rgba(192,16,42,0.06); border:1px solid rgba(192,16,42,0.2); border-radius:8px;
+    margin-top:12px;
+  }
+  #clickerSection h4 { color:#f87171; font-size:13px; margin-bottom:10px; }
+  #clickBtn {
+    background:var(--crimson); color:#fff; border:none;
+    font-family:'Space Mono',monospace; font-size:12px;
+    padding:10px 20px; border-radius:8px; cursor:pointer; transition:opacity .15s;
+  }
+  #clickBtn:hover { opacity:.8; }
+
+  /* ── TOAST ───────────────────────────────────────────────── */
+  #toast {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:rgba(15,8,10,0.95); border:1px solid rgba(240,192,64,0.3);
+    color:var(--gold); font-size:12px; padding:10px 20px; border-radius:8px;
+    pointer-events:none; opacity:0; transition:opacity .3s; z-index:1000;
+    max-width:320px; text-align:center;
+  }
+  #toast.show { opacity:1; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────────── */
+  @media(max-width:400px) {
+    .machine-wrap { padding:18px 14px; }
+    .reel { width:72px; height:72px; font-size:2.4rem; }
+    header h1 { font-size:36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎰 SLOT MACHINE</h1>
+  <div class="subtitle">Press your luck • Win big • Lose bigger</div>
+</header>
+
+<div class="machine-wrap">
+
+  <!-- Balance chips -->
+  <div class="balance-row">
+    <div class="balance-chip">
+      <span class="label">BALANCE</span>
+      <span class="value" id="balanceVal">$50.00</span>
+    </div>
+    <div class="balance-chip">
+      <span class="label">TOTAL WON</span>
+      <span class="value" id="wonVal">$0.00</span>
+    </div>
+    <div class="balance-chip" id="netChip">
+      <span class="label">NET</span>
+      <span class="value" id="netVal">$0.00</span>
+    </div>
+    <div class="balance-chip">
+      <span class="label">GAMES</span>
+      <span class="value" id="gamesVal">0</span>
+    </div>
+  </div>
+
+  <!-- Reels -->
+  <div class="reels">
+    <div class="reel" id="reel1">🎰</div>
+    <div class="reel" id="reel2">🎰</div>
+    <div class="reel" id="reel3">🎰</div>
+  </div>
+
+  <!-- Result -->
+  <div id="result">Place your bet and spin!</div>
+
+  <!-- Bet row -->
+  <div class="bet-row">
+    <label>BET $</label>
+    <input type="number" id="betInput" min="0.01" step="0.01" value="10.00">
+    <button class="bet-btn" onclick="setBet(0.5)">½</button>
+    <button class="bet-btn" onclick="setBet(2)">2×</button>
+    <button class="bet-btn" onclick="setMaxBet()">MAX</button>
+  </div>
+
+  <!-- Spin -->
+  <button id="spinBtn" onclick="spin()">SPIN</button>
+  <div id="cooldownBar"><div id="cooldownFill"></div></div>
+
+  <!-- 777 jackpot section -->
+  <div id="jackpot777Section">
+    <div class="j777-counter" id="j777Counter">0 / 3</div>
+    <div class="j777-label">777 JACKPOTS HIT</div>
+    <div class="j777-fill"><div class="j777-fill-bar" id="j777Bar" style="width:0%"></div></div>
+    <button id="downloadJackpotBtn" onclick="downloadJackpotFile()">⬇ DOWNLOAD REWARD FILE</button>
+    <div class="j777-hint" id="j777Hint">Hit 777 three times to unlock a reward.<br>Import the reward file to unlock a secret achievement!</div>
+  </div>
+
+  <!-- Domain toggle (hidden until domain code used) -->
+  <div id="domainToggleWrap" style="display:none; margin-top:12px;">
+    <div class="domain-toggle-row">
+      <div class="tooltip-wrap">
+        <input type="checkbox" id="domainToggle" onchange="toggleDomain()">
+        <label for="domainToggle">⚔️ Domain Expansion</label>
+        <span class="tooltip-tip">When active, greatly increases your chance of hitting 777</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clicker (shows when broke) -->
+  <div id="clickerSection">
+    <h4>💸 You're broke! Click to rebuild.</h4>
+    <button id="clickBtn" onclick="clickerEarn()">CLICK ME (+<span id="clickAmt">$0.50</span>)</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Clicker balance: $<span id="clickBal">0.00</span></p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('shop',this)">SHOP</button>
+    <button class="tab-btn" onclick="switchTab('invest',this)">INVEST</button>
+    <button class="tab-btn" onclick="switchTab('achievements',this)">TROPHIES</button>
+    <button class="tab-btn" onclick="switchTab('admin',this)">ADMIN</button>
+    <button class="tab-btn" onclick="switchTab('save',this)">SAVE</button>
+  </div>
+
+  <!-- ── SHOP TAB ─────────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-shop">
+    <div id="shopBody">
+      <div class="upgrade-list" id="upgradeList">
+        <!-- populated by JS -->
+      </div>
+      <button id="maxUpgBtn" onclick="maxAllUpgrades()" style="display:none;">🚀 MAX ALL UPGRADES (LVL 1,000,000)</button>
+    </div>
+  </div>
+
+  <!-- ── INVEST TAB ──────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-invest">
+    <div class="portfolio-summary">
+      <h4>Portfolio Summary</h4>
+      <p>Invested: <span id="invTotalIn">$0.00</span></p>
+      <p>Value: <span id="invTotalVal">$0.00</span></p>
+      <p>Return: <span id="invReturn">$0.00 (0.00%)</span></p>
+    </div>
+    <div class="inv-list" id="invList"><!-- populated by JS --></div>
+    <div class="inv-action-row">
+      <button class="inv-action-btn collect-btn" id="collectBtn" onclick="collectDividends()">Collect Dividends ($0.00)</button>
+      <button class="inv-action-btn liquidate-btn" onclick="sellAllInvestments()">Liquidate All</button>
+    </div>
+  </div>
+
+  <!-- ── ACHIEVEMENTS TAB ────────────────────────────────── -->
+  <div class="tab-panel" id="tab-achievements">
+    <p style="font-size:10px;color:var(--muted);margin-bottom:12px;"><span id="achievCount">0</span> / <span id="achievTotal">0</span> unlocked</p>
+    <div class="achiev-grid-sm" id="achievGrid"></div>
+  </div>
+
+  <!-- ── ADMIN TAB ───────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-admin">
+    <div id="adminHidden" style="text-align:center;padding:20px;">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">Enter code <b style="color:var(--gold)">ADMIN</b> to unlock.</p>
+    </div>
+    <div id="adminPanel" class="admin-panel" style="display:none;">
+      <h4>⚡ ADMIN PANEL</h4>
+      <div class="admin-row">
+        <label>FORCE:</label>
+        <input type="number" class="admin-input" id="f1" min="1" max="6" placeholder="1">
+        <input type="number" class="admin-input" id="f2" min="1" max="6" placeholder="1">
+        <input type="number" class="admin-input" id="f3" min="1" max="6" placeholder="1">
+        <button class="admin-btn" onclick="setForce()">SET</button>
+      </div>
+      <div class="admin-row">
+        <label>SPEED:</label>
+        <select id="speedSel" class="admin-select" onchange="setSpeed()">
+          <option value="normal">Normal</option>
+          <option value="fast">Fast</option>
+        </select>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="adminSetMoney(999999999999)" style="width:100%;">💰 Set to $999,999,999,999</button>
+      </div>
+      <div class="admin-row">
+        <label>SET $:</label>
+        <input type="number" class="admin-input wide" id="adminMoneyIn" placeholder="Amount">
+        <button class="admin-btn" onclick="adminSetMoney(parseFloat(document.getElementById('adminMoneyIn').value))">SET</button>
+      </div>
+      <div id="adminMultipliers">Jackpot: 2× | 777 Jackpot: 10×</div>
+      <div id="adminDebuff">MHASKETT Debuff: 0%</div>
+    </div>
+  </div>
+
+  <!-- ── SAVE TAB ────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-save">
+    <div class="code-row">
+      <input type="text" class="code-input" id="codeInput" placeholder="Enter code...">
+      <button class="code-submit" onclick="applyCode()">ACTIVATE</button>
+    </div>
+    <div class="save-row">
+      <button class="save-btn export" onclick="saveGame()">💾 Save</button>
+      <button class="save-btn import" onclick="document.getElementById('loadFile').click()">📁 Load</button>
+    </div>
+    <input type="file" id="loadFile" accept=".json,.sav,.dat,.jackpot" onchange="loadGame()" style="display:none;">
+    <p style="font-size:9px;color:var(--muted);margin-top:10px;">Save files are protected with checksum validation. Importing a <b>.jackpot</b> reward file will unlock a secret achievement.</p>
+  </div>
+
+</div><!-- end machine-wrap -->
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+// CORE STATE
+// ═══════════════════════════════════════════════════════════
+let gamesPlayed = 0;
+let totalSpent = 0;
+let totalWon = 0;
+let currentMoney = 50;
+
+let domainActive = false;
+let isAdmin = false;
+let ragaActive = false;
+let ragaAdaptNumber = null;
+let reelSpeed = 50;
+let forcedNumbers = null;
+let cooldown = false;
+let loadedFileName = null;
+let shopDisabled = false;
+let mhaskettUnlocked = false;
+
+let consecutiveWins = 0;
+let wasBroke = false;
+let totalWinsG = 0;
+let jackpotCount = 0;
+let upgradePurchaseCounts = { clicker:0, jackpot:0, multiplier:0, speed:0, starting:0, twoMatch:0 };
+
+let jackpot777Count = 0; // count of 777 hits
+
+const SLOT_SYMBOLS = ["🍒","🍋","🔔","⭐","💎","7️⃣"];
+
+// ── INVESTMENTS ──────────────────────────────────────────────
+let investments = {
+  bonds: { amount:0, value:0, totalInvested:0 },
+  index: { amount:0, value:0, totalInvested:0 },
+  tech:  { amount:0, value:0, totalInvested:0 },
+  crypto:{ amount:0, value:0, totalInvested:0 }
+};
+let pendingDividends = 0;
+
+// ── UPGRADES ─────────────────────────────────────────────────
+let upgrades = {
+  clicker:    { level:1, cost:25 },
+  jackpot:    { level:1, cost:100 },
+  multiplier: { level:1, cost:150 },
+  speed:      { level:1, cost:75 },
+  starting:   { level:1, cost:200 },
+  twoMatch:   { level:1, cost:80 }
+};
+
+// ── ACHIEVEMENTS ─────────────────────────────────────────────
+const ACHIEVEMENTS = [
+  { id:'first_spin',   icon:'🎰', name:'First Spin',      desc:'Spin for the first time.' },
+  { id:'first_win',    icon:'✅', name:'Winner',           desc:'Win your first jackpot.' },
+  { id:'ten_wins',     icon:'🔥', name:'On Fire',          desc:'Win 10 jackpots.' },
+  { id:'fifty_wins',   icon:'💪', name:'Consistent',       desc:'Win 50 jackpots.' },
+  { id:'reach_1k',     icon:'💰', name:'Four Figures',     desc:'Reach $1,000 balance.' },
+  { id:'reach_10k',    icon:'💎', name:'Five Figures',     desc:'Reach $10,000 balance.' },
+  { id:'reach_1m',     icon:'👑', name:'Millionaire',      desc:'Reach $1,000,000 balance.' },
+  { id:'triple_777',   icon:'7️⃣', name:'Triple 7s',        desc:'Hit 777 jackpot three times.' },
+  { id:'hundred_spins',icon:'🔄', name:'Committed',        desc:'Spin 100 times.' },
+  { id:'broke',        icon:'😬', name:'Went Broke',       desc:'Hit $0 balance.' },
+  { id:'come_back',    icon:'📈', name:'Comeback Kid',     desc:'Recover from being broke.' },
+  { id:'max_upgrades', icon:'🚀', name:'Maxed Out',        desc:'Use MAX ALL UPGRADES.' },
+  { id:'big_bet',      icon:'🎲', name:'High Roller',      desc:'Bet $10,000 or more in one spin.' },
+  { id:'streak_5',     icon:'⚡', name:'Hot Streak',       desc:'Win 5 jackpots in a row.' },
+  { id:'JACKPOTTTTT',  icon:'🌟', name:'JACKPOTTTTT!',     desc:'???', secret:true },
+];
+let unlockedAchievements = [];
+let achievementDates = {};
+
+// ── SECURITY ──────────────────────────────────────────────────
+const GAME_VERSION = "3.0.0";
+const MIN_COMPATIBLE_VERSION = "2.1.0";
+const SECURITY_KEY = "SlotMachine_SecureHash_2024_v2";
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i=0;i<str.length;i++) { const c=str.charCodeAt(i); hash=((hash<<5)-hash)+c; hash=hash&hash; }
+  return hash.toString(16);
+}
+function generateChecksum(d) {
+  return simpleHash(SECURITY_KEY + JSON.stringify({gamesPlayed:d.gamesPlayed,totalSpent:d.totalSpent,totalWon:d.totalWon,currentMoney:d.currentMoney,version:d.version,upgrades:d.upgrades,shopDisabled:d.shopDisabled}));
+}
+function validateChecksum(d) { return d.checksum && d.checksum===generateChecksum(d); }
+function isVersionCompatible(v) {
+  if(!v)return false;
+  const p=s=>s.split('.').map(Number);
+  const sv=p(v),mv=p(MIN_COMPATIBLE_VERSION);
+  for(let i=0;i<mv.length;i++){if(sv[i]>mv[i])return true;if(sv[i]<mv[i])return false;}
+  return true;
+}
+function validateGameValues(d) {
+  if(d.currentMoney<0||d.currentMoney>1e12)return false;
+  if(d.totalSpent<0||d.totalSpent>1e12)return false;
+  if(d.totalWon<0||d.totalWon>1e12)return false;
+  if(d.gamesPlayed<0||d.gamesPlayed>100000)return false;
+  if(d.totalSpent===0&&d.gamesPlayed>0)return false;
+  if(d.totalWon>d.totalSpent*50)return false;
+  if(d.upgrades){for(const[,u]of Object.entries(d.upgrades)){if(u.level<1||u.level>1000000)return false;if(u.cost<1||u.cost>1e9)return false;}}
+  return true;
+}
+
+// ── UPGRADE HELPERS ───────────────────────────────────────────
+const getClickerEarnings = () => 0.5 + (upgrades.clicker.level-1)*0.25;
+const getJackpotChance   = () => Math.min(0.15, 0.02 + (upgrades.jackpot.level-1)*0.01);
+const getCooldownTime    = () => Math.max(1, 3 - (upgrades.speed.level-1)*0.3);
+const getMinMoney        = () => 10 + (upgrades.starting.level-1)*5;
+const getTwoMatchMult    = () => 0.5 + (upgrades.twoMatch.level-1)*0.1;
+function getJackpotMults() {
+  const b = upgrades.multiplier.level-1;
+  return { regular: 2+b, jackpot777: 10+(b*2) };
+}
+function getMhaskettDebuff() {
+  if(!ragaActive)return 0;
+  return Math.pow(Math.min(1,currentMoney/1e12),2);
+}
+function applyDebuffToChance(c) { return c*(1-getMhaskettDebuff()*0.9); }
+
+// ── TOAST / NOTIFY ────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── ACHIEVEMENTS ──────────────────────────────────────────────
+function unlockAchievement(id) {
+  if(unlockedAchievements.includes(id))return;
+  const def=ACHIEVEMENTS.find(a=>a.id===id);
+  if(!def)return;
+  unlockedAchievements.push(id);
+  achievementDates[id]=Date.now();
+  persistToLocal();
+  showToast(`🏆 Achievement: ${def.name}!`);
+  renderAchievements();
+}
+function renderAchievements() {
+  const grid=document.getElementById('achievGrid');
+  document.getElementById('achievCount').textContent=unlockedAchievements.length;
+  document.getElementById('achievTotal').textContent=ACHIEVEMENTS.length;
+  grid.innerHTML=ACHIEVEMENTS.map(a=>{
+    const ok=unlockedAchievements.includes(a.id);
+    const sec=a.secret&&!ok;
+    return `<div class="achiev-sm ${ok?'unlocked':''} ${sec?'secret':''}">
+      <div class="achiev-icon-sm">${sec?'❓':a.icon}</div>
+      <div class="achiev-name-sm">${sec?'???':a.name}</div>
+      <div class="achiev-desc-sm">${sec?'Hidden achievement.':a.desc}</div>
+      ${ok?`<div class="achiev-unlocked-sm">✅ ${new Date(achievementDates[a.id]).toLocaleDateString()}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── 777 JACKPOT REWARD ────────────────────────────────────────
+function update777Section() {
+  const sec=document.getElementById('jackpot777Section');
+  if(gamesPlayed>0||jackpot777Count>0) sec.style.display='block';
+  document.getElementById('j777Counter').textContent=`${jackpot777Count} / 3`;
+  document.getElementById('j777Bar').style.width=Math.min(100,(jackpot777Count/3)*100)+'%';
+  if(jackpot777Count>=3) {
+    document.getElementById('downloadJackpotBtn').style.display='inline-block';
+    document.getElementById('j777Hint').textContent='Download your reward file and import it below to unlock a secret achievement!';
+    unlockAchievement('triple_777');
+  }
+}
+function downloadJackpotFile() {
+  const payload={type:'jackpot_reward',id:'JACKPOTTTTT',earned:Date.now(),hits:jackpot777Count,sig:(jackpot777Count*7777+31337).toString(16)};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='jackpot_reward.jackpot'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('🎰 Jackpot reward downloaded! Import it to unlock a secret achievement!');
+}
+
+// ── INVESTMENTS ───────────────────────────────────────────────
+function buyInvestment(key) {
+  const amt=Math.floor(parseFloat(document.getElementById(key+'Amt').value)||0);
+  if(amt<=0||amt>currentMoney)return;
+  currentMoney-=amt;
+  investments[key].amount+=amt;
+  investments[key].totalInvested+=amt;
+  updateUI();
+  persistToLocal();
+}
+function sellInvestment(key) {
+  const inv=investments[key];
+  if(!inv||inv.amount<=0)return;
+  currentMoney+=inv.value; inv.amount=0; inv.value=0;
+  updateUI(); persistToLocal();
+}
+function sellAllInvestments() {
+  for(const k of Object.keys(investments)){if(investments[k].value>0)currentMoney+=investments[k].value;investments[k].amount=0;investments[k].value=0;}
+  updateUI(); persistToLocal();
+}
+function collectDividends() {
+  currentMoney+=pendingDividends; pendingDividends=0;
+  persistToLocal(); updateUI();
+}
+function updateInvestments() {
+  let totalVal=0;
+  for(const[k,inv]of Object.entries(investments)){
+    const base={bonds:1,index:1,tech:1,crypto:1}[k]||1;
+    inv.value=Math.max(0,inv.amount*base*(1+(Math.random()-0.5)*0.02));
+    totalVal+=inv.value;
+  }
+  const invested=Object.values(investments).reduce((s,i)=>s+i.totalInvested,0);
+  document.getElementById('invTotalIn').textContent='$'+invested.toFixed(2);
+  document.getElementById('invTotalVal').textContent='$'+totalVal.toFixed(2);
+  const ret=totalVal-invested;
+  document.getElementById('invReturn').textContent=`$${ret.toFixed(2)} (${invested?((ret/invested)*100).toFixed(2):'0.00'}%)`;
+  document.getElementById('invReturn').style.color=ret>=0?'var(--green)':'#f87171';
+  // per-investment stats
+  for(const[k,inv]of Object.entries(investments)){
+    const el=document.getElementById(k+'Stats');
+    if(el)el.textContent=`Owned: ${inv.amount} | Value: $${inv.value.toFixed(2)}`;
+  }
+  document.getElementById('collectBtn').textContent=`Collect Dividends ($${pendingDividends.toFixed(2)})`;
+}
+function marketTick() {
+  for(const[k,inv]of Object.entries(investments)){
+    let c=0;
+    if(k==='bonds')c=0.02;
+    else if(k==='index')c=0.03+(Math.random()-0.5)*0.02;
+    else if(k==='tech')c=(Math.random()*0.25)-0.10;
+    else if(k==='crypto')c=(Math.random()*0.45)-0.20;
+    inv.value=Math.max(0,inv.value*(1+c));
+    if(k==='bonds'||k==='index')pendingDividends+=inv.amount*0.01;
+  }
+  persistToLocal(); updateInvestments();
+}
+setInterval(marketTick,5000);
+
+// build investment rows
+function buildInvestmentRows() {
+  const defs=[
+    {key:'bonds',  name:'💼 Safe Bonds',  desc:'Low risk, steady 2% return per spin'},
+    {key:'index',  name:'📊 Index Fund',  desc:'Medium risk, 3–5% return per spin'},
+    {key:'tech',   name:'🚀 Tech Stocks', desc:'High risk, −10% to +15% return per spin'},
+    {key:'crypto', name:'💎 Crypto',      desc:'Extreme risk, −20% to +25% return per spin'},
+  ];
+  document.getElementById('invList').innerHTML=defs.map(d=>`
+    <div class="inv-row">
+      <div class="inv-top">
+        <div>
+          <div class="inv-name">${d.name}</div>
+          <div class="inv-desc">${d.desc}</div>
+          <div class="inv-stats" id="${d.key}Stats">Owned: 0 | Value: $0.00</div>
+        </div>
+      </div>
+      <div class="inv-actions">
+        <input type="number" class="inv-input" id="${d.key}Amt" placeholder="Amount" min="1">
+        <button class="inv-buy" onclick="buyInvestment('${d.key}')">Buy</button>
+        <button class="inv-sell" onclick="sellInvestment('${d.key}')">Sell All</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── SHOP ──────────────────────────────────────────────────────
+const UPGRADE_DEFS=[
+  {key:'clicker',    icon:'💸', name:'Clicker Power',    desc:'Increase clicker earnings'},
+  {key:'jackpot',    icon:'🍀', name:'Jackpot Chance',   desc:'Increase chance of hitting jackpots'},
+  {key:'multiplier', icon:'💎', name:'Jackpot Mult',     desc:'Increase jackpot winnings'},
+  {key:'speed',      icon:'⚡', name:'Spin Speed',       desc:'Reduce cooldown between spins'},
+  {key:'starting',   icon:'💰', name:'Starting Money',   desc:'Increase money when broke'},
+  {key:'twoMatch',   icon:'🎯', name:'Two Match Bonus',  desc:'Increase two-symbol match payout'},
+];
+function buildShopRows() {
+  document.getElementById('upgradeList').innerHTML=UPGRADE_DEFS.map(d=>`
+    <div class="upg-row">
+      <div class="upg-info">
+        <div class="upg-name">${d.icon} ${d.name}</div>
+        <div class="upg-desc">${d.desc}</div>
+        <div class="upg-level" id="upg_${d.key}_level">Level 1</div>
+      </div>
+      <button class="upg-buy" id="upg_${d.key}_btn" onclick="buyUpgrade('${d.key}')">$—</button>
+    </div>
+  `).join('');
+}
+function updateShop() {
+  const disabled=shopDisabled&&!mhaskettUnlocked;
+  const shopBody=document.getElementById('shopBody');
+  if(disabled){
+    shopBody.innerHTML=`<div class="shop-disabled-msg">🚫 SHOP DISABLED<br><small>Codes were used. Reach 1 trillion to unlock.</small></div>`;
+    return;
+  }
+  // ensure rows exist
+  if(!document.getElementById('upgradeList')) buildShopRows();
+
+  const ce=getClickerEarnings();
+  const jc=(getJackpotChance()*100).toFixed(1);
+  const m=getJackpotMults();
+  const cd=getCooldownTime().toFixed(1);
+  const mm=getMinMoney();
+  const tw=getTwoMatchMult().toFixed(1);
+  const levelTexts={
+    clicker:`Level ${upgrades.clicker.level} (+$${ce.toFixed(2)})`,
+    jackpot:`Level ${upgrades.jackpot.level} (${jc}% chance)`,
+    multiplier:`Level ${upgrades.multiplier.level} (${m.regular}× / ${m.jackpot777}×)`,
+    speed:`Level ${upgrades.speed.level} (${cd}s cooldown)`,
+    starting:`Level ${upgrades.starting.level} ($${mm} minimum)`,
+    twoMatch:`Level ${upgrades.twoMatch.level} (${tw}× bet)`,
+  };
+  for(const key of Object.keys(upgrades)){
+    const lvl=document.getElementById(`upg_${key}_level`);
+    const btn=document.getElementById(`upg_${key}_btn`);
+    if(lvl)lvl.textContent=levelTexts[key];
+    if(btn){btn.textContent=`$${upgrades[key].cost.toFixed(0)}`;btn.disabled=currentMoney<upgrades[key].cost;}
+  }
+  // admin max
+  if(isAdmin){
+    document.getElementById('maxUpgBtn').style.display='block';
+    document.getElementById('adminMultipliers').textContent=`Jackpot: ${m.regular}× | 777 Jackpot: ${m.jackpot777}×`;
+    document.getElementById('adminDebuff').textContent=`MHASKETT Debuff: ${Math.round(getMhaskettDebuff()*100)}%`;
+  }
+}
+function buyUpgrade(type) {
+  if((shopDisabled&&!mhaskettUnlocked)||currentMoney<upgrades[type].cost)return;
+  currentMoney-=upgrades[type].cost;
+  upgrades[type].level++;
+  const bases={clicker:25,jackpot:100,multiplier:150,speed:75,starting:200,twoMatch:80};
+  upgrades[type].cost=Math.floor((bases[type]||25)*Math.pow(1.5,upgrades[type].level-1));
+  const names={clicker:'Clicker Power',jackpot:'Jackpot Chance',multiplier:'Jackpot Multiplier',speed:'Spin Speed',starting:'Starting Money',twoMatch:'Two Match Bonus'};
+  showToast(`✅ ${names[type]} → Level ${upgrades[type].level}`);
+  updateUI(); persistToLocal();
+  checkAchievementsPassive();
+}
+function maxAllUpgrades() {
+  if(!isAdmin)return;
+  for(const k in upgrades){upgrades[k].level=1000000;upgrades[k].cost=1;}
+  unlockAchievement('max_upgrades');
+  showToast('🚀 All upgrades maxed!');
+  updateUI(); persistToLocal();
+}
+function disableShop(){shopDisabled=true;updateShop();}
+
+// ── MAIN SPIN ─────────────────────────────────────────────────
+async function spin() {
+  if(cooldown)return;
+  if(currentMoney<=0){showToast('⚠️ Broke! Use the clicker.');startClicker();return;}
+  let bet=parseFloat(document.getElementById('betInput').value);
+  if(isNaN(bet)||bet<=0||bet>currentMoney)return;
+
+  if(bet>=10000)unlockAchievement('big_bet');
+  if(gamesPlayed===0)unlockAchievement('first_spin');
+
+  cooldown=true;
+  document.getElementById('spinBtn').disabled=true;
+  let ct=getCooldownTime();
+  let rem=ct;
+  document.getElementById('cooldownFill').style.width='0%';
+  const ticker=setInterval(()=>{
+    rem-=0.1;
+    const pct=Math.max(0,((ct-rem)/ct)*100);
+    document.getElementById('cooldownFill').style.width=pct+'%';
+    if(rem<=0){clearInterval(ticker);cooldown=false;document.getElementById('spinBtn').disabled=false;document.getElementById('cooldownFill').style.width='0%';}
+  },100);
+
+  gamesPlayed++;
+  totalSpent+=bet;
+  currentMoney-=bet;
+
+  const preBet=currentMoney+bet; // money before this spin
+
+  // determine results
+  let r1,r2,r3;
+  if(forcedNumbers){[r1,r2,r3]=forcedNumbers;forcedNumbers=null;}
+  else if((domainActive||isAdmin)&&Math.random()<0.40){r1=r2=r3=SLOT_SYMBOLS[5];}
+  else if(ragaActive&&ragaAdaptNumber!==null){
+    const ch=applyDebuffToChance(0.75);
+    if(Math.random()<ch){r1=r2=r3=ragaAdaptNumber;}
+  }
+  if(r1===undefined){
+    const jc=getJackpotChance();
+    if(Math.random()<jc){
+      r1=r2=r3=Math.random()<0.3?SLOT_SYMBOLS[5]:SLOT_SYMBOLS[Math.floor(Math.random()*6)];
+    }else{
+      r1=SLOT_SYMBOLS[Math.floor(Math.random()*6)];
+      r2=SLOT_SYMBOLS[Math.floor(Math.random()*6)];
+      r3=SLOT_SYMBOLS[Math.floor(Math.random()*6)];
+    }
+  }
+
+  document.getElementById('result').textContent='Spinning...';
+  const reelIds=['reel1','reel2','reel3'];
+  reelIds.forEach(id=>document.getElementById(id).classList.add('spinning'));
+
+  await Promise.all([
+    spinVisual('reel1',r1,700+reelSpeed),
+    spinVisual('reel2',r2,950+reelSpeed),
+    spinVisual('reel3',r3,1200+reelSpeed),
+  ]);
+
+  reelIds.forEach(id=>document.getElementById(id).classList.remove('spinning'));
+
+  // evaluate
+  let win=0, msg='', flashClass='';
+  const m=getJackpotMults();
+
+  if(r1==='7️⃣'&&r2==='7️⃣'&&r3==='7️⃣'){
+    win=preBet*(m.jackpot777-1)+bet;
+    msg=`🎉 777 MEGA JACKPOT! +$${win.toFixed(2)}`;
+    jackpotCount++;
+    jackpot777Count++;
+    consecutiveWins++;
+    totalWinsG++;
+    flashClass='jackpot-flash';
+    unlockAchievement('first_win');
+    if(totalWinsG>=10)unlockAchievement('ten_wins');
+    if(totalWinsG>=50)unlockAchievement('fifty_wins');
+  } else if(r1===r2&&r2===r3){
+    win=bet*m.regular;
+    msg=`✅ JACKPOT ${r1}${r1}${r1}! +$${win.toFixed(2)}`;
+    consecutiveWins++;
+    totalWinsG++;
+    flashClass='win-flash';
+    unlockAchievement('first_win');
+    if(totalWinsG>=10)unlockAchievement('ten_wins');
+    if(totalWinsG>=50)unlockAchievement('fifty_wins');
+  } else if(r1===r2||r2===r3||r1===r3){
+    const tw=getTwoMatchMult();
+    win=bet*tw;
+    msg=`🎲 Two match! +$${win.toFixed(2)}`;
+    if(ragaActive)ragaAdaptNumber=r1===r2?r1:(r2===r3?r2:r1);
+    flashClass='win-flash';
+  } else {
+    msg=`❌ No match. −$${bet.toFixed(2)}`;
+    consecutiveWins=0;
+  }
+
+  if(consecutiveWins>=5)unlockAchievement('streak_5');
+
+  totalWon+=win;
+  currentMoney+=win;
+
+  document.getElementById('result').textContent=msg;
+  reelIds.forEach(id=>{
+    if(flashClass){document.getElementById(id).classList.add(flashClass);setTimeout(()=>document.getElementById(id).classList.remove(flashClass),1800);}
+  });
+
+  if(gamesPlayed>=100)unlockAchievement('hundred_spins');
+  checkAchievementsPassive();
+  update777Section();
+  updateUI();
+  persistToLocal();
+  checkTrillionUnlock();
+  if(currentMoney<=0)startClicker();
+}
+
+function spinVisual(id, final, delay) {
+  return new Promise(res=>{
+    const el=document.getElementById(id);
+    const iv=setInterval(()=>el.textContent=SLOT_SYMBOLS[Math.floor(Math.random()*6)],reelSpeed||50);
+    setTimeout(()=>{clearInterval(iv);el.textContent=final;res();},delay);
+  });
+}
+
+function checkAchievementsPassive() {
+  if(currentMoney>=1000)unlockAchievement('reach_1k');
+  if(currentMoney>=10000)unlockAchievement('reach_10k');
+  if(currentMoney>=1000000)unlockAchievement('reach_1m');
+}
+
+// ── TRILLION UNLOCK ───────────────────────────────────────────
+function checkTrillionUnlock() {
+  if(ragaActive&&currentMoney>=1e12&&shopDisabled&&!mhaskettUnlocked){
+    mhaskettUnlocked=true; currentMoney=50; shopDisabled=false;
+    updateUI(); updateShop();
+    alert('🎉 TRILLION REACHED! Shop unlocked!\n\nMoney reset to $50.00');
+  }
+}
+
+// ── BET HELPERS ───────────────────────────────────────────────
+function setBet(mult) {
+  const inp=document.getElementById('betInput');
+  const cur=parseFloat(inp.value)||10;
+  inp.value=Math.max(0.01,Math.min(currentMoney,+(cur*mult).toFixed(2)));
+}
+function setMaxBet() {
+  document.getElementById('betInput').value=+currentMoney.toFixed(2);
+}
+
+// ── CLICKER ───────────────────────────────────────────────────
+function startClicker() {
+  document.getElementById('clickerSection').style.display='block';
+  document.getElementById('spinBtn').disabled=true;
+  document.getElementById('betInput').disabled=true;
+  unlockAchievement('broke');
+}
+function clickerEarn() {
+  const e=getClickerEarnings();
+  currentMoney+=e;
+  document.getElementById('clickBal').textContent=currentMoney.toFixed(2);
+  updateUI();
+  const min=getMinMoney();
+  if(currentMoney>=min){
+    document.getElementById('clickerSection').style.display='none';
+    document.getElementById('spinBtn').disabled=false;
+    document.getElementById('betInput').disabled=false;
+    document.getElementById('betInput').value=min.toFixed(2);
+    unlockAchievement('come_back');
+    showToast('💰 Back in the game!');
+  }
+  document.getElementById('clickAmt').textContent='$'+e.toFixed(2);
+}
+
+// ── CODES / ADMIN ─────────────────────────────────────────────
+function applyCode() {
+  const raw=document.getElementById('codeInput').value.trim().toUpperCase();
+  if(raw==='ADMIN'){
+    isAdmin=true; domainActive=true;
+    document.getElementById('adminPanel').style.display='block';
+    document.getElementById('adminHidden').style.display='none';
+    document.getElementById('domainToggleWrap').style.display='block';
+    document.getElementById('maxUpgBtn').style.display='block';
+    showToast('✅ ADMIN mode activated!');
+  } else if(raw==='DOMAIN'){
+    disableShop();
+    document.getElementById('domainToggleWrap').style.display='block';
+    showToast('🌀 Domain Expansion unlocked! Shop disabled.');
+  } else if(raw==='MHASKETT'){
+    ragaActive=true; disableShop();
+    showToast('⚔️ MHASKETT activated! 75% triple match chance.');
+  } else {
+    showToast('❌ Invalid code.');
+  }
+  document.getElementById('codeInput').value='';
+  document.getElementById('codeInput').addEventListener('keypress',e=>{if(e.key==='Enter')applyCode();});
+}
+function toggleDomain(){domainActive=document.getElementById('domainToggle').checked;}
+function setForce(){
+  const v=[parseInt(document.getElementById('f1').value),parseInt(document.getElementById('f2').value),parseInt(document.getElementById('f3').value)];
+  if(v.some(n=>isNaN(n)||n<1||n>6)){showToast('❌ Force values must be 1–6');return;}
+  forcedNumbers=v.map(n=>SLOT_SYMBOLS[n-1]);
+  showToast('🎯 Forced: '+forcedNumbers.join(' '));
+}
+function setSpeed(){reelSpeed=document.getElementById('speedSel').value==='fast'?0:50;}
+function adminSetMoney(v){
+  if(!isAdmin)return;
+  if(isNaN(v)||v<0){showToast('❌ Invalid amount.');return;}
+  currentMoney=v; updateUI(); persistToLocal();
+  showToast(`✅ Money set to $${v.toFixed(2)}`);
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='achievements')renderAchievements();
+  if(id==='invest')updateInvestments();
+  if(id==='shop')updateShop();
+}
+
+// ── SAVE / LOAD ───────────────────────────────────────────────
+function persistToLocal() {
+  try {
+    localStorage.setItem('sm_money',currentMoney);
+    localStorage.setItem('sm_games',gamesPlayed);
+    localStorage.setItem('sm_spent',totalSpent);
+    localStorage.setItem('sm_won',totalWon);
+    localStorage.setItem('sm_upgrades',JSON.stringify(upgrades));
+    localStorage.setItem('sm_investments',JSON.stringify(investments));
+    localStorage.setItem('sm_dividends',pendingDividends);
+    localStorage.setItem('sm_shopDisabled',shopDisabled);
+    localStorage.setItem('sm_achievements',JSON.stringify(unlockedAchievements));
+    localStorage.setItem('sm_achiev_dates',JSON.stringify(achievementDates));
+    localStorage.setItem('sm_777count',jackpot777Count);
+    localStorage.setItem('sm_ragaActive',ragaActive);
+    localStorage.setItem('sm_mhaskett',mhaskettUnlocked);
+  } catch(e){}
+}
+function loadFromLocal() {
+  try {
+    currentMoney=parseFloat(localStorage.getItem('sm_money'))||50;
+    gamesPlayed=parseInt(localStorage.getItem('sm_games'))||0;
+    totalSpent=parseFloat(localStorage.getItem('sm_spent'))||0;
+    totalWon=parseFloat(localStorage.getItem('sm_won'))||0;
+    const ug=localStorage.getItem('sm_upgrades');
+    if(ug)upgrades=JSON.parse(ug);
+    const inv=localStorage.getItem('sm_investments');
+    if(inv)investments=JSON.parse(inv);
+    pendingDividends=parseFloat(localStorage.getItem('sm_dividends'))||0;
+    shopDisabled=localStorage.getItem('sm_shopDisabled')==='true';
+    const ach=localStorage.getItem('sm_achievements');
+    if(ach)unlockedAchievements=JSON.parse(ach);
+    const ad=localStorage.getItem('sm_achiev_dates');
+    if(ad)achievementDates=JSON.parse(ad);
+    jackpot777Count=parseInt(localStorage.getItem('sm_777count'))||0;
+    ragaActive=localStorage.getItem('sm_ragaActive')==='true';
+    mhaskettUnlocked=localStorage.getItem('sm_mhaskett')==='true';
+  } catch(e){}
+}
+function saveGame() {
+  const d={
+    version:GAME_VERSION, gamesPlayed, totalSpent, totalWon, currentMoney,
+    moneyData:[currentMoney], labels:[gamesPlayed], segmentColors:['#00ff88'],
+    domainActive, isAdmin, ragaActive, ragaAdaptNumber, shopDisabled, mhaskettUnlocked,
+    upgrades, consecutiveWins, wasBroke, totalWins:totalWinsG, jackpotCount,
+    upgradePurchaseCounts, investments, pendingDividends,
+    unlockedAchievements, achievementDates, jackpot777Count,
+    saveDate:new Date().toISOString(), timestamp:Date.now()
+  };
+  d.checksum=generateChecksum(d);
+  const warning=`{\n  "_WARNING_":"DO NOT EDIT THIS FILE",\n  "_SECURITY_":"Checksum protected",\n  "_VERSION_":"${GAME_VERSION}",\n`;
+  const final=warning+JSON.stringify(d,null,2).substring(1);
+  const blob=new Blob([final],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const fn=loadedFileName?loadedFileName.replace(/\.[^/.]+$/,'')+'.json':`slot_save_${new Date().toISOString().slice(0,10)}.json`;
+  a.download=fn; a.click(); URL.revokeObjectURL(url);
+  showToast('💾 Game saved!');
+}
+function loadGame() {
+  const file=document.getElementById('loadFile').files[0];
+  if(!file)return;
+  loadedFileName=file.name;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const raw=e.target.result;
+      let data;
+      try{data=JSON.parse(raw);}catch{showToast('💥 File corrupted.'); return;}
+
+      // ── JACKPOT REWARD FILE ──────────────────────────────
+      if(data.type==='jackpot_reward'&&data.id==='JACKPOTTTTT'){
+        const expected=(data.hits*7777+31337).toString(16);
+        if(data.sig===expected&&data.hits>=3){
+          unlockAchievement('JACKPOTTTTT');
+          showToast('🌟 Secret Achievement Unlocked: JACKPOTTTTT!');
+          alert('🌟 SECRET ACHIEVEMENT UNLOCKED!\n\n✨ JACKPOTTTTT!\n\nThe gods of fortune smile upon you.');
+        } else {
+          showToast('❌ Invalid reward file.');
+        }
+        document.getElementById('loadFile').value='';
+        return;
+      }
+
+      for(const k of Object.keys(data)){if(k.startsWith('_'))delete data[k];}
+      if(!isVersionCompatible(data.version)){alert('❌ Incompatible save version: '+data.version);return;}
+      if(!validateChecksum(data)){alert('🚫 Save file tampered — cannot load.');return;}
+      if(!validateGameValues(data)){alert('⚠️ Invalid values — cannot load.');return;}
+
+      gamesPlayed=data.gamesPlayed||0;
+      totalSpent=data.totalSpent||0;
+      totalWon=data.totalWon||0;
+      currentMoney=data.currentMoney||50;
+      domainActive=data.domainActive||false;
+      isAdmin=data.isAdmin||false;
+      ragaActive=data.ragaActive||false;
+      ragaAdaptNumber=data.ragaAdaptNumber||null;
+      shopDisabled=data.shopDisabled||false;
+      mhaskettUnlocked=data.mhaskettUnlocked||false;
+      consecutiveWins=data.consecutiveWins||0;
+      totalWinsG=data.totalWins||0;
+      jackpotCount=data.jackpotCount||0;
+      upgradePurchaseCounts=data.upgradePurchaseCounts||upgradePurchaseCounts;
+      investments=data.investments||investments;
+      pendingDividends=data.pendingDividends||0;
+      if(data.unlockedAchievements)unlockedAchievements=data.unlockedAchievements;
+      if(data.achievementDates)achievementDates=data.achievementDates;
+      if(data.jackpot777Count)jackpot777Count=data.jackpot777Count;
+      if(data.upgrades)upgrades=data.upgrades;
+      if(isAdmin){document.getElementById('adminPanel').style.display='block';document.getElementById('adminHidden').style.display='none';document.getElementById('maxUpgBtn').style.display='block';}
+      if(domainActive||isAdmin)document.getElementById('domainToggleWrap').style.display='block';
+      persistToLocal(); updateUI(); buildShopRows(); updateShop(); update777Section();
+      showToast('📂 Save loaded — '+new Date(data.saveDate).toLocaleDateString());
+    }catch(err){alert('❌ Error loading: '+err.message);}
+  };
+  reader.readAsText(file);
+  document.getElementById('loadFile').value='';
+}
+
+// ── MAIN UI UPDATE ────────────────────────────────────────────
+function updateUI() {
+  document.getElementById('balanceVal').textContent='$'+currentMoney.toFixed(2);
+  document.getElementById('wonVal').textContent='$'+totalWon.toFixed(2);
+  const net=totalWon-totalSpent;
+  document.getElementById('netVal').textContent=(net>=0?'+':'')+net.toFixed(2);
+  const chip=document.getElementById('netChip');
+  chip.className='balance-chip '+(net>=0?'net-pos':'net-neg');
+  document.getElementById('gamesVal').textContent=gamesPlayed;
+  document.getElementById('clickAmt').textContent='$'+getClickerEarnings().toFixed(2);
+  updateShop();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function init() {
+  loadFromLocal();
+  buildShopRows();
+  buildInvestmentRows();
+  updateUI();
+  update777Section();
+  renderAchievements();
+  if(isAdmin){document.getElementById('adminPanel').style.display='block';document.getElementById('adminHidden').style.display='none';document.getElementById('maxUpgBtn').style.display='block';}
+  if(domainActive||isAdmin)document.getElementById('domainToggleWrap').style.display='block';
+  // code input enter key
+  document.getElementById('codeInput').addEventListener('keypress',e=>{if(e.key==='Enter')applyCode();});
+}
+init();
+</script>
+</body>
+</html>
